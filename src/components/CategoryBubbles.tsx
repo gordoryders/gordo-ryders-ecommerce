@@ -2,56 +2,99 @@ import Link from "next/link";
 
 interface CategoryItem {
   name: string;
-  emoji: string;
+  image: string;
   href: string;
-  count: string;
+  subtitle: string;
 }
 
 export default function CategoryBubbles() {
   const categories: CategoryItem[] = [
-    { name: "Cascos", emoji: "🪖", href: "#cascos", count: "+80 refs" },
-    { name: "Guantes", emoji: "🧤", href: "#guantes", count: "+65 refs" },
-    { name: "Impermeables", emoji: "🌧️", href: "#impermeables", count: "+35 refs" },
-    { name: "Chaquetas", emoji: "🧥", href: "#chaquetas", count: "+40 refs" },
-    { name: "Protecciones", emoji: "🛡️", href: "#protecciones", count: "+50 refs" },
-    { name: "Accesorios", emoji: "📱", href: "#accesorios", count: "+70 refs" },
-    { name: "Mayoristas", emoji: "📦", href: "#mayoristas", count: "Precios B2B" },
+    {
+      name: "Cascos",
+      image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Certificación ECE",
+    },
+    {
+      name: "Guantes",
+      image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Proviker & Cuero",
+    },
+    {
+      name: "Impermeables",
+      image: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Siliconados",
+    },
+    {
+      name: "Chaquetas",
+      image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Térmicas y CE",
+    },
+    {
+      name: "Protecciones",
+      image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Rodilleras Acero",
+    },
+    {
+      name: "Accesorios",
+      image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=400&q=80",
+      href: "#catalogo",
+      subtitle: "Portacelulares CNC",
+    },
   ];
 
   return (
-    <section className="bg-neutral-900/40 border-b border-neutral-800 py-6">
+    <section className="bg-neutral-950 py-8 border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-black uppercase tracking-wider text-neutral-400">
-            Explorar por Categoría
-          </h2>
-          <span className="text-[11px] text-orange-400 font-bold hover:underline cursor-pointer">
-            Ver todas las categorías →
-          </span>
+        
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-base sm:text-lg font-black uppercase text-white tracking-wide">
+              Categorías Principales
+            </h2>
+            <p className="text-xs text-neutral-400">
+              Explora las líneas de equipamiento más buscadas por moteros
+            </p>
+          </div>
+          <Link
+            href="#catalogo"
+            className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
+          >
+            Ver catálogo completo →
+          </Link>
         </div>
 
-        {/* Horizontal scrollable bubbles */}
-        <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-none">
+        {/* Real photo circles with dark border */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-4">
           {categories.map((cat) => (
             <Link
               key={cat.name}
               href={cat.href}
-              className="flex flex-col items-center gap-2 group shrink-0"
+              className="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-neutral-900 transition-all"
             >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-neutral-900 border border-neutral-700/80 group-hover:border-orange-500 group-hover:scale-105 transition-all flex items-center justify-center text-2xl sm:text-3xl shadow-md group-hover:shadow-orange-500/10">
-                {cat.emoji}
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-neutral-700 group-hover:border-orange-500 group-hover:scale-105 transition-all shadow-lg shadow-black/60 mb-2">
+                <img
+                  src={cat.image}
+                  alt={cat.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-neutral-950/25 group-hover:bg-transparent transition-colors" />
               </div>
-              <div className="text-center">
-                <span className="text-xs font-bold text-neutral-200 group-hover:text-orange-400 block transition-colors">
-                  {cat.name}
-                </span>
-                <span className="text-[10px] text-neutral-500 font-medium block">
-                  {cat.count}
-                </span>
-              </div>
+              <span className="text-xs sm:text-sm font-bold text-white group-hover:text-orange-400 transition-colors">
+                {cat.name}
+              </span>
+              <span className="text-[10px] text-neutral-400 font-medium hidden sm:block">
+                {cat.subtitle}
+              </span>
             </Link>
           ))}
         </div>
+
       </div>
     </section>
   );
