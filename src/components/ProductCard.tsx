@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Product } from "@/types";
 import { ShoppingCart, Star, MessageSquareText, Zap, Eye } from "lucide-react";
 
@@ -48,10 +49,11 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-700 hover:shadow-2xl hover:shadow-orange-500/10 transition-all flex flex-col group">
       
-      {/* 1. PRODUCT PHOTO CONTAINER (Click opens Detail Modal) */}
-      <div 
+      {/* 1. PRODUCT PHOTO CONTAINER (Click opens Full Product Page) */}
+      <Link 
+        href={`/producto/${product.slug}`}
         onClick={() => onViewDetail && onViewDetail(product)}
-        className="relative h-60 w-full bg-neutral-950 overflow-hidden cursor-pointer"
+        className="relative h-60 w-full bg-neutral-950 overflow-hidden cursor-pointer block"
       >
         <img
           src={imageUrl}
@@ -65,7 +67,7 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
           <span className="bg-neutral-900/90 text-white border border-neutral-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl">
             <Eye className="w-3.5 h-3.5 text-orange-400" />
-            <span>Ver 4 ángulos y zoom</span>
+            <span>Ver ficha técnica y 4 ángulos</span>
           </span>
         </div>
 
@@ -90,7 +92,7 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
             <span>Últimas {product.stock} unidades</span>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* 2. CARD BODY */}
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
@@ -107,13 +109,14 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
             </div>
           </div>
 
-          {/* Product Name (Click opens detail) */}
-          <h3 
+          {/* Product Name (Click opens full product page) */}
+          <Link 
+            href={`/producto/${product.slug}`}
             onClick={() => onViewDetail && onViewDetail(product)}
-            className="text-sm font-bold text-white line-clamp-2 group-hover:text-orange-400 transition-colors leading-snug cursor-pointer"
+            className="text-sm font-bold text-white line-clamp-2 group-hover:text-orange-400 transition-colors leading-snug cursor-pointer block"
           >
             {product.name}
-          </h3>
+          </Link>
 
           {/* Size Selector */}
           <div className="mt-3 flex items-center gap-2">

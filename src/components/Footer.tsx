@@ -47,11 +47,11 @@ export default function Footer({ onOpenTracking, onOpenContact }: FooterProps = 
               Categorías Populares
             </h4>
             <ul className="space-y-2 text-[11px]">
-              <li><Link href="#cascos" className="hover:text-orange-400 transition-colors">Cascos Integrales y Abatibles</Link></li>
-              <li><Link href="#guantes" className="hover:text-orange-400 transition-colors">Guantes Proviker Ref E44</Link></li>
-              <li><Link href="#impermeables" className="hover:text-orange-400 transition-colors">Impermeables de Alta Resistencia</Link></li>
-              <li><Link href="#protecciones" className="hover:text-orange-400 transition-colors">Rodilleras y Protecciones Urbanas</Link></li>
-              <li><Link href="#accesorios" className="hover:text-orange-400 transition-colors">Portacelulares y Maleteros</Link></li>
+              <li><Link href="/categoria/cascos" className="hover:text-orange-400 transition-colors">Cascos Integrales y Abatibles</Link></li>
+              <li><Link href="/categoria/guantes" className="hover:text-orange-400 transition-colors">Guantes Proviker Ref E44</Link></li>
+              <li><Link href="/categoria/impermeables" className="hover:text-orange-400 transition-colors">Impermeables de Alta Resistencia</Link></li>
+              <li><Link href="/categoria/protecciones" className="hover:text-orange-400 transition-colors">Rodilleras y Protecciones Urbanas</Link></li>
+              <li><Link href="/categoria/accesorios" className="hover:text-orange-400 transition-colors">Portacelulares y Accesorios CNC</Link></li>
             </ul>
           </div>
 
@@ -61,11 +61,11 @@ export default function Footer({ onOpenTracking, onOpenContact }: FooterProps = 
               Atención & Compras
             </h4>
             <ul className="space-y-2 text-[11px]">
-              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Cómo comprar online</button></li>
-              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Políticas de garantía y cambios</button></li>
-              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Tiempos y costos de envío</button></li>
-              <li><a href="#mayoristas" className="hover:text-orange-400 transition-colors">Condiciones para mayoristas</a></li>
-              <li><button onClick={onOpenTracking} className="hover:text-orange-400 transition-colors text-left font-bold text-neutral-300">Seguimiento de pedidos con guía</button></li>
+              <li><Link href="/contacto" className="hover:text-orange-400 transition-colors text-left block">Cómo comprar online</Link></li>
+              <li><Link href="/contacto" className="hover:text-orange-400 transition-colors text-left block">Políticas de garantía y cambios</Link></li>
+              <li><Link href="/rastreo" className="hover:text-orange-400 transition-colors text-left block">Tiempos y costos de envío</Link></li>
+              <li><Link href="/mayoristas" className="hover:text-orange-400 transition-colors block font-semibold text-emerald-400">Condiciones para mayoristas B2B</Link></li>
+              <li><Link href="/rastreo" className="hover:text-orange-400 transition-colors text-left font-bold text-white block">Seguimiento de pedidos con guía</Link></li>
             </ul>
           </div>
 

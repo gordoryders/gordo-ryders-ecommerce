@@ -12,37 +12,37 @@ export default function CategoryBubbles() {
     {
       name: "Cascos",
       image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/cascos",
       subtitle: "Certificación ECE",
     },
     {
       name: "Guantes",
       image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/guantes",
       subtitle: "Proviker & Cuero",
     },
     {
       name: "Impermeables",
       image: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/impermeables",
       subtitle: "Siliconados",
     },
     {
       name: "Chaquetas",
       image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/impermeables",
       subtitle: "Térmicas y CE",
     },
     {
       name: "Protecciones",
       image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/protecciones",
       subtitle: "Rodilleras Acero",
     },
     {
       name: "Accesorios",
       image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=400&q=80",
-      href: "#catalogo",
+      href: "/categoria/accesorios",
       subtitle: "Portacelulares CNC",
     },
   ];

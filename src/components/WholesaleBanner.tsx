@@ -1,4 +1,5 @@
-import { Building2, MessageCircle, Truck, Percent, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { Building2, MessageCircle, Truck, Percent, CheckCircle, Calculator } from "lucide-react";
 
 export default function WholesaleBanner() {
   return (
@@ -41,22 +42,26 @@ export default function WholesaleBanner() {
               </div>
             </div>
 
-            <div className="lg:col-span-4 flex flex-col items-center justify-center text-center lg:border-l lg:border-neutral-700/70 lg:pl-8">
-              <span className="text-xs text-neutral-400 font-medium mb-3">
-                Atención personalizada con Edwin y el equipo comercial
+            <div className="lg:col-span-4 flex flex-col items-center justify-center text-center lg:border-l lg:border-neutral-700/70 lg:pl-8 space-y-2.5">
+              <span className="text-xs text-neutral-400 font-medium">
+                Atención personalizada con Edwin Bernal
               </span>
+              <Link
+                href="/mayoristas"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black py-3.5 px-6 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-xl shadow-orange-500/10 transition-all uppercase tracking-wider"
+              >
+                <Calculator className="w-4 h-4" />
+                <span>Simulador de Rentabilidad B2B</span>
+              </Link>
               <a
-                href="https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20solicitar%20el%20catálogo%20mayorista%20y%20lista%20de%20precios"
+                href="https://wa.me/573000000000?text=Hola%20Edwin,%20deseo%20solicitar%20el%20catálogo%20mayorista%20y%20lista%20de%20precios"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-black py-3.5 px-6 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/10 hover:scale-105 transition-all uppercase tracking-wider"
+                className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs flex items-center justify-center gap-2 border border-neutral-700 transition-colors"
               >
-                <MessageCircle className="w-5 h-5" />
-                <span>Solicitar Catálogo Mayorista</span>
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                <span>Pedir Catálogo por WhatsApp</span>
               </a>
-              <span className="text-[10px] text-neutral-500 mt-2">
-                Respuesta inmediata por WhatsApp de lunes a sábado
-              </span>
             </div>
 
           </div>
