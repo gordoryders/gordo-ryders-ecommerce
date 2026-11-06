@@ -19,7 +19,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   const categorySlug = resolvedParams.slug.toLowerCase();
   const querySearch = searchParams.get("q") || "";
-  const subcategory = searchParams.get("sub") || "";
+  const initialSub = searchParams.get("sub") || "all";
+  
+  const [activeSub, setActiveSub] = useState<string>(initialSub);
   const [sortOrder, setSortOrder] = useState<"featured" | "price-asc" | "price-desc">("featured");
 
   // Find category metadata
@@ -32,7 +34,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     ? querySearch ? `Resultados para "${querySearch}"` : "Catálogo Completo"
     : categorySlug.toUpperCase();
 
-  // Filter products
+  // Instant in-memory filter
   const filteredProducts = useMemo(() => {
     let list = [...PRODUCTS];
 
@@ -44,6 +46,18 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           p.category_id?.toLowerCase() === categorySlug ||
           p.category_name?.toLowerCase().includes(categorySlug) ||
           p.slug.toLowerCase().includes(categorySlug)
+      );
+    }
+
+    // Filter by active subcategory pill
+    if (activeSub !== "all") {
+      const subNorm = activeSub.replace("mayorista-", "").replace("guantes-", "").replace("cascos-", "");
+      list = list.filter(
+        (p) =>
+          p.slug.toLowerCase().includes(subNorm) ||
+          p.name.toLowerCase().includes(subNorm) ||
+          p.category_name?.toLowerCase().includes(subNorm) ||
+          p.sku.toLowerCase().includes(subNorm)
       );
     }
 
@@ -64,14 +78,14 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     }
 
     return list;
-  }, [categorySlug, querySearch, sortOrder]);
+  }, [categorySlug, querySearch, activeSub, sortOrder]);
 
   return (
     <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs text-neutral-400 mb-6">
-        <Link href="/" className="hover:text-orange-400 transition-colors">Inicio</Link>
+        <Link href="/" prefetch={true} className="hover:text-orange-400 transition-colors">Inicio</Link>
         <span>/</span>
         <span className="text-white font-bold">{title}</span>
       </nav>
@@ -109,24 +123,37 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         </div>
       </div>
 
-      {/* Subcategory Pills (if category has them) */}
+      {/* Instant Interactive Subcategory Pills (Zero Latency, Super Smooth) */}
       {currentCategory && currentCategory.subcategories.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none text-xs">
-          <Link
-            href={`/categoria/${currentCategory.slug}`}
-            className="px-3.5 py-1.5 rounded-full font-bold bg-orange-500 text-neutral-950 shadow-md shrink-0"
+          <button
+            type="button"
+            onClick={() => setActiveSub("all")}
+            className={`px-4 py-2 rounded-full font-black text-xs transition-all duration-75 active:scale-95 cursor-pointer shrink-0 ${
+              activeSub === "all"
+                ? "bg-orange-500 text-neutral-950 shadow-lg shadow-orange-500/25 ring-2 ring-orange-400/40"
+                : "bg-neutral-900 border border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700"
+            }`}
           >
             Todos ({currentCategory.name})
-          </Link>
-          {currentCategory.subcategories.map((sub) => (
-            <Link
-              key={sub.slug}
-              href={`/categoria/${currentCategory.slug}?sub=${sub.slug}`}
-              className="px-3.5 py-1.5 rounded-full font-medium bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white shrink-0 transition-colors"
-            >
-              {sub.name}
-            </Link>
-          ))}
+          </button>
+          {currentCategory.subcategories.map((sub) => {
+            const isActive = activeSub === sub.slug;
+            return (
+              <button
+                key={sub.slug}
+                type="button"
+                onClick={() => setActiveSub(sub.slug)}
+                className={`px-4 py-2 rounded-full font-bold text-xs transition-all duration-75 active:scale-95 cursor-pointer shrink-0 border ${
+                  isActive
+                    ? "bg-orange-500 text-neutral-950 border-orange-500 font-black shadow-lg shadow-orange-500/25 ring-2 ring-orange-400/40"
+                    : "bg-neutral-900 border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-700"
+                }`}
+              >
+                {sub.name}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -144,14 +171,15 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       ) : (
         <div className="py-20 text-center space-y-4 rounded-3xl bg-neutral-900 border border-neutral-800 p-8">
           <p className="text-base text-neutral-300">
-            No encontramos productos para tu búsqueda en esta categoría.
+            No encontramos productos para esta subcategoría específica en bodega.
           </p>
-          <Link
-            href="/categoria/all"
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase px-6 py-3 rounded-xl transition-colors"
+          <button
+            type="button"
+            onClick={() => setActiveSub("all")}
+            className="inline-block bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs uppercase px-6 py-3 rounded-xl transition-all duration-75 shadow-lg shadow-orange-500/20 cursor-pointer"
           >
-            Ver Todo el Catálogo
-          </Link>
+            Ver Todos los {currentCategory?.name || "Productos"}
+          </button>
         </div>
       )}
 

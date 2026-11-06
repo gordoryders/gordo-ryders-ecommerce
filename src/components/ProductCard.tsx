@@ -52,24 +52,17 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
       {/* 1. PRODUCT PHOTO CONTAINER (Click opens Full Product Page) */}
       <Link 
         href={`/producto/${product.slug}`}
+        prefetch={true}
         onClick={() => onViewDetail && onViewDetail(product)}
-        className="relative h-60 w-full bg-neutral-950 overflow-hidden cursor-pointer block"
+        className="relative h-60 w-full bg-neutral-950 overflow-hidden cursor-pointer block active:opacity-90 transition-opacity"
       >
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-neutral-950/40" />
-
-        {/* Quick View Hover Pill */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
-          <span className="bg-neutral-900/90 text-white border border-neutral-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl">
-            <Eye className="w-3.5 h-3.5 text-orange-400" />
-            <span>Ver ficha técnica y 4 ángulos</span>
-          </span>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-neutral-950/20" />
 
         {/* Top Badges (Mercado Libre Style) */}
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
@@ -112,8 +105,9 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
           {/* Product Name (Click opens full product page) */}
           <Link 
             href={`/producto/${product.slug}`}
+            prefetch={true}
             onClick={() => onViewDetail && onViewDetail(product)}
-            className="text-sm font-bold text-white line-clamp-2 group-hover:text-orange-400 transition-colors leading-snug cursor-pointer block"
+            className="text-sm font-bold text-white line-clamp-2 hover:text-orange-400 active:text-orange-500 transition-colors leading-snug cursor-pointer block"
           >
             {product.name}
           </Link>
@@ -183,7 +177,7 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
           <div className="grid grid-cols-2 gap-2 mt-4">
             <button
               onClick={() => onAddToCart && onAddToCart(product, selectedSize)}
-              className="bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-orange-500/10 uppercase tracking-wider"
+              className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-75 shadow-lg shadow-orange-500/10 uppercase tracking-wider cursor-pointer"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               <span>Comprar</span>
@@ -193,7 +187,7 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
               href={`https://wa.me/573000000000?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors border border-neutral-700"
+              className="bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all duration-75 border border-neutral-700 cursor-pointer"
             >
               <MessageSquareText className="w-3.5 h-3.5 text-emerald-400" />
               <span>WhatsApp</span>

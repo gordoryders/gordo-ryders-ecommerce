@@ -448,19 +448,19 @@ export default function Header({
               </div>
 
               {/* Direct Category Links */}
-              <Link href="/categoria/cascos" className="text-neutral-300 hover:text-orange-400 transition-colors py-1">
+              <Link prefetch={true} href="/categoria/cascos" className="text-neutral-300 hover:text-orange-400 active:scale-95 transition-all duration-75 py-1 cursor-pointer">
                 Cascos
               </Link>
-              <Link href="/categoria/guantes" className="text-neutral-300 hover:text-orange-400 transition-colors py-1">
+              <Link prefetch={true} href="/categoria/guantes" className="text-neutral-300 hover:text-orange-400 active:scale-95 transition-all duration-75 py-1 cursor-pointer">
                 Guantes Proviker
               </Link>
-              <Link href="/categoria/impermeables" className="text-neutral-300 hover:text-orange-400 transition-colors py-1">
+              <Link prefetch={true} href="/categoria/impermeables" className="text-neutral-300 hover:text-orange-400 active:scale-95 transition-all duration-75 py-1 cursor-pointer">
                 Impermeables
               </Link>
-              <Link href="/categoria/protecciones" className="text-neutral-300 hover:text-orange-400 transition-colors py-1">
+              <Link prefetch={true} href="/categoria/protecciones" className="text-neutral-300 hover:text-orange-400 active:scale-95 transition-all duration-75 py-1 cursor-pointer">
                 Protecciones
               </Link>
-              <Link href="/categoria/ofertas" className="text-orange-400 hover:text-orange-300 font-bold transition-colors py-1 flex items-center gap-1">
+              <Link prefetch={true} href="/categoria/ofertas" className="text-orange-400 hover:text-orange-300 active:scale-95 font-bold transition-all duration-75 py-1 flex items-center gap-1 cursor-pointer">
                 <Flame className="w-3.5 h-3.5" />
                 Ofertas del Día
               </Link>
@@ -469,24 +469,27 @@ export default function Header({
             {/* Right Strategic Links (Wholesale, Contact, Tracking) */}
             <div className="flex items-center gap-5 text-neutral-300">
               <Link
+                prefetch={true}
                 href="/mayoristas"
-                className="hover:text-emerald-400 transition-colors flex items-center gap-1.5 font-bold"
+                className="hover:text-emerald-400 active:scale-95 transition-all duration-75 flex items-center gap-1.5 font-bold cursor-pointer"
               >
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Mayoristas B2B</span>
               </Link>
 
               <Link
+                prefetch={true}
                 href="/contacto"
-                className="hover:text-white transition-colors flex items-center gap-1.5"
+                className="hover:text-white active:scale-95 transition-all duration-75 flex items-center gap-1.5 cursor-pointer"
               >
                 <Phone className="w-3.5 h-3.5 text-orange-400" />
                 <span>Contacto & Bodega</span>
               </Link>
 
               <Link
+                prefetch={true}
                 href="/rastreo"
-                className="hover:text-white transition-colors flex items-center gap-1.5"
+                className="hover:text-white active:scale-95 transition-all duration-75 flex items-center gap-1.5 cursor-pointer"
               >
                 <Package className="w-3.5 h-3.5 text-neutral-400" />
                 <span>Rastrear Guía</span>

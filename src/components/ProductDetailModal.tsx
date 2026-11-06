@@ -158,12 +158,6 @@ export default function ProductDetailModal({
                   }}
                 />
 
-                {/* Subtle Lens Hint Badge */}
-                <div className="absolute bottom-3 left-3 bg-neutral-950/80 backdrop-blur-md border border-neutral-800 px-2.5 py-1 rounded-xl text-[10px] text-neutral-400 pointer-events-none hidden sm:flex items-center gap-1.5">
-                  <Ruler className="w-3 h-3 text-orange-400" />
-                  <span>Pasa el ratón para zoom de alta definición</span>
-                </div>
-
                 {/* Badge */}
                 {discountPercent && (
                   <div className="absolute top-3 left-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider">
