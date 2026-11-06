@@ -10,11 +10,23 @@ import ProductCard from "@/components/ProductCard";
 import BrandStrip from "@/components/BrandStrip";
 import WholesaleBanner from "@/components/WholesaleBanner";
 import Footer from "@/components/Footer";
-import { Product } from "@/types";
+import ProductDetailModal from "@/components/ProductDetailModal";
+import SlideOverCart from "@/components/SlideOverCart";
+import LocationModal from "@/components/LocationModal";
+import OrderTrackingModal from "@/components/OrderTrackingModal";
+import ContactModal from "@/components/ContactModal";
+import ChatbotSupport from "@/components/ChatbotSupport";
+import { Product, CartItem } from "@/types";
 import { Flame, ArrowRight, ShieldCheck, Zap } from "lucide-react";
 
 export default function Home() {
-  const [cartCount, setCartCount] = useState<number>(0);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isLocationOpen, setIsLocationOpen] = useState<boolean>(false);
+  const [isTrackingOpen, setIsTrackingOpen] = useState<boolean>(false);
+  const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
+  const [userCity, setUserCity] = useState<string>("Bogotá D.C.");
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   const sampleProducts: Product[] = [
@@ -31,7 +43,10 @@ export default function Home() {
       rating: 4.9,
       reviews_count: 84,
       images: [
-        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -50,7 +65,10 @@ export default function Home() {
       rating: 5.0,
       reviews_count: 62,
       images: [
-        "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -69,7 +87,10 @@ export default function Home() {
       rating: 4.8,
       reviews_count: 39,
       images: [
-        "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -88,7 +109,10 @@ export default function Home() {
       rating: 5.0,
       reviews_count: 31,
       images: [
-        "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -107,7 +131,10 @@ export default function Home() {
       rating: 4.7,
       reviews_count: 27,
       images: [
-        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -126,7 +153,10 @@ export default function Home() {
       rating: 4.9,
       reviews_count: 53,
       images: [
-        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=700&q=80",
+        "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=900&q=80",
       ],
       is_featured: true,
       is_active: true,
@@ -134,22 +164,129 @@ export default function Home() {
     },
   ];
 
-  const handleAddToCart = (product: Product) => {
-    setCartCount((prev) => prev + 1);
+  // Total cart item quantity
+  const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Quick add from card (with default size and auto-open cart)
+  const handleQuickAddToCart = (product: Product) => {
+    setCartItems((prev) => {
+      const existingIndex = prev.findIndex(
+        (item) => item.product.id === product.id && item.selectedSize === "M"
+      );
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        updated[existingIndex].quantity += 1;
+        return updated;
+      }
+      return [
+        ...prev,
+        {
+          product,
+          quantity: 1,
+          selectedSize: "M",
+          selectedColor: "Negro Mate",
+        },
+      ];
+    });
+    setIsCartOpen(true);
   };
 
-  const filteredProducts = selectedFilter === "all"
-    ? sampleProducts
-    : sampleProducts.filter((p) => p.category_name?.toLowerCase().includes(selectedFilter));
+  // Add from detailed modal with selected size, color, quantity
+  const handleDetailAddToCart = (
+    product: Product,
+    size: string,
+    color: string,
+    quantity: number
+  ) => {
+    setCartItems((prev) => {
+      const existingIndex = prev.findIndex(
+        (item) =>
+          item.product.id === product.id &&
+          item.selectedSize === size &&
+          item.selectedColor === color
+      );
+      if (existingIndex > -1) {
+        const updated = [...prev];
+        updated[existingIndex].quantity += quantity;
+        return updated;
+      }
+      return [
+        ...prev,
+        {
+          product,
+          quantity,
+          selectedSize: size,
+          selectedColor: color,
+        },
+      ];
+    });
+    setIsCartOpen(true);
+  };
+
+  const handleUpdateQuantity = (index: number, quantity: number) => {
+    setCartItems((prev) => {
+      if (quantity <= 0) {
+        return prev.filter((_, i) => i !== index);
+      }
+      const updated = [...prev];
+      updated[index].quantity = quantity;
+      return updated;
+    });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setCartItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCheckout = () => {
+    const formatCOP = (num: number) =>
+      new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        maximumFractionDigits: 0,
+      }).format(num);
+
+    const subtotal = cartItems.reduce(
+      (acc, i) => acc + i.product.price_retail * i.quantity,
+      0
+    );
+
+    const message = encodeURIComponent(
+      `Hola Gordo Ryders, deseo confirmar mi pedido:\n\n${cartItems
+        .map(
+          (i) =>
+            `• ${i.product.name} (Talla: ${i.selectedSize}, Color: ${i.selectedColor}) x${i.quantity} = ${formatCOP(
+              i.product.price_retail * i.quantity
+            )}`
+        )
+        .join("\n")}\n\nTotal Pedido: ${formatCOP(subtotal)}\nCiudad de destino: ${userCity}\n\n¿Por favor me confirman datos de pago (Bancolombia/Nequi/Wompi)?`
+    );
+
+    window.open(`https://wa.me/573000000000?text=${message}`, "_blank");
+  };
+
+  const filteredProducts =
+    selectedFilter === "all"
+      ? sampleProducts
+      : sampleProducts.filter((p) =>
+          p.category_name?.toLowerCase().includes(selectedFilter)
+        );
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col font-sans selection:bg-orange-500 selection:text-neutral-950">
       
-      {/* 1. Header con Buscador Predictivo y Carrito */}
-      <Header cartCount={cartCount} />
+      {/* 1. Header 2-Niveles estilo Retail (Mercado Libre / Amazon) */}
+      <Header
+        cartCount={totalCartCount}
+        userCity={userCity}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenLocation={() => setIsLocationOpen(true)}
+        onOpenTracking={() => setIsTrackingOpen(true)}
+        onOpenContact={() => setIsContactOpen(true)}
+      />
 
       <main className="flex-1">
-        {/* 2. Hero Slider Principal (Carrusel automático estilo Mercado Libre / Retail) */}
+        {/* 2. Hero Slider Principal */}
         <HeroSlider />
 
         {/* 3. Categorías con Fotografía Real */}
@@ -160,7 +297,8 @@ export default function Home() {
           title="Ofertas Relámpago de la Semana"
           badge="OFERTA DEL DÍA"
           products={sampleProducts}
-          onAddToCart={handleAddToCart}
+          onAddToCart={handleQuickAddToCart}
+          onViewDetail={(product) => setSelectedProduct(product)}
           showCountdown={true}
         />
 
@@ -180,7 +318,7 @@ export default function Home() {
                 Equipamiento y Protección
               </h2>
               <p className="text-xs text-neutral-400 mt-1">
-                Selecciona tu categoría y cotiza tu talla directamente o compra con pasarela segura.
+                Haz clic en cualquier producto para inspeccionar sus 4 ángulos con zoom sutil de alta definición.
               </p>
             </div>
 
@@ -215,7 +353,8 @@ export default function Home() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAddToCart={handleAddToCart}
+                onAddToCart={handleQuickAddToCart}
+                onViewDetail={(p) => setSelectedProduct(p)}
               />
             ))}
           </div>
@@ -253,7 +392,57 @@ export default function Home() {
       </main>
 
       {/* 9. Footer Oficial */}
-      <Footer />
+      <Footer
+        onOpenTracking={() => setIsTrackingOpen(true)}
+        onOpenContact={() => setIsContactOpen(true)}
+      />
+
+      {/* Modal 1: Detalle de Producto con 4 Ángulos y Zoom Hover Suave */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={handleDetailAddToCart}
+      />
+
+      {/* Modal 2: Carrito Lateral Desplegable (Slide-over Cart) */}
+      <SlideOverCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+      />
+
+      {/* Modal 3: Selector de Ubicación / Ciudad de Envío */}
+      <LocationModal
+        isOpen={isLocationOpen}
+        onClose={() => setIsLocationOpen(false)}
+        currentCity={userCity}
+        onSelectCity={(city) => {
+          setUserCity(city);
+          setIsLocationOpen(false);
+        }}
+      />
+
+      {/* Modal 4: Rastreador de Guías y Envíos en Tiempo Real */}
+      <OrderTrackingModal
+        isOpen={isTrackingOpen}
+        onClose={() => setIsTrackingOpen(false)}
+      />
+
+      {/* Modal 5: Centro de Contacto Oficial y Redes Sociales */}
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+      />
+
+      {/* Widget Flotante 6: Asistente Virtual / Chatbot de Soporte */}
+      <ChatbotSupport
+        onOpenTracking={() => setIsTrackingOpen(true)}
+        onOpenContact={() => setIsContactOpen(true)}
+      />
 
     </div>
   );

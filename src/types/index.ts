@@ -29,6 +29,7 @@ export interface Product {
   rating?: number;
   reviews_count?: number;
   images: string[];
+  specs?: { label: string; value: string }[];
   is_featured: boolean;
   is_active: boolean;
   stock?: number;
@@ -36,6 +37,7 @@ export interface Product {
 
 export interface CartItem {
   product: Product;
-  variant?: ProductVariant;
+  selectedSize: string;
+  selectedColor?: string;
   quantity: number;
 }

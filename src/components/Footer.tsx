@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
-export default function Footer() {
+interface FooterProps {
+  onOpenTracking?: () => void;
+  onOpenContact?: () => void;
+}
+
+export default function Footer({ onOpenTracking, onOpenContact }: FooterProps = {}) {
   return (
     <footer className="bg-neutral-950 text-neutral-400 border-t border-neutral-800 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -56,11 +61,11 @@ export default function Footer() {
               Atención & Compras
             </h4>
             <ul className="space-y-2 text-[11px]">
-              <li><a href="#" className="hover:text-orange-400 transition-colors">Cómo comprar online</a></li>
-              <li><a href="#" className="hover:text-orange-400 transition-colors">Políticas de garantía y cambios</a></li>
-              <li><a href="#" className="hover:text-orange-400 transition-colors">Tiempos y costos de envío</a></li>
+              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Cómo comprar online</button></li>
+              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Políticas de garantía y cambios</button></li>
+              <li><button onClick={onOpenContact} className="hover:text-orange-400 transition-colors text-left">Tiempos y costos de envío</button></li>
               <li><a href="#mayoristas" className="hover:text-orange-400 transition-colors">Condiciones para mayoristas</a></li>
-              <li><a href="#" className="hover:text-orange-400 transition-colors">Seguimiento de pedidos con guía</a></li>
+              <li><button onClick={onOpenTracking} className="hover:text-orange-400 transition-colors text-left font-bold text-neutral-300">Seguimiento de pedidos con guía</button></li>
             </ul>
           </div>
 
@@ -73,10 +78,15 @@ export default function Footer() {
               <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
               <span>Bogotá, Colombia • Sede física y bodega de despachos</span>
             </div>
-            <div className="flex items-center gap-2 text-[11px]">
-              <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+            <a 
+              href="https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20asesoría%20sobre%20un%20producto" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[11px] text-emerald-400 hover:underline"
+            >
+              <Phone className="w-4 h-4 shrink-0" />
               <span>WhatsApp Ventas: +57 300 000 0000</span>
-            </div>
+            </a>
             <div className="flex items-center gap-2 text-[11px]">
               <Mail className="w-4 h-4 text-amber-400 shrink-0" />
               <span>contacto@gordoryders.com</span>

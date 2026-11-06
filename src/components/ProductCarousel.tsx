@@ -11,6 +11,7 @@ interface ProductCarouselProps {
   badge?: string;
   products: Product[];
   onAddToCart?: (product: Product) => void;
+  onViewDetail?: (product: Product) => void;
   showCountdown?: boolean;
 }
 
@@ -20,6 +21,7 @@ export default function ProductCarousel({
   badge = "OFERTA RELÁMPAGO",
   products,
   onAddToCart,
+  onViewDetail,
   showCountdown = true,
 }: ProductCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,11 @@ export default function ProductCarousel({
               key={product.id}
               className="w-[280px] sm:w-[310px] shrink-0 snap-start"
             >
-              <ProductCard product={product} onAddToCart={onAddToCart} />
+              <ProductCard 
+                product={product} 
+                onAddToCart={onAddToCart} 
+                onViewDetail={onViewDetail}
+              />
             </div>
           ))}
         </div>

@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { Product } from "@/types";
-import { ShoppingCart, Star, MessageSquareText, Zap, ShieldCheck } from "lucide-react";
+import { ShoppingCart, Star, MessageSquareText, Zap, Eye } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart?: (product: Product) => void;
+  onAddToCart?: (product: Product, size: string) => void;
+  onViewDetail?: (product: Product) => void;
 }
 
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, onAddToCart, onViewDetail }: ProductCardProps) {
   const [selectedSize, setSelectedSize] = useState<string>("L");
 
   const discountPercent = product.price_original && product.price_original > product.price_retail
@@ -27,7 +28,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const cuota3x = Math.round(product.price_retail / 3);
 
   const whatsappMessage = encodeURIComponent(
-    `Hola Gordo Ryders, me interesa el producto: ${product.name} (Ref: ${product.sku}) en talla ${selectedSize}. ¿Tienen disponibilidad para envío?`
+    `Hola Gordo Ryders, me interesa el producto: ${product.name} (Ref: ${product.sku}) en talla ${selectedSize}. ¿Tienen despacho disponible?`
   );
 
   const fallbackImage = product.category_name?.toLowerCase().includes("casco")
@@ -47,8 +48,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-700 hover:shadow-2xl hover:shadow-orange-500/10 transition-all flex flex-col group">
       
-      {/* 1. PRODUCT PHOTO CONTAINER */}
-      <div className="relative h-60 w-full bg-neutral-950 overflow-hidden">
+      {/* 1. PRODUCT PHOTO CONTAINER (Click opens Detail Modal) */}
+      <div 
+        onClick={() => onViewDetail && onViewDetail(product)}
+        className="relative h-60 w-full bg-neutral-950 overflow-hidden cursor-pointer"
+      >
         <img
           src={imageUrl}
           alt={product.name}
@@ -57,8 +61,16 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-neutral-950/40" />
 
+        {/* Quick View Hover Pill */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-[2px]">
+          <span className="bg-neutral-900/90 text-white border border-neutral-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-xl">
+            <Eye className="w-3.5 h-3.5 text-orange-400" />
+            <span>Ver 4 ángulos y zoom</span>
+          </span>
+        </div>
+
         {/* Top Badges (Mercado Libre Style) */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+        <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
           {product.badge && (
             <span className="bg-orange-500 text-neutral-950 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-md tracking-wider">
               {product.badge}
@@ -67,13 +79,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
         </div>
 
         {/* Ref / SKU Badge */}
-        <span className="absolute top-3 right-3 bg-neutral-950/80 backdrop-blur-sm border border-neutral-700 text-neutral-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded">
+        <span className="absolute top-3 right-3 bg-neutral-950/80 backdrop-blur-sm border border-neutral-700 text-neutral-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded pointer-events-none">
           REF: {product.sku}
         </span>
 
         {/* Scarcity tag */}
         {product.stock && product.stock <= 5 && (
-          <div className="absolute bottom-2.5 left-3 bg-neutral-950/90 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 backdrop-blur-md">
+          <div className="absolute bottom-2.5 left-3 bg-neutral-950/90 border border-amber-500/40 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 backdrop-blur-md pointer-events-none">
             <Zap className="w-3 h-3 text-amber-400" />
             <span>Últimas {product.stock} unidades</span>
           </div>
@@ -95,8 +107,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
             </div>
           </div>
 
-          {/* Product Name */}
-          <h3 className="text-sm font-bold text-white line-clamp-2 group-hover:text-orange-400 transition-colors leading-snug">
+          {/* Product Name (Click opens detail) */}
+          <h3 
+            onClick={() => onViewDetail && onViewDetail(product)}
+            className="text-sm font-bold text-white line-clamp-2 group-hover:text-orange-400 transition-colors leading-snug cursor-pointer"
+          >
             {product.name}
           </h3>
 
@@ -164,7 +179,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           {/* Actions */}
           <div className="grid grid-cols-2 gap-2 mt-4">
             <button
-              onClick={() => onAddToCart && onAddToCart(product)}
+              onClick={() => onAddToCart && onAddToCart(product, selectedSize)}
               className="bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-orange-500/10 uppercase tracking-wider"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
