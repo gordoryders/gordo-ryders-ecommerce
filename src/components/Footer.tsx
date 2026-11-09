@@ -101,7 +101,13 @@ export default function Footer({ onOpenTracking, onOpenContact }: FooterProps = 
 
         {/* Bottom Credits & Payments */}
         <div className="mt-10 pt-6 border-t border-neutral-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-500">
-          <p>© 2026 Gordo Ryders. Todos los derechos reservados.</p>
+          <div className="flex items-center gap-3">
+            <p>© 2026 Gordo Ryders. Todos los derechos reservados.</p>
+            <span>•</span>
+            <Link href="/admin" className="hover:text-orange-400 transition-colors text-neutral-600 hover:underline">
+              Panel Admin
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <span>Pagos seguros procesados con:</span>
             <span className="font-bold text-neutral-300">Wompi (Bancolombia)</span>

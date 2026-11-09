@@ -1,4 +1,4 @@
-import { Product } from "@/types";
+import { Product, LookbookAlbum } from "@/types";
 
 export interface SubCategory {
   name: string;
@@ -15,6 +15,52 @@ export interface MegaCategory {
   highlight?: string;
   subcategories: SubCategory[];
 }
+
+export const LOOKBOOK_ALBUMS: LookbookAlbum[] = [
+  {
+    id: "album-1",
+    title: "Equipamiento Urbano Diario",
+    subtitle: "Bogotá & Rutas Metropolitanas",
+    category: "Urbano",
+    tag: "COLECCIÓN 2026",
+    coverImage: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
+    ],
+    description: "El combo perfecto para el día a día: Guantes Proviker con touch screen, casco certificado ECE y soporte CNC antivibración.",
+    productSlugs: ["guante-proviker-e44", "casco-integral-shaft-pro-582", "soporte-portacelular-antivibracion"],
+  },
+  {
+    id: "album-2",
+    title: "Ruta de Lluvia & Clima Extremo",
+    subtitle: "Cero Filtraciones en Carretera",
+    category: "Lluvia",
+    tag: "100% SILICONADO",
+    coverImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1200&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80",
+    ],
+    description: "Tecnología termosellada náutica para no mojarte ni en los peores aguaceros de la Línea o carretera abierta.",
+    productSlugs: ["impermeable-enterizo-siliconado", "chaqueta-termica-protecciones-ce"],
+  },
+  {
+    id: "album-3",
+    title: "Blindaje de Impacto & Carretera",
+    subtitle: "Protección Nivel 2 Certificada",
+    category: "Seguridad",
+    tag: "ACERO & TPU",
+    coverImage: "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
+    ],
+    description: "Rodilleras y coderas articuladas en aleación de acero cepillado con chaqueta térmica y protecciones CE desmontables.",
+    productSlugs: ["kit-rodilleras-coderas-acero", "chaqueta-termica-protecciones-ce"],
+  },
+];
 
 export const MEGA_CATEGORIES: MegaCategory[] = [
   {

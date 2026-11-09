@@ -67,8 +67,30 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
         {/* Top Badges (Mercado Libre Style) */}
         <div className="absolute top-3 left-3 flex flex-col gap-1 z-10 pointer-events-none">
           {product.badge && (
-            <span className="bg-orange-500 text-neutral-950 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-md tracking-wider">
+            <span
+              className={`text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-md tracking-wider ${
+                product.badge_color === "red"
+                  ? "bg-red-600 text-white"
+                  : product.badge_color === "emerald"
+                  ? "bg-emerald-500 text-neutral-950"
+                  : product.badge_color === "purple"
+                  ? "bg-purple-600 text-white"
+                  : product.badge_color === "blue"
+                  ? "bg-blue-600 text-white"
+                  : "bg-orange-500 text-neutral-950"
+              }`}
+            >
               {product.badge}
+            </span>
+          )}
+          {product.is_new_arrival && !product.badge && (
+            <span className="bg-emerald-500 text-neutral-950 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-md tracking-wider">
+              NOVEDAD 2026
+            </span>
+          )}
+          {product.is_limited_edition && !product.badge && (
+            <span className="bg-purple-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded shadow-md tracking-wider">
+              EDICIÓN LIMITADA
             </span>
           )}
         </div>

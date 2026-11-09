@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useStore } from "@/context/StoreContext";
 import { 
   Package, 
   Search, 
@@ -16,14 +17,18 @@ import {
 } from "lucide-react";
 
 export default function RastreoPage() {
+  const { getOrderByGuide } = useStore();
   const [guideInput, setGuideInput] = useState("");
   const [carrier, setCarrier] = useState("Inter Rapidísimo");
   const [trackingResult, setTrackingResult] = useState<null | {
     guide: string;
     carrier: string;
     destination: string;
+    customerName?: string;
+    productsSummary?: string;
     status: string;
     estimatedDelivery: string;
+    isRealOrder: boolean;
     steps: { title: string; date: string; description: string; done: boolean }[];
   }>(null);
 
@@ -31,13 +36,92 @@ export default function RastreoPage() {
     e.preventDefault();
     if (!guideInput.trim()) return;
 
-    // Simulated carrier response
+    const matched = getOrderByGuide(guideInput);
+
+    if (matched) {
+      const statusMap = {
+        empacado: {
+          label: "Empacado en Bodega Central (Bogotá)",
+          estimate: "En preparación para entrega a transportadora",
+          stepIndex: 0,
+        },
+        recolectado: {
+          label: "Recolectado por transportadora",
+          estimate: "En camino al centro logístico",
+          stepIndex: 1,
+        },
+        en_transito: {
+          label: "En tránsito intermunicipal",
+          estimate: "En viaje hacia tu ciudad",
+          stepIndex: 2,
+        },
+        en_reparto: {
+          label: "En reparto local hacia tu dirección",
+          estimate: "Llega hoy antes de las 6:30 PM",
+          stepIndex: 3,
+        },
+        entregado: {
+          label: "¡Entregado a satisfacción!",
+          estimate: "Paquete entregado al cliente",
+          stepIndex: 4,
+        },
+      };
+
+      const currentStage = statusMap[matched.status] || statusMap.en_transito;
+
+      setTrackingResult({
+        guide: matched.guideNumber,
+        carrier: matched.carrier,
+        destination: matched.city,
+        customerName: matched.customerName,
+        productsSummary: matched.productsSummary,
+        status: currentStage.label,
+        estimatedDelivery: currentStage.estimate,
+        isRealOrder: true,
+        steps: [
+          {
+            title: "Orden confirmada y empacada en bodega Gordo Ryders",
+            date: matched.date || "Fecha de registro",
+            description: `Productos: ${matched.productsSummary}. Embalaje y control de calidad aprobado.`,
+            done: currentStage.stepIndex >= 0,
+          },
+          {
+            title: `Recolectado por ${matched.carrier}`,
+            date: currentStage.stepIndex >= 1 ? "Manifiesto asignado" : "Pendiente",
+            description: "Paquete ingresado a plataforma logística con código de barras nacional.",
+            done: currentStage.stepIndex >= 1,
+          },
+          {
+            title: `En tránsito hacia ${matched.city}`,
+            date: currentStage.stepIndex >= 2 ? "En ruta terrestre / aérea" : "Pendiente",
+            description: "Despacho interdepartamental con seguro a todo riesgo.",
+            done: currentStage.stepIndex >= 2,
+          },
+          {
+            title: "En reparto con móvil local",
+            date: currentStage.stepIndex >= 3 ? "Hoy en curso" : "Pendiente",
+            description: "Mensajero asignado con destino final.",
+            done: currentStage.stepIndex >= 3,
+          },
+          {
+            title: "Entrega exitosa al destinatario",
+            date: currentStage.stepIndex >= 4 ? "Completado" : "Estimado",
+            description: `Recibe: ${matched.customerName} a satisfacción.`,
+            done: currentStage.stepIndex >= 4,
+          },
+        ],
+      });
+      return;
+    }
+
+    // Default simulated carrier response if not matched
     setTrackingResult({
       guide: guideInput.toUpperCase(),
       carrier,
-      destination: "Bogotá D.C., Colombia",
+      destination: "Colombia - Destino Nacional",
       status: "En reparto local hacia tu dirección",
       estimatedDelivery: "Hoy antes de las 6:30 PM",
+      isRealOrder: false,
       steps: [
         {
           title: "Orden confirmada y empacada en bodega",
@@ -164,6 +248,19 @@ export default function RastreoPage() {
               <h2 className="text-xl sm:text-2xl font-black text-white uppercase">
                 {trackingResult.status}
               </h2>
+              {trackingResult.customerName && (
+                <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400 mt-2">
+                  <span><strong className="text-white">Destinatario:</strong> {trackingResult.customerName}</span>
+                  <span>•</span>
+                  <span><strong className="text-white">Destino:</strong> {trackingResult.destination}</span>
+                  {trackingResult.productsSummary && (
+                    <>
+                      <span>•</span>
+                      <span className="text-orange-400 font-semibold">{trackingResult.productsSummary}</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <div className="sm:text-right p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
               <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">Entrega Estimada</span>

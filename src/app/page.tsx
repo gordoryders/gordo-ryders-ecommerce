@@ -6,11 +6,12 @@ import CategoryBubbles from "@/components/CategoryBubbles";
 import PromoTiles from "@/components/PromoTiles";
 import ProductCarousel from "@/components/ProductCarousel";
 import ProductCard from "@/components/ProductCard";
+import LookbookCollage from "@/components/LookbookCollage";
 import BrandStrip from "@/components/BrandStrip";
 import WholesaleBanner from "@/components/WholesaleBanner";
 import { PRODUCTS } from "@/data/products";
 import { useStore } from "@/context/StoreContext";
-import { Flame } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 
 export default function Home() {
   const { addToCart } = useStore();
@@ -24,6 +25,8 @@ export default function Home() {
           p.category_id?.toLowerCase().includes(selectedFilter)
         );
 
+  const newArrivals = PRODUCTS.filter((p) => p.is_new_arrival || p.badge?.includes("MÁS VENDIDO") || p.badge?.includes("NUEVA"));
+
   return (
     <div>
       {/* 1. Hero Slider Principal (Carrusel automático estilo Retail) */}
@@ -32,7 +35,19 @@ export default function Home() {
       {/* 2. Categorías con Fotografía Real */}
       <CategoryBubbles />
 
-      {/* 3. Carrusel Horizontal de Ofertas Relámpago con Cuenta Regresiva */}
+      {/* 3. Carrusel de Novedades & Nuevos Lanzamientos 2026 */}
+      <ProductCarousel
+        title="Novedades & Nuevos Ingresos 2026"
+        badge="RECIÉN LLEGADO"
+        products={newArrivals.length > 0 ? newArrivals : PRODUCTS}
+        onAddToCart={(p) => addToCart(p, "M", "Negro", 1)}
+        showCountdown={false}
+      />
+
+      {/* 4. Banners Triples Promocionales */}
+      <PromoTiles />
+
+      {/* 5. Carrusel Horizontal de Ofertas Relámpago con Cuenta Regresiva */}
       <ProductCarousel
         title="Ofertas Relámpago de la Semana"
         badge="OFERTA DEL DÍA"
@@ -41,10 +56,10 @@ export default function Home() {
         showCountdown={true}
       />
 
-      {/* 4. Banners Triples Promocionales */}
-      <PromoTiles />
+      {/* 6. Mini-Álbumes & Lookbook Collages Categorizados */}
+      <LookbookCollage />
 
-      {/* 5. Catálogo Principal con Filtros Rápidos */}
+      {/* 7. Catálogo Principal con Filtros Rápidos */}
       <section id="catalogo" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
