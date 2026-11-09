@@ -7,6 +7,7 @@ import PromoTiles from "@/components/PromoTiles";
 import ProductCarousel from "@/components/ProductCarousel";
 import ProductCard from "@/components/ProductCard";
 import LookbookCollage from "@/components/LookbookCollage";
+import CombosSection from "@/components/CombosSection";
 import BrandStrip from "@/components/BrandStrip";
 import WholesaleBanner from "@/components/WholesaleBanner";
 import { PRODUCTS } from "@/data/products";
@@ -14,7 +15,7 @@ import { useStore } from "@/context/StoreContext";
 import { Flame, Sparkles } from "lucide-react";
 
 export default function Home() {
-  const { addToCart, products, albums } = useStore();
+  const { addToCart, products, albums, categories } = useStore();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   const activeProducts = products.filter((p) => p.is_active);
@@ -60,10 +61,13 @@ export default function Home() {
         showCountdown={true}
       />
 
-      {/* 6. Mini-Álbumes & Lookbook Collages Categorizados */}
+      {/* 6. Combos & Packs Dinámicos con Descuento */}
+      <CombosSection />
+
+      {/* 7. Mini-Álbumes & Lookbook Collages Categorizados (Estilo Amazon) */}
       <LookbookCollage albums={albums} />
 
-      {/* 7. Catálogo Principal con Filtros Rápidos */}
+      {/* 8. Catálogo Principal con Filtros Rápidos */}
       <section id="catalogo" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
@@ -80,27 +84,29 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Filter Pills */}
+          {/* Filter Pills Dinámicos */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-            {[
-              { label: "Todos los productos", value: "all" },
-              { label: "Guantes Proviker", value: "guante" },
-              { label: "Cascos", value: "casco" },
-              { label: "Impermeables", value: "impermeable" },
-              { label: "Protecciones", value: "protecci" },
-              { label: "Chaquetas", value: "chaqueta" },
-              { label: "Accesorios CNC", value: "accesorios" },
-            ].map((f) => (
+            <button
+              onClick={() => setSelectedFilter("all")}
+              className={`px-3.5 py-1.5 rounded-full font-bold transition-all shrink-0 cursor-pointer ${
+                selectedFilter === "all"
+                  ? "bg-orange-500 text-neutral-950 shadow-md font-black"
+                  : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"
+              }`}
+            >
+              Todos los productos
+            </button>
+            {categories.map((cat) => (
               <button
-                key={f.value}
-                onClick={() => setSelectedFilter(f.value)}
-                className={`px-3.5 py-1.5 rounded-full font-bold transition-all shrink-0 ${
-                  selectedFilter === f.value
-                    ? "bg-orange-500 text-neutral-950 shadow-md"
+                key={cat.id}
+                onClick={() => setSelectedFilter(cat.name.toLowerCase())}
+                className={`px-3.5 py-1.5 rounded-full font-bold transition-all shrink-0 cursor-pointer ${
+                  selectedFilter.toLowerCase() === cat.name.toLowerCase()
+                    ? "bg-orange-500 text-neutral-950 shadow-md font-black"
                     : "bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-neutral-700"
                 }`}
               >
-                {f.label}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -115,29 +121,6 @@ export default function Home() {
               onAddToCart={(p, size) => addToCart(p, size, "Negro", 1)}
             />
           ))}
-        </div>
-
-        {/* Upselling Combo Banner */}
-        <div className="mt-12 bg-gradient-to-r from-neutral-900 via-neutral-900 to-orange-950/40 border border-neutral-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-          <div className="space-y-2 text-center md:text-left">
-            <span className="text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-full border border-orange-500/20">
-              Combo Rutero Especial
-            </span>
-            <h3 className="text-xl sm:text-2xl font-black text-white uppercase leading-tight">
-              Lleva Guantes Proviker + Impermeable y ahorra $35.000 COP
-            </h3>
-            <p className="text-xs text-neutral-400 max-w-xl">
-              Equípate completo para rodar en carretera y ciudad. Incluye bolso transportador hermético y garantía oficial.
-            </p>
-          </div>
-          <a
-            href="https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20aprovechar%20el%20Combo%20Rutero%20(Guantes%20+%20Impermeable)"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black px-6 py-3.5 rounded-xl text-xs uppercase tracking-wider shrink-0 transition-colors shadow-lg shadow-orange-500/20"
-          >
-            Comprar Combo en Promoción
-          </a>
         </div>
 
       </section>

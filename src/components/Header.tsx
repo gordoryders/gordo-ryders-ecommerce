@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useStore } from "@/context/StoreContext";
 import { 
   Search, 
   ShoppingCart, 
@@ -41,6 +43,8 @@ export default function Header({
   onOpenContact,
 }: HeaderProps) {
   const router = useRouter();
+  const { categories, products } = useStore();
+  const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -53,9 +57,14 @@ export default function Header({
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Filter products for predictive search preview
+  const activeProductsList = products && products.length > 0 ? products : PRODUCTS;
   const searchResults = searchQuery.trim().length >= 2
-    ? PRODUCTS.filter((p) => {
+    ? activeProductsList.filter((p) => {
         const query = searchQuery.toLowerCase();
         const matchesName = p.name.toLowerCase().includes(query);
         const matchesSku = p.sku.toLowerCase().includes(query);
@@ -655,14 +664,14 @@ export default function Header({
       )}
 
       {/* =========================================================================
-          AUTH MODAL (Google / Email)
+          AUTH MODAL (Google / Email) - Portal to Body to avoid any Header blur / clipping
           ========================================================================= */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 sm:p-7 text-white relative shadow-2xl my-auto animate-in fade-in zoom-in-95">
+      {showAuthModal && mounted && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[999999] min-h-[100dvh] w-screen flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 text-white shadow-2xl my-auto animate-in fade-in zoom-in-95">
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1 rounded-xl hover:bg-neutral-800"
+              className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1.5 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -677,8 +686,8 @@ export default function Header({
             </div>
             <div className="space-y-3">
               <button
-                onClick={() => alert("El login con Google se activa con Supabase Auth configurado.")}
-                className="w-full flex items-center justify-center gap-3 p-3 rounded-2xl bg-white hover:bg-neutral-100 text-neutral-950 font-bold text-xs transition-colors"
+                onClick={() => alert("El login con Google se activa con Supabase / Firebase Auth configurado.")}
+                className="w-full flex items-center justify-center gap-3 p-3 rounded-2xl bg-white hover:bg-neutral-100 text-neutral-950 font-bold text-xs transition-colors cursor-pointer shadow-md"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
@@ -690,13 +699,14 @@ export default function Header({
               </button>
               <button
                 onClick={() => alert("El login por correo enviará un Magic Link seguro a tu bandeja.")}
-                className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-colors border border-neutral-700"
+                className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-colors border border-neutral-700 cursor-pointer"
               >
                 Ingresar con Correo Electrónico
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </header>

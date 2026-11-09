@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useStore } from "@/context/StoreContext";
-import { Product, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, HeroBanner, Invoice } from "@/types";
+import { Product, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
 import {
   BarChart3,
   Package,
@@ -43,6 +43,15 @@ export default function AdminPage() {
     addProduct,
     updateProduct,
     deleteProduct,
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    combos,
+    addCombo,
+    updateCombo,
+    deleteCombo,
+    setProductOffer,
     orders,
     addOrder,
     updateOrder,
@@ -104,9 +113,9 @@ export default function AdminPage() {
     } catch {}
   };
 
-  // 2. ACTIVE TABS (Redes sociales eliminada, Anuncios y Facturas agregadas)
+  // 2. ACTIVE TABS (Redes sociales eliminada, Combos, Ofertas, Categorías agregadas)
   const [activeTab, setActiveTab] = useState<
-    "products" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews"
+    "products" | "combos" | "offers" | "categories" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews"
   >("products");
 
   // 3. PRODUCT MODAL WITH LOCAL PC FILE UPLOADS & LIVE PREVIEW
@@ -128,6 +137,11 @@ export default function AdminPage() {
     is_new_arrival: boolean;
     is_limited_edition: boolean;
     is_active: boolean;
+    offer_is_active: boolean;
+    offer_price: number;
+    offer_duration_type: "permanent" | "hours" | "days";
+    offer_duration_value: number;
+    offer_badge_text: string;
     img1: string;
     img2: string;
     img3: string;
@@ -146,6 +160,11 @@ export default function AdminPage() {
     is_new_arrival: true,
     is_limited_edition: false,
     is_active: true,
+    offer_is_active: false,
+    offer_price: 220000,
+    offer_duration_type: "permanent",
+    offer_duration_value: 24,
+    offer_badge_text: "OFERTA RELÁMPAGO",
     img1: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
     img2: "",
     img3: "",
@@ -178,7 +197,7 @@ export default function AdminPage() {
     setProdForm({
       name: "",
       sku: `GR-${Math.floor(100 + Math.random() * 900)}`,
-      category_name: "Cascos",
+      category_name: categories[0]?.name || "Cascos",
       price_retail: 289900,
       price_original: 345000,
       price_wholesale: 220000,
@@ -188,6 +207,11 @@ export default function AdminPage() {
       is_new_arrival: true,
       is_limited_edition: false,
       is_active: true,
+      offer_is_active: false,
+      offer_price: 249900,
+      offer_duration_type: "permanent",
+      offer_duration_value: 24,
+      offer_badge_text: "OFERTA RELÁMPAGO",
       img1: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
       img2: "",
       img3: "",
@@ -202,7 +226,7 @@ export default function AdminPage() {
     setProdForm({
       name: product.name,
       sku: product.sku,
-      category_name: product.category_name || "Cascos",
+      category_name: product.category_name || categories[0]?.name || "Cascos",
       price_retail: product.price_retail,
       price_original: product.price_original || 0,
       price_wholesale: product.price_wholesale || 0,
@@ -212,6 +236,11 @@ export default function AdminPage() {
       is_new_arrival: !!product.is_new_arrival,
       is_limited_edition: !!product.is_limited_edition,
       is_active: product.is_active,
+      offer_is_active: !!product.offer_is_active,
+      offer_price: product.offer_price || product.price_retail,
+      offer_duration_type: product.offer_duration_type || "permanent",
+      offer_duration_value: product.offer_duration_value || 24,
+      offer_badge_text: product.offer_badge_text || "OFERTA RELÁMPAGO",
       img1: product.images?.[0] || "",
       img2: product.images?.[1] || "",
       img3: product.images?.[2] || "",
@@ -227,6 +256,15 @@ export default function AdminPage() {
     const slug = editingProduct
       ? editingProduct.slug
       : prodForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+    let expiresAt: string | undefined = undefined;
+    if (prodForm.offer_is_active) {
+      if (prodForm.offer_duration_type === "hours") {
+        expiresAt = new Date(Date.now() + (prodForm.offer_duration_value || 12) * 3600000).toISOString();
+      } else if (prodForm.offer_duration_type === "days") {
+        expiresAt = new Date(Date.now() + (prodForm.offer_duration_value || 3) * 86400000).toISOString();
+      }
+    }
 
     const productPayload: Product = {
       id: editingProduct ? editingProduct.id : `prod-${Date.now()}`,
@@ -244,6 +282,12 @@ export default function AdminPage() {
       is_limited_edition: prodForm.is_limited_edition,
       is_active: prodForm.is_active,
       is_featured: true,
+      offer_is_active: prodForm.offer_is_active,
+      offer_price: prodForm.offer_price ? Number(prodForm.offer_price) : undefined,
+      offer_duration_type: prodForm.offer_duration_type,
+      offer_duration_value: prodForm.offer_duration_value,
+      offer_expires_at: expiresAt,
+      offer_badge_text: prodForm.offer_badge_text,
       images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80"],
       description: prodForm.description,
       rating: editingProduct?.rating ?? 5.0,
@@ -256,6 +300,158 @@ export default function AdminPage() {
       addProduct(productPayload);
     }
     setIsProductModalOpen(false);
+  };
+
+  // CATEGORIES MANAGEMENT STATE & HANDLERS
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [catForm, setCatForm] = useState<{
+    name: string;
+    slug: string;
+    description: string;
+  }>({
+    name: "",
+    slug: "",
+    description: "",
+  });
+
+  const openNewCategoryModal = () => {
+    setEditingCategory(null);
+    setCatForm({ name: "", slug: "", description: "" });
+    setIsCategoryModalOpen(true);
+  };
+
+  const openEditCategoryModal = (cat: Category) => {
+    setEditingCategory(cat);
+    setCatForm({
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description || "",
+    });
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    const slug = catForm.slug.trim()
+      ? catForm.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      : catForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+    const payload: Category = {
+      id: editingCategory ? editingCategory.id : `cat-${Date.now()}`,
+      name: catForm.name.trim(),
+      slug: slug,
+      description: catForm.description.trim(),
+    };
+
+    if (editingCategory) {
+      updateCategory(payload);
+    } else {
+      addCategory(payload);
+    }
+    setIsCategoryModalOpen(false);
+  };
+
+  // COMBOS & PACKS STATE & HANDLERS
+  const [isComboModalOpen, setIsComboModalOpen] = useState(false);
+  const [editingCombo, setEditingCombo] = useState<ProductCombo | null>(null);
+  const [comboForm, setComboForm] = useState<{
+    name: string;
+    tag: string;
+    description: string;
+    productIds: string[];
+    price: number;
+    isActive: boolean;
+  }>({
+    name: "",
+    tag: "COMBO RUTERO ESPECIAL",
+    description: "",
+    productIds: [],
+    price: 0,
+    isActive: true,
+  });
+
+  const openNewComboModal = () => {
+    setEditingCombo(null);
+    const initialProductIds = products.slice(0, 2).map((p) => p.id);
+    const initialSum = products
+      .filter((p) => initialProductIds.includes(p.id))
+      .reduce((acc, p) => acc + p.price_retail, 0);
+
+    setComboForm({
+      name: "",
+      tag: "COMBO RUTERO ESPECIAL",
+      description: "Equípate con todo el kit necesario para rodar con garantía y descuento oficial.",
+      productIds: initialProductIds,
+      price: Math.round(initialSum * 0.85),
+      isActive: true,
+    });
+    setIsComboModalOpen(true);
+  };
+
+  const openEditComboModal = (combo: ProductCombo) => {
+    setEditingCombo(combo);
+    setComboForm({
+      name: combo.name,
+      tag: combo.tag,
+      description: combo.description,
+      productIds: combo.productIds || [],
+      price: combo.price,
+      isActive: combo.isActive,
+    });
+    setIsComboModalOpen(true);
+  };
+
+  const toggleProductInCombo = (productId: string) => {
+    setComboForm((prev) => {
+      const exists = prev.productIds.includes(productId);
+      const nextIds = exists
+        ? prev.productIds.filter((id) => id !== productId)
+        : [...prev.productIds, productId];
+
+      const newSum = products
+        .filter((p) => nextIds.includes(p.id))
+        .reduce((acc, p) => acc + p.price_retail, 0);
+
+      return {
+        ...prev,
+        productIds: nextIds,
+        price: prev.price === 0 || !exists ? Math.round(newSum * 0.85) : prev.price,
+      };
+    });
+  };
+
+  const handleSaveCombo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (comboForm.productIds.length < 2) {
+      alert("Por favor selecciona al menos 2 productos para armar el combo.");
+      return;
+    }
+
+    const selectedProds = products.filter((p) => comboForm.productIds.includes(p.id));
+    const calculatedSum = selectedProds.reduce((acc, p) => acc + p.price_retail, 0);
+    const savings = Math.max(0, calculatedSum - Number(comboForm.price));
+    const slug = comboForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+    const payload: ProductCombo = {
+      id: editingCombo ? editingCombo.id : `combo-${Date.now()}`,
+      name: comboForm.name.trim(),
+      slug: slug || `combo-${Date.now()}`,
+      tag: comboForm.tag.trim() || "COMBO PROMOCIONAL",
+      description: comboForm.description.trim(),
+      productIds: comboForm.productIds,
+      originalPrice: calculatedSum,
+      price: Number(comboForm.price),
+      savingsAmount: savings,
+      isActive: comboForm.isActive,
+    };
+
+    if (editingCombo) {
+      updateCombo(payload);
+    } else {
+      addCombo(payload);
+    }
+    setIsComboModalOpen(false);
   };
 
   // 4. HERO BANNER / SLIDER ANNOUNCEMENT STATE
@@ -735,7 +931,10 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-3 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-neutral-900">
           {[
             { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
-            { id: "banners", label: "Anuncios & Slider Home", icon: Sparkles, badge: banners.filter((b) => b.isActive).length },
+            { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
+            { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
+            { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
+            { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
             { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
             { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
             { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
@@ -801,11 +1000,11 @@ export default function AdminPage() {
                   className="bg-neutral-900 border border-neutral-800 rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-orange-500 cursor-pointer"
                 >
                   <option value="all">Todas las Categorías</option>
-                  <option value="Cascos">Cascos</option>
-                  <option value="Guantes">Guantes</option>
-                  <option value="Impermeable">Impermeables & Chaquetas</option>
-                  <option value="Protecciones">Protecciones</option>
-                  <option value="Accesorios">Accesorios</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -935,6 +1134,389 @@ export default function AdminPage() {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: COMBOS & PACKS DE AHORRO (NUEVA SECCIÓN PEDIDA)
+            ========================================================================= */}
+        {activeTab === "combos" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">Combos & Packs Promocionales</h3>
+                <p className="text-xs text-neutral-400">
+                  Crea paquetes de 2 o 3 productos con un precio especial y ahorro automático para el comprador.
+                </p>
+              </div>
+              <button
+                onClick={openNewComboModal}
+                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Crear Nuevo Combo</span>
+              </button>
+            </div>
+
+            {combos.length === 0 ? (
+              <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-12 text-center space-y-4">
+                <Sparkles className="w-12 h-12 text-orange-400 mx-auto" />
+                <h4 className="text-base font-bold text-white">No tienes combos activos todavía</h4>
+                <p className="text-xs text-neutral-400 max-w-md mx-auto">
+                  Arma combos combinando por ejemplo un casco + guantes + soporte para incentivar ventas cruzadas.
+                </p>
+                <button
+                  onClick={openNewComboModal}
+                  className="bg-orange-500 text-neutral-950 font-black text-xs px-4 py-2.5 rounded-xl cursor-pointer"
+                >
+                  Crear mi primer combo
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {combos.map((combo) => {
+                  const comboProds = products.filter((p) => (combo.productIds || []).includes(p.id));
+                  const calculatedSum = comboProds.reduce((acc, p) => acc + p.price_retail, 0);
+                  const originalPrice = combo.originalPrice || calculatedSum;
+                  const savings = combo.savingsAmount || Math.max(0, originalPrice - combo.price);
+
+                  return (
+                    <div
+                      key={combo.id}
+                      className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 flex flex-col justify-between space-y-5 shadow-xl hover:border-neutral-700 transition-all"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-black uppercase text-orange-400 bg-orange-500/10 px-2.5 py-0.5 rounded-full border border-orange-500/20">
+                            {combo.tag}
+                          </span>
+                          <button
+                            onClick={() => updateCombo({ ...combo, isActive: !combo.isActive })}
+                            className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full cursor-pointer transition-colors ${
+                              combo.isActive
+                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                : "bg-neutral-800 text-neutral-500 border border-neutral-700"
+                            }`}
+                          >
+                            {combo.isActive ? "Activo en Tienda" : "Pausado"}
+                          </button>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-black text-white uppercase">{combo.name}</h4>
+                          <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">{combo.description}</p>
+                        </div>
+
+                        {/* Included Products Mini List */}
+                        <div className="space-y-2 pt-1">
+                          <span className="text-[10px] font-bold uppercase text-neutral-400 block">
+                            Productos incluidos en el combo ({comboProds.length}):
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {comboProds.map((prod) => (
+                              <div
+                                key={prod.id}
+                                className="flex items-center gap-2.5 bg-neutral-950 border border-neutral-800 rounded-xl p-2"
+                              >
+                                <img
+                                  src={prod.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=100&q=80"}
+                                  alt={prod.name}
+                                  className="w-9 h-9 rounded-lg object-cover bg-neutral-900 border border-neutral-800 shrink-0"
+                                />
+                                <div className="min-w-0">
+                                  <span className="text-[11px] font-bold text-white truncate block">{prod.name}</span>
+                                  <span className="text-[10px] text-neutral-400 font-mono block">
+                                    {formatCOP(prod.price_retail)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Pricing Breakdown */}
+                        <div className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800/80 flex items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[10px] text-neutral-500 line-through font-mono block">
+                              Regular: {formatCOP(originalPrice)}
+                            </span>
+                            <span className="text-lg font-black text-orange-400 font-mono">
+                              {formatCOP(combo.price)}
+                            </span>
+                          </div>
+                          {savings > 0 && (
+                            <div className="text-right">
+                              <span className="text-[10px] text-emerald-400 font-black uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                Ahorro: {formatCOP(savings)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                        <button
+                          onClick={() => openEditComboModal(combo)}
+                          className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                          <span>Editar Combo</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`¿Eliminar combo "${combo.name}"?`)) {
+                              deleteCombo(combo.id);
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: OFERTAS RELÁMPAGO CON DURACIÓN (NUEVA SECCIÓN PEDIDA)
+            ========================================================================= */}
+        {activeTab === "offers" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">Ofertas Relámpago & Cuenta Regresiva</h3>
+                <p className="text-xs text-neutral-400">
+                  Controla qué productos están en oferta, su descuento y duración exacta (horas con reloj regresivo, días o para siempre).
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
+                  <Flame className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-400 uppercase font-bold block">Ofertas Activas</span>
+                  <strong className="text-lg font-black text-white">
+                    {products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-400 uppercase font-bold block">Descuento Promedio</span>
+                  <strong className="text-lg font-black text-emerald-400">
+                    22% OFF
+                  </strong>
+                </div>
+              </div>
+
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-400 uppercase font-bold block">Visibilidad en Home</span>
+                  <strong className="text-lg font-black text-white">
+                    Carrusel Activo
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Offers Table */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-neutral-950 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-400">
+                    <tr>
+                      <th className="p-4">Producto en Oferta</th>
+                      <th className="p-4">Precio Regular</th>
+                      <th className="p-4">Precio Oferta</th>
+                      <th className="p-4">Descuento</th>
+                      <th className="p-4">Duración</th>
+                      <th className="p-4">Estado</th>
+                      <th className="p-4 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-800">
+                    {products.map((prod) => {
+                      const hasOffer = prod.offer_is_active || (prod.price_original && prod.price_original > prod.price_retail);
+                      const regularPrice = prod.price_original || prod.price_retail;
+                      const offerPrice = prod.offer_price || prod.price_retail;
+                      const discountPct = regularPrice > offerPrice ? Math.round(((regularPrice - offerPrice) / regularPrice) * 100) : 0;
+
+                      return (
+                        <tr key={prod.id} className="hover:bg-neutral-800/40 transition-colors">
+                          <td className="p-4 flex items-center gap-3 min-w-[200px]">
+                            <img
+                              src={prod.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=100&q=80"}
+                              alt={prod.name}
+                              className="w-10 h-10 rounded-xl object-cover bg-neutral-950 border border-neutral-800 shrink-0"
+                            />
+                            <div>
+                              <strong className="font-bold text-white block truncate max-w-[200px]">{prod.name}</strong>
+                              <span className="text-[10px] text-neutral-400 font-mono">{prod.sku} • {prod.category_name}</span>
+                            </div>
+                          </td>
+
+                          <td className="p-4 font-mono text-neutral-400">
+                            {formatCOP(regularPrice)}
+                          </td>
+
+                          <td className="p-4 font-mono font-bold text-orange-400">
+                            {formatCOP(offerPrice)}
+                          </td>
+
+                          <td className="p-4">
+                            {discountPct > 0 ? (
+                              <span className="text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                {discountPct}% OFF
+                              </span>
+                            ) : (
+                              <span className="text-neutral-500 text-[10px]">-</span>
+                            )}
+                          </td>
+
+                          <td className="p-4 text-neutral-300">
+                            {prod.offer_duration_type === "permanent" ? (
+                              <span className="text-neutral-300 font-medium">Permanente (Sin expiración)</span>
+                            ) : prod.offer_duration_type === "hours" ? (
+                              <span className="text-amber-400 font-bold flex items-center gap-1">
+                                <span>{prod.offer_duration_value || 12} horas (Reloj activo)</span>
+                              </span>
+                            ) : prod.offer_duration_type === "days" ? (
+                              <span className="text-purple-400 font-bold">
+                                {prod.offer_duration_value || 3} días
+                              </span>
+                            ) : (
+                              <span className="text-neutral-500">No definida</span>
+                            )}
+                          </td>
+
+                          <td className="p-4">
+                            <button
+                              onClick={() => {
+                                setProductOffer(prod.id, {
+                                  isActive: !hasOffer,
+                                  price: prod.offer_price || prod.price_retail,
+                                  durationType: prod.offer_duration_type || "permanent",
+                                  durationValue: prod.offer_duration_value || 24,
+                                });
+                              }}
+                              className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full cursor-pointer transition-all ${
+                                hasOffer
+                                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
+                                  : "bg-neutral-800 text-neutral-500 border border-neutral-700"
+                              }`}
+                            >
+                              {hasOffer ? "Oferta Activa" : "Sin Oferta"}
+                            </button>
+                          </td>
+
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => openEditProductModal(prod)}
+                              className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              Configurar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB: GESTIÓN DE CATEGORÍAS (NUEVA SECCIÓN PEDIDA)
+            ========================================================================= */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">Categorías de la Tienda</h3>
+                <p className="text-xs text-neutral-400">
+                  Crea y administra las categorías oficiales de Gordo Ryders. Todos los productos y menús se sincronizan con esta lista.
+                </p>
+              </div>
+              <button
+                onClick={openNewCategoryModal}
+                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Crear Nueva Categoría</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((cat) => {
+                const linkedProducts = products.filter(
+                  (p) =>
+                    p.category_name?.toLowerCase() === cat.name.toLowerCase() ||
+                    p.category_id?.toLowerCase() === cat.slug?.toLowerCase()
+                );
+
+                return (
+                  <div
+                    key={cat.id}
+                    className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 flex flex-col justify-between space-y-4 shadow-xl hover:border-neutral-700 transition-all"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-[10px] font-mono font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
+                          /{cat.slug}
+                        </span>
+                        <span className="text-[11px] font-bold text-neutral-400">
+                          {linkedProducts.length} productos
+                        </span>
+                      </div>
+                      <h4 className="text-base font-black text-white uppercase">{cat.name}</h4>
+                      <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                        {cat.description || "Categoría oficial de repuestos y equipamiento motero."}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                      <button
+                        onClick={() => openEditCategoryModal(cat)}
+                        className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                        <span>Editar</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Eliminar categoría "${cat.name}"?`)) {
+                            deleteCategory(cat.id);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -2621,6 +3203,272 @@ export default function AdminPage() {
                 </button>
                 <button type="submit" className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black uppercase">
                   Guardar Envío
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CREAR / EDITAR CATEGORÍA
+          ========================================================================= */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-6 my-auto animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <h3 className="text-base font-black uppercase text-white">
+                {editingCategory ? "Editar Categoría" : "Nueva Categoría Oficial"}
+              </h3>
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Nombre de la Categoría
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={catForm.name}
+                  onChange={(e) => setCatForm({ ...catForm, name: e.target.value })}
+                  placeholder="Ej: Intercomunicadores & Audio"
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Slug / URL Amigable
+                </label>
+                <input
+                  type="text"
+                  value={catForm.slug}
+                  onChange={(e) => setCatForm({ ...catForm, slug: e.target.value })}
+                  placeholder="Ej: intercomunicadores (opcional, se autogenera)"
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Descripción
+                </label>
+                <textarea
+                  rows={2}
+                  value={catForm.description}
+                  onChange={(e) => setCatForm({ ...catForm, description: e.target.value })}
+                  placeholder="Descripción corta para filtros y posicionamiento..."
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase"
+                >
+                  {editingCategory ? "Guardar Cambios" : "Crear Categoría"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CREAR / EDITAR COMBO PROMOCIONAL (CON SELECTOR DE PRODUCTOS)
+          ========================================================================= */}
+      {isComboModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 shadow-2xl space-y-6 my-auto animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <div>
+                <h3 className="text-base font-black uppercase text-white">
+                  {editingCombo ? "Editar Combo Promocional" : "Crear Nuevo Combo de Equipamiento"}
+                </h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Selecciona los productos a incluir y define el precio con descuento.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsComboModalOpen(false)}
+                className="p-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCombo} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                    Nombre del Combo
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={comboForm.name}
+                    onChange={(e) => setComboForm({ ...comboForm, name: e.target.value })}
+                    placeholder="Ej: Combo Rutero Urbano 2026"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                    Etiqueta / Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={comboForm.tag}
+                    onChange={(e) => setComboForm({ ...comboForm, tag: e.target.value })}
+                    placeholder="Ej: COMBO RUTERO ESPECIAL"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-xs text-white uppercase font-bold focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                  Descripción del Combo
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={comboForm.description}
+                  onChange={(e) => setComboForm({ ...comboForm, description: e.target.value })}
+                  placeholder="Explica qué incluye y los beneficios de comprar este combo completo..."
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500"
+                />
+              </div>
+
+              {/* PRODUCT SELECTOR WITH CHECKBOXES */}
+              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider">
+                    Selecciona los productos para este combo ({comboForm.productIds.length} seleccionados):
+                  </label>
+                  <span className="text-[11px] font-mono text-orange-400 font-bold">
+                    Mínimo 2 productos
+                  </span>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-neutral-700">
+                  {products.map((p) => {
+                    const isSelected = comboForm.productIds.includes(p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => toggleProductInCombo(p.id)}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-orange-500/10 border-orange-500/40 text-white"
+                            : "bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}} // handled by parent onClick
+                            className="w-4 h-4 accent-orange-500 rounded"
+                          />
+                          <img
+                            src={p.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=100&q=80"}
+                            alt={p.name}
+                            className="w-9 h-9 rounded-lg object-cover bg-neutral-950 border border-neutral-800 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <span className="text-xs font-bold block truncate max-w-[280px]">{p.name}</span>
+                            <span className="text-[10px] text-neutral-400 font-mono">{p.category_name} • {p.sku}</span>
+                          </div>
+                        </div>
+
+                        <span className="text-xs font-mono font-bold text-white shrink-0">
+                          {formatCOP(p.price_retail)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Subtotal preview */}
+                {(() => {
+                  const selProds = products.filter((p) => comboForm.productIds.includes(p.id));
+                  const sum = selProds.reduce((acc, p) => acc + p.price_retail, 0);
+                  const savings = Math.max(0, sum - Number(comboForm.price || 0));
+
+                  return (
+                    <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between text-xs">
+                      <span className="text-neutral-400">
+                        Suma individual: <strong className="text-white font-mono">{formatCOP(sum)}</strong>
+                      </span>
+                      {comboForm.price > 0 && sum > comboForm.price && (
+                        <span className="text-emerald-400 font-black">
+                          Ahorro calculado: {formatCOP(savings)} ({Math.round((savings / sum) * 100)}% OFF)
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Combo Price */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                    Precio Promocional del Combo (COP)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={comboForm.price}
+                    onChange={(e) => setComboForm({ ...comboForm, price: Number(e.target.value) })}
+                    placeholder="Ej: 389900"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono font-bold focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-300">
+                    <input
+                      type="checkbox"
+                      checked={comboForm.isActive}
+                      onChange={(e) => setComboForm({ ...comboForm, isActive: e.target.checked })}
+                      className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+                    />
+                    <span>Activar combo inmediatamente en la tienda</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsComboModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase"
+                >
+                  {editingCombo ? "Actualizar Combo" : "Guardar Combo"}
                 </button>
               </div>
             </form>

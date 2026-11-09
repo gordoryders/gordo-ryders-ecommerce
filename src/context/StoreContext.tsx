@@ -1,8 +1,98 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice } from "@/types";
+import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
 import { PRODUCTS, LOOKBOOK_ALBUMS } from "@/data/products";
+
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: "cat-cascos",
+    name: "Cascos",
+    slug: "cascos",
+    description: "Cascos integrales, abatibles y cross homologados ECE 22.06 y DOT",
+    icon: "Shield",
+  },
+  {
+    id: "cat-guantes",
+    name: "Guantes",
+    slug: "guantes",
+    description: "Guantes de protección urbana y pista con tecnología touch screen",
+    icon: "Hand",
+  },
+  {
+    id: "cat-impermeables",
+    name: "Impermeables",
+    slug: "impermeables",
+    description: "Trajes 100% siliconados termosellados de alta resistencia",
+    icon: "CloudRain",
+  },
+  {
+    id: "cat-protecciones",
+    name: "Protecciones",
+    slug: "protecciones",
+    description: "Rodilleras, coderas articuladas de acero y petos",
+    icon: "ShieldCheck",
+  },
+  {
+    id: "cat-chaquetas",
+    name: "Chaquetas",
+    slug: "chaquetas",
+    description: "Chaquetas térmicas y de protección con insertos CE Nivel 2",
+    icon: "Flame",
+  },
+  {
+    id: "cat-accesorios",
+    name: "Accesorios",
+    slug: "accesorios",
+    description: "Soportes portacelular antivibración CNC, candados y sliders",
+    icon: "Smartphone",
+  },
+];
+
+const DEFAULT_COMBOS: ProductCombo[] = [
+  {
+    id: "combo-1",
+    name: "Combo Rutero Urbano 2026",
+    slug: "combo-rutero-urbano",
+    tag: "COMBO RUTERO ESPECIAL",
+    badgeColor: "orange",
+    description: "Casco Shaft Pro 582 ECE 22.06 + Guantes Proviker Ref E44 con touch screen + Soporte CNC antivibración para smartphone.",
+    productIds: ["p-1", "p-2", "p-5"],
+    originalPrice: 439900,
+    price: 389900,
+    savingsAmount: 50000,
+    image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80",
+    isActive: true,
+  },
+  {
+    id: "combo-2",
+    name: "Combo Lluvia Extrema Náutico",
+    slug: "combo-lluvia-extrema",
+    tag: "AHORRA $35.000 COP",
+    badgeColor: "emerald",
+    description: "Impermeable Enterizo 100% Siliconado con tula hermética + Guantes Proviker Protección Urbana.",
+    productIds: ["p-3", "p-2"],
+    originalPrice: 204000,
+    price: 169000,
+    savingsAmount: 35000,
+    image: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1200&q=80",
+    isActive: true,
+  },
+  {
+    id: "combo-3",
+    name: "Pack Protección Total Pista",
+    slug: "pack-proteccion-total",
+    tag: "EDICIÓN BLINDADA",
+    badgeColor: "red",
+    description: "Chaqueta Térmica con Protecciones CE Nivel 2 + Kit de Rodilleras y Coderas Articuladas en Acero Reforzado.",
+    productIds: ["p-4", "p-6"],
+    originalPrice: 323000,
+    price: 269000,
+    savingsAmount: 54000,
+    image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80",
+    isActive: true,
+  },
+];
 
 const DEFAULT_BANNERS: HeroBanner[] = [
   {
@@ -342,6 +432,31 @@ interface StoreContextType {
   updateBanner: (banner: HeroBanner) => void;
   deleteBanner: (id: string) => void;
 
+  // Categories (Admin Synced)
+  categories: Category[];
+  addCategory: (category: Category) => void;
+  updateCategory: (category: Category) => void;
+  deleteCategory: (id: string) => void;
+
+  // Combos & Packs (Admin Synced)
+  combos: ProductCombo[];
+  addCombo: (combo: ProductCombo) => void;
+  updateCombo: (combo: ProductCombo) => void;
+  deleteCombo: (id: string) => void;
+
+  // Product Offers Helper
+  setProductOffer: (
+    productId: string,
+    offer: {
+      isActive: boolean;
+      price: number;
+      durationType: "permanent" | "hours" | "days";
+      durationValue?: number;
+      expiresAt?: string;
+      badgeText?: string;
+    }
+  ) => void;
+
   // Invoices & Official Bills (Admin Synced)
   invoices: Invoice[];
   addInvoice: (invoice: Invoice) => void;
@@ -375,6 +490,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
   const [banners, setBanners] = useState<HeroBanner[]>(DEFAULT_BANNERS);
   const [invoices, setInvoices] = useState<Invoice[]>(DEFAULT_INVOICES);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [combos, setCombos] = useState<ProductCombo[]>(DEFAULT_COMBOS);
   const [whatsappClicks, setWhatsappClicks] = useState<number>(38);
   const [productViews, setProductViews] = useState<number>(342);
 
@@ -410,6 +527,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       const savedInvoices = localStorage.getItem("gr_admin_invoices");
       if (savedInvoices) setInvoices(JSON.parse(savedInvoices));
+
+      const savedCategories = localStorage.getItem("gr_admin_categories");
+      if (savedCategories) setCategories(JSON.parse(savedCategories));
+
+      const savedCombos = localStorage.getItem("gr_admin_combos");
+      if (savedCombos) setCombos(JSON.parse(savedCombos));
 
       const savedClicks = localStorage.getItem("gr_wa_clicks");
       if (savedClicks) setWhatsappClicks(Number(savedClicks));
@@ -706,6 +829,100 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return invoices.find((inv) => inv.invoiceNumber.toUpperCase() === clean);
   };
 
+  // Categories Operations
+  const addCategory = (newCat: Category) => {
+    setCategories((prev) => {
+      const updated = [...prev, newCat];
+      try {
+        localStorage.setItem("gr_admin_categories", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const updateCategory = (updatedCat: Category) => {
+    setCategories((prev) => {
+      const updated = prev.map((c) => (c.id === updatedCat.id ? updatedCat : c));
+      try {
+        localStorage.setItem("gr_admin_categories", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteCategory = (id: string) => {
+    setCategories((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      try {
+        localStorage.setItem("gr_admin_categories", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  // Combos Operations
+  const addCombo = (newCombo: ProductCombo) => {
+    setCombos((prev) => {
+      const updated = [newCombo, ...prev];
+      try {
+        localStorage.setItem("gr_admin_combos", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const updateCombo = (updatedCombo: ProductCombo) => {
+    setCombos((prev) => {
+      const updated = prev.map((c) => (c.id === updatedCombo.id ? updatedCombo : c));
+      try {
+        localStorage.setItem("gr_admin_combos", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteCombo = (id: string) => {
+    setCombos((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      try {
+        localStorage.setItem("gr_admin_combos", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  // Product Offer Helper
+  const setProductOffer = (
+    productId: string,
+    offer: {
+      isActive: boolean;
+      price: number;
+      durationType: "permanent" | "hours" | "days";
+      durationValue?: number;
+      expiresAt?: string;
+      badgeText?: string;
+    }
+  ) => {
+    setProducts((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id !== productId) return p;
+        return {
+          ...p,
+          offer_is_active: offer.isActive,
+          offer_price: offer.price,
+          offer_duration_type: offer.durationType,
+          offer_duration_value: offer.durationValue,
+          offer_expires_at: offer.expiresAt,
+          offer_badge_text: offer.badgeText || (offer.isActive ? "OFERTA RELÁMPAGO" : undefined),
+        };
+      });
+      try {
+        localStorage.setItem("gr_admin_products", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   // Analytics Operations
   const trackWhatsAppClick = () => {
     setWhatsappClicks((prev) => {
@@ -778,6 +995,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addBanner,
         updateBanner,
         deleteBanner,
+        categories,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        combos,
+        addCombo,
+        updateCombo,
+        deleteCombo,
+        setProductOffer,
         invoices,
         addInvoice,
         updateInvoice,

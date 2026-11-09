@@ -4,6 +4,8 @@ export interface Category {
   slug: string;
   description?: string;
   icon?: string;
+  image?: string;
+  productCount?: number;
 }
 
 export interface ProductVariant {
@@ -36,6 +38,12 @@ export interface Product {
   is_new_arrival?: boolean;
   is_limited_edition?: boolean;
   stock?: number;
+  offer_is_active?: boolean;
+  offer_price?: number;
+  offer_duration_type?: "permanent" | "hours" | "days";
+  offer_duration_value?: number;
+  offer_expires_at?: string;
+  offer_badge_text?: string;
 }
 
 export interface CartItem {
@@ -83,6 +91,21 @@ export interface HeroBanner {
   secondaryLink?: string;
   bgImage: string;
   accentColor?: string;
+  isActive: boolean;
+}
+
+export interface ProductCombo {
+  id: string;
+  name: string;
+  slug: string;
+  tag: string;
+  badgeColor?: "orange" | "red" | "emerald" | "purple";
+  description: string;
+  productIds: string[];
+  price: number;
+  originalPrice: number;
+  savingsAmount: number;
+  image?: string;
   isActive: boolean;
 }
 
