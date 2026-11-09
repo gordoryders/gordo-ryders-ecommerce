@@ -658,8 +658,8 @@ export default function Header({
           AUTH MODAL (Google / Email)
           ========================================================================= */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 text-white relative shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 sm:p-7 text-white relative shadow-2xl my-auto animate-in fade-in zoom-in-95">
             <button
               onClick={() => setShowAuthModal(false)}
               className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1 rounded-xl hover:bg-neutral-800"

@@ -2,66 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useStore } from "@/context/StoreContext";
 import { ChevronLeft, ChevronRight, ArrowRight, ShieldCheck, CreditCard, Truck, MessageCircle } from "lucide-react";
 
-interface Slide {
-  id: number;
-  tag: string;
-  title: string;
-  highlight: string;
-  subtitle: string;
-  buttonText: string;
-  buttonLink: string;
-  secondaryText?: string;
-  secondaryLink?: string;
-  bgImage: string;
-  accentColor: string;
-}
-
 export default function HeroSlider() {
+  const { banners } = useStore();
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const slides: Slide[] = [
-    {
-      id: 1,
-      tag: "OFERTA RELÁMPAGO • HASTA AGOTAR STOCK",
-      title: "CASCOS CERTIFICADOS",
-      highlight: "HASTA 35% OFF",
-      subtitle: "Homologación internacional DOT y ECE 22.06. Calotas de policarbonato reforzado y visor anti-scratch.",
-      buttonText: "VER CASCOS EN OFERTA",
-      buttonLink: "#catalogo",
-      secondaryText: "Cotizar por WhatsApp",
-      secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20cotizar%20cascos%20en%20oferta",
-      bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
-      accentColor: "from-orange-600 via-amber-500 to-yellow-500",
-    },
-    {
-      id: 2,
-      tag: "LÍNEA OFICIAL PROVIKER 2026",
-      title: "GUANTES URBANOS",
-      highlight: "PROTECCIÓN Y CONFORT",
-      subtitle: "Palma antideslizante con shock-absorber, protecciones rígidas en nudillos y dedos compatibles con pantalla táctil.",
-      buttonText: "EXPLORAR GUANTES",
-      buttonLink: "#catalogo",
-      secondaryText: "Ver Ref E44",
-      secondaryLink: "#catalogo",
-      bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80",
-      accentColor: "from-amber-500 via-orange-500 to-red-500",
-    },
-    {
-      id: 3,
-      tag: "CANAL MAYORISTA PARA ALMACENES Y TALLERES",
-      title: "PRECIOS DE DISTRIBUIDOR",
-      highlight: "DESDE 6 UNIDADES",
-      subtitle: "Suministro constante con más de 300 referencias listas para despacho inmediato en toda Colombia.",
-      buttonText: "SOLICITAR CATÁLOGO MAYORISTA",
-      buttonLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20completo",
-      bgImage: "https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=1920&q=80",
-      accentColor: "from-emerald-500 via-teal-400 to-cyan-400",
-    },
-  ];
+  const activeSlides = banners.filter((b) => b.isActive);
+  const slides = activeSlides.length > 0 ? activeSlides : banners;
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);

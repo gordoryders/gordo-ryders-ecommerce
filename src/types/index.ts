@@ -71,6 +71,50 @@ export interface Order {
   productsSummary: string;
 }
 
+export interface HeroBanner {
+  id: string;
+  tag: string;
+  title: string;
+  highlight: string;
+  subtitle: string;
+  buttonText: string;
+  buttonLink: string;
+  secondaryText?: string;
+  secondaryLink?: string;
+  bgImage: string;
+  accentColor?: string;
+  isActive: boolean;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  orderId?: string;
+  date: string;
+  customerName: string;
+  customerNitOrCedula: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerCity: string;
+  customerAddress?: string;
+  carrier: string;
+  guideNumber: string;
+  items: {
+    productName: string;
+    sku: string;
+    size?: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+  }[];
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  paymentMethod: "Wompi (Bancolombia)" | "Mercado Pago" | "PSE / Nequi" | "Transferencia Directa";
+  paymentStatus: "pagado" | "pendiente" | "anulado";
+}
+
 export interface CustomerUser {
   id: string;
   name: string;
@@ -78,11 +122,14 @@ export interface CustomerUser {
   phone: string;
   city: string;
   type: "detal" | "mayorista";
+  authProvider?: "Google Workspace" | "Correo / Magic Link";
+  avatarUrl?: string;
   ordersCount: number;
   totalSpent: number;
   registrationDate: string;
   status: "activo" | "verificado" | "bloqueado";
   notes?: string;
+  recentOrders?: string[];
 }
 
 export interface WholesaleInquiry {

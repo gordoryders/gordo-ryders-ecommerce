@@ -2,22 +2,31 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useStore } from "@/context/StoreContext";
 import { Sparkles, ArrowRight, Eye, ShieldCheck, ShoppingCart, Package, X, CheckCircle2 } from "lucide-react";
-import { LOOKBOOK_ALBUMS, getProductBySlug } from "@/data/products";
-import { LookbookAlbum } from "@/types";
+import { LOOKBOOK_ALBUMS } from "@/data/products";
+import { LookbookAlbum, Product } from "@/types";
 
 interface LookbookCollageProps {
   albums?: LookbookAlbum[];
 }
 
-export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCollageProps) {
+export default function LookbookCollage({ albums: propAlbums }: LookbookCollageProps) {
+  const { albums: storeAlbums, products } = useStore();
+  const albums = propAlbums || storeAlbums || LOOKBOOK_ALBUMS;
+
   const [activeAlbumIndex, setActiveAlbumIndex] = useState(0);
   const [isBoxModalOpen, setIsBoxModalOpen] = useState(false);
   const currentAlbum = albums[activeAlbumIndex] || albums[0];
 
-  const featuredProducts = currentAlbum.productSlugs
-    .map((slug) => getProductBySlug(slug))
-    .filter(Boolean);
+  // Resolve products from live store products by slug or id
+  const featuredProducts: Product[] = (currentAlbum.productSlugs || [])
+    .map((identifier) =>
+      products.find(
+        (p) => p.slug === identifier || p.id === identifier || p.name.toLowerCase().includes(identifier.toLowerCase())
+      )
+    )
+    .filter(Boolean) as Product[];
 
   const formatCOP = (amount: number) => {
     return new Intl.NumberFormat("es-CO", {
@@ -42,13 +51,13 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">
               <Sparkles className="w-4 h-4 text-orange-500" />
-              <span>Kits & Cajas de Equipamiento 2026</span>
+              <span>Mini-Álbumes & Lookbooks 2026</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight">
               Equípate por Líneas de Ruta
             </h2>
             <p className="text-xs text-neutral-400 mt-1">
-              Cada lookbook es una caja de protección completa. Ábrela para explorar los productos de la combinación o verlos en detalle.
+              Collages fotográficos con productos reales seleccionados. Haz clic en el collage para abrir la caja y ver cada ítem.
             </p>
           </div>
 
@@ -70,50 +79,74 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
           </div>
         </div>
 
-        {/* Collage Display Grid */}
+        {/* Real Mosaic Collage Grid (Inspired by multi-photo Pinterest/Lookbook style) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
-          {/* Main Hero Shot (7 cols) */}
-          <div className="lg:col-span-7 relative rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl min-h-[340px] sm:min-h-[420px] group flex flex-col justify-end p-6 sm:p-8">
-            <img
-              src={currentAlbum.coverImage}
-              alt={currentAlbum.title}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-transparent" />
-
-            <div className="relative z-10 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/15 border border-orange-500/30 px-3 py-1 rounded-full shadow">
-                  {currentAlbum.tag}
-                </span>
-                <span className="text-xs text-neutral-300 font-semibold">• {currentAlbum.subtitle}</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
-                {currentAlbum.title}
-              </h3>
-              <p className="text-xs text-neutral-300 max-w-lg leading-relaxed">
-                {currentAlbum.description}
-              </p>
-
-              {/* Botón Abrir Caja */}
-              <div className="pt-2">
-                <button
-                  onClick={() => setIsBoxModalOpen(true)}
-                  className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs uppercase px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
-                >
-                  <Package className="w-4 h-4" />
-                  <span>Abrir Caja de este Kit ({featuredProducts.length} productos)</span>
-                </button>
-              </div>
+          {/* Main 4-Photo Mosaic Collage (7 cols) */}
+          <div className="lg:col-span-7 relative rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl min-h-[380px] sm:min-h-[440px] group flex flex-col justify-between bg-neutral-900">
+            
+            {/* 4-Photo Quadrant Grid */}
+            <div className="grid grid-cols-2 gap-1.5 p-1.5 flex-1 min-h-[320px]">
+              {featuredProducts.length >= 4 ? (
+                featuredProducts.slice(0, 4).map((p, idx) => (
+                  <div
+                    key={p.id || idx}
+                    onClick={() => setIsBoxModalOpen(true)}
+                    className="relative overflow-hidden rounded-2xl bg-neutral-950 cursor-pointer group/quadrant min-h-[150px] sm:min-h-[190px]"
+                  >
+                    <img
+                      src={p.images?.[0] || currentAlbum.coverImage}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover/quadrant:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px]">
+                      <span className="font-bold text-white line-clamp-1 bg-neutral-950/80 px-2 py-0.5 rounded backdrop-blur-sm">
+                        {p.name}
+                      </span>
+                      <span className="font-mono font-bold text-orange-400 bg-neutral-950/90 px-1.5 py-0.5 rounded">
+                        {formatCOP(p.price_retail)}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-2 relative h-full min-h-[300px] rounded-2xl overflow-hidden">
+                  <img src={currentAlbum.coverImage} alt={currentAlbum.title} className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
+
+            {/* Bottom Bar on Collage with Kit Info and Open Button */}
+            <div className="p-4 sm:p-5 bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-neutral-950/40 border-t border-neutral-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 rounded-full shadow">
+                    {currentAlbum.tag}
+                  </span>
+                  <span className="text-xs text-neutral-300 font-semibold">• {currentAlbum.subtitle}</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight">
+                  {currentAlbum.title}
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setIsBoxModalOpen(true)}
+                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs uppercase px-4 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Package className="w-4 h-4" />
+                <span>Abrir Caja ({featuredProducts.length} Productos)</span>
+              </button>
+            </div>
+
           </div>
 
           {/* Right Product Grid in this Album (5 cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between gap-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-                Productos dentro de esta caja:
+                Productos dentro de este collage:
               </span>
               <button
                 onClick={() => setIsBoxModalOpen(true)}
@@ -136,7 +169,7 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
-                        src={p.images[0]}
+                        src={p.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80"}
                         alt={p.name}
                         className="w-14 h-14 rounded-xl object-cover bg-neutral-950 border border-neutral-800 shrink-0"
                       />
@@ -163,7 +196,6 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
               })}
             </div>
 
-            {/* Quick action wholesale / catalog link */}
             <div className="pt-2">
               <button
                 onClick={() => setIsBoxModalOpen(true)}
@@ -226,7 +258,7 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
                     >
                       <div className="flex items-start gap-3">
                         <img
-                          src={prod.images[0]}
+                          src={prod.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80"}
                           alt={prod.name}
                           className="w-20 h-20 rounded-xl object-cover bg-neutral-900 border border-neutral-800 shrink-0"
                         />

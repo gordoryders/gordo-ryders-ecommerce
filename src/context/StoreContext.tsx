@@ -1,8 +1,144 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings } from "@/types";
+import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice } from "@/types";
 import { PRODUCTS, LOOKBOOK_ALBUMS } from "@/data/products";
+
+const DEFAULT_BANNERS: HeroBanner[] = [
+  {
+    id: "banner-1",
+    tag: "OFERTA RELÁMPAGO • HASTA AGOTAR STOCK",
+    title: "CASCOS CERTIFICADOS",
+    highlight: "HASTA 35% OFF",
+    subtitle: "Homologación internacional DOT y ECE 22.06. Calotas de policarbonato reforzado y visor anti-scratch.",
+    buttonText: "VER CASCOS EN OFERTA",
+    buttonLink: "#catalogo",
+    secondaryText: "Cotizar por WhatsApp",
+    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20cotizar%20cascos%20en%20oferta",
+    bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-orange-600 via-amber-500 to-yellow-500",
+    isActive: true,
+  },
+  {
+    id: "banner-2",
+    tag: "LÍNEA OFICIAL PROVIKER 2026",
+    title: "GUANTES URBANOS",
+    highlight: "PROTECCIÓN Y CONFORT",
+    subtitle: "Palma antideslizante con shock-absorber, protecciones rígidas en nudillos y dedos compatibles con pantalla táctil.",
+    buttonText: "EXPLORAR GUANTES",
+    buttonLink: "#catalogo",
+    secondaryText: "Ver Ref E44",
+    secondaryLink: "#catalogo",
+    bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-amber-500 via-orange-500 to-red-500",
+    isActive: true,
+  },
+  {
+    id: "banner-3",
+    tag: "CANAL MAYORISTA PARA ALMACENES Y TALLERES",
+    title: "PRECIOS DE DISTRIBUIDOR",
+    highlight: "DESDE 6 UNIDADES",
+    subtitle: "Suministro constante con más de 300 referencias listas para despacho inmediato en toda Colombia.",
+    buttonText: "SOLICITAR CATÁLOGO MAYORISTA",
+    buttonLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20completo",
+    bgImage: "https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-emerald-500 via-teal-400 to-cyan-400",
+    isActive: true,
+  },
+];
+
+const DEFAULT_INVOICES: Invoice[] = [
+  {
+    id: "inv-1",
+    invoiceNumber: "FACT-GR-2026-00124",
+    orderId: "ord-1",
+    date: "08 Nov 2026, 09:30 AM",
+    customerName: "Carlos Mario Restrepo",
+    customerNitOrCedula: "1.037.492.180",
+    customerPhone: "3104567890",
+    customerEmail: "carlos.mario@gmail.com",
+    customerCity: "Medellín, Antioquia",
+    customerAddress: "Calle 10 # 43E-20, El Poblado",
+    carrier: "Inter Rapidísimo",
+    guideNumber: "INT-7009482",
+    items: [
+      {
+        productName: "Guantes Urbanos Proviker Ref E44",
+        sku: "G-PROV-E44",
+        size: "L",
+        quantity: 2,
+        unitPrice: 85000,
+        subtotal: 170000,
+      },
+    ],
+    subtotal: 170000,
+    shippingCost: 0,
+    tax: 0,
+    total: 170000,
+    paymentMethod: "Wompi (Bancolombia)",
+    paymentStatus: "pagado",
+  },
+  {
+    id: "inv-2",
+    invoiceNumber: "FACT-GR-2026-00125",
+    orderId: "ord-2",
+    date: "07 Nov 2026, 03:15 PM",
+    customerName: "Alejandro Gómez",
+    customerNitOrCedula: "14.892.301",
+    customerPhone: "3158901234",
+    customerEmail: "alejandro.gomez@gmail.com",
+    customerCity: "Cali, Valle",
+    customerAddress: "Avenida 6N # 24-18, Granada",
+    carrier: "Servientrega",
+    guideNumber: "SER-8849201",
+    items: [
+      {
+        productName: "Casco Integral Shaft Pro 582 Certificado ECE 22.06",
+        sku: "C-SHAFT-582",
+        size: "M",
+        quantity: 1,
+        unitPrice: 289900,
+        subtotal: 289900,
+      },
+    ],
+    subtotal: 289900,
+    shippingCost: 0,
+    tax: 0,
+    total: 289900,
+    paymentMethod: "PSE / Nequi",
+    paymentStatus: "pagado",
+  },
+  {
+    id: "inv-3",
+    invoiceNumber: "FACT-GR-2026-00126",
+    orderId: "ord-3",
+    date: "08 Nov 2026, 10:45 AM",
+    customerName: "Almacén Motos El Diamante (B2B)",
+    customerNitOrCedula: "900.849.201-4",
+    customerPhone: "3209876543",
+    customerEmail: "compras@motoseldiamante.com",
+    customerCity: "Barranquilla, Atlántico",
+    customerAddress: "Calle 30 # 41-15, Centro",
+    carrier: "Envia",
+    guideNumber: "ENV-4592018",
+    items: [
+      {
+        productName: "Lote Mayorista 12x Guantes Proviker Ref E44",
+        sku: "G-PROV-E44-B2B",
+        size: "Surtido",
+        quantity: 12,
+        unitPrice: 55000,
+        subtotal: 660000,
+      },
+    ],
+    subtotal: 660000,
+    shippingCost: 0,
+    tax: 0,
+    total: 660000,
+    paymentMethod: "Transferencia Directa",
+    paymentStatus: "pagado",
+  },
+];
 
 const DEFAULT_USERS: CustomerUser[] = [
   {
@@ -200,6 +336,19 @@ interface StoreContextType {
   settings: StoreSettings;
   updateSettings: (settings: StoreSettings) => void;
 
+  // Hero Banners / Slider Announcements (Admin Synced)
+  banners: HeroBanner[];
+  addBanner: (banner: HeroBanner) => void;
+  updateBanner: (banner: HeroBanner) => void;
+  deleteBanner: (id: string) => void;
+
+  // Invoices & Official Bills (Admin Synced)
+  invoices: Invoice[];
+  addInvoice: (invoice: Invoice) => void;
+  updateInvoice: (invoice: Invoice) => void;
+  deleteInvoice: (id: string) => void;
+  getInvoiceByNumber: (invoiceNumber: string) => Invoice | undefined;
+
   // Analytics
   whatsappClicks: number;
   trackWhatsAppClick: (label?: string) => void;
@@ -224,6 +373,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<CustomerUser[]>(DEFAULT_USERS);
   const [wholesaleInquiries, setWholesaleInquiries] = useState<WholesaleInquiry[]>(DEFAULT_WHOLESALE_INQUIRIES);
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
+  const [banners, setBanners] = useState<HeroBanner[]>(DEFAULT_BANNERS);
+  const [invoices, setInvoices] = useState<Invoice[]>(DEFAULT_INVOICES);
   const [whatsappClicks, setWhatsappClicks] = useState<number>(38);
   const [productViews, setProductViews] = useState<number>(342);
 
@@ -253,6 +404,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       const savedSettings = localStorage.getItem("gr_admin_settings");
       if (savedSettings) setSettings(JSON.parse(savedSettings));
+
+      const savedBanners = localStorage.getItem("gr_admin_banners");
+      if (savedBanners) setBanners(JSON.parse(savedBanners));
+
+      const savedInvoices = localStorage.getItem("gr_admin_invoices");
+      if (savedInvoices) setInvoices(JSON.parse(savedInvoices));
 
       const savedClicks = localStorage.getItem("gr_wa_clicks");
       if (savedClicks) setWhatsappClicks(Number(savedClicks));
@@ -482,6 +639,73 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
+  // Banners Operations
+  const addBanner = (newBanner: HeroBanner) => {
+    setBanners((prev) => {
+      const updated = [newBanner, ...prev];
+      try {
+        localStorage.setItem("gr_admin_banners", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const updateBanner = (updatedBanner: HeroBanner) => {
+    setBanners((prev) => {
+      const updated = prev.map((b) => (b.id === updatedBanner.id ? updatedBanner : b));
+      try {
+        localStorage.setItem("gr_admin_banners", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteBanner = (id: string) => {
+    setBanners((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+      try {
+        localStorage.setItem("gr_admin_banners", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  // Invoices Operations
+  const addInvoice = (newInvoice: Invoice) => {
+    setInvoices((prev) => {
+      const updated = [newInvoice, ...prev];
+      try {
+        localStorage.setItem("gr_admin_invoices", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const updateInvoice = (updatedInvoice: Invoice) => {
+    setInvoices((prev) => {
+      const updated = prev.map((inv) => (inv.id === updatedInvoice.id ? updatedInvoice : inv));
+      try {
+        localStorage.setItem("gr_admin_invoices", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteInvoice = (id: string) => {
+    setInvoices((prev) => {
+      const updated = prev.filter((inv) => inv.id !== id);
+      try {
+        localStorage.setItem("gr_admin_invoices", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const getInvoiceByNumber = (num: string): Invoice | undefined => {
+    const clean = num.trim().toUpperCase();
+    return invoices.find((inv) => inv.invoiceNumber.toUpperCase() === clean);
+  };
+
   // Analytics Operations
   const trackWhatsAppClick = () => {
     setWhatsappClicks((prev) => {
@@ -550,6 +774,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         deleteWholesaleInquiry,
         settings,
         updateSettings,
+        banners,
+        addBanner,
+        updateBanner,
+        deleteBanner,
+        invoices,
+        addInvoice,
+        updateInvoice,
+        deleteInvoice,
+        getInvoiceByNumber,
         whatsappClicks,
         trackWhatsAppClick,
         productViews,

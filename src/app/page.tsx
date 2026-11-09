@@ -14,18 +14,22 @@ import { useStore } from "@/context/StoreContext";
 import { Flame, Sparkles } from "lucide-react";
 
 export default function Home() {
-  const { addToCart } = useStore();
+  const { addToCart, products, albums } = useStore();
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+
+  const activeProducts = products.filter((p) => p.is_active);
 
   const filteredProducts =
     selectedFilter === "all"
-      ? PRODUCTS
-      : PRODUCTS.filter((p) =>
+      ? activeProducts
+      : activeProducts.filter((p) =>
           p.category_name?.toLowerCase().includes(selectedFilter) ||
           p.category_id?.toLowerCase().includes(selectedFilter)
         );
 
-  const newArrivals = PRODUCTS.filter((p) => p.is_new_arrival || p.badge?.includes("MÁS VENDIDO") || p.badge?.includes("NUEVA"));
+  const newArrivals = activeProducts.filter(
+    (p) => p.is_new_arrival || p.badge?.includes("MÁS VENDIDO") || p.badge?.includes("NUEVA") || p.badge?.includes("2026")
+  );
 
   return (
     <div>
@@ -39,7 +43,7 @@ export default function Home() {
       <ProductCarousel
         title="Novedades & Nuevos Ingresos 2026"
         badge="RECIÉN LLEGADO"
-        products={newArrivals.length > 0 ? newArrivals : PRODUCTS}
+        products={newArrivals.length > 0 ? newArrivals : activeProducts}
         onAddToCart={(p) => addToCart(p, "M", "Negro", 1)}
         showCountdown={false}
       />
@@ -51,13 +55,13 @@ export default function Home() {
       <ProductCarousel
         title="Ofertas Relámpago de la Semana"
         badge="OFERTA DEL DÍA"
-        products={PRODUCTS}
+        products={activeProducts}
         onAddToCart={(p) => addToCart(p, "M", "Negro", 1)}
         showCountdown={true}
       />
 
       {/* 6. Mini-Álbumes & Lookbook Collages Categorizados */}
-      <LookbookCollage />
+      <LookbookCollage albums={albums} />
 
       {/* 7. Catálogo Principal con Filtros Rápidos */}
       <section id="catalogo" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
