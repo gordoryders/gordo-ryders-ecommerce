@@ -71,6 +71,49 @@ export interface Order {
   productsSummary: string;
 }
 
+export interface CustomerUser {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  type: "detal" | "mayorista";
+  ordersCount: number;
+  totalSpent: number;
+  registrationDate: string;
+  status: "activo" | "verificado" | "bloqueado";
+  notes?: string;
+}
+
+export interface WholesaleInquiry {
+  id: string;
+  businessName: string;
+  contactName: string;
+  nitOrCedula: string;
+  phone: string;
+  city: string;
+  productsInterest: string;
+  estimatedUnits: number;
+  date: string;
+  status: "nuevo" | "catalogo_enviado" | "en_negociacion" | "cerrado" | "descartado";
+  notes?: string;
+}
+
+export interface StoreSettings {
+  whatsappSales: string;
+  whatsappWholesale: string;
+  instagramHandle: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  tiktokUrl: string;
+  youtubeUrl: string;
+  email: string;
+  address: string;
+  city: string;
+  schedule: string;
+  mapsUrl: string;
+}
+
 export interface AdminMetrics {
   totalViews: number;
   whatsappClicks: number;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Eye, ShieldCheck, ShoppingCart } from "lucide-react";
+import { Sparkles, ArrowRight, Eye, ShieldCheck, ShoppingCart, Package, X, CheckCircle2 } from "lucide-react";
 import { LOOKBOOK_ALBUMS, getProductBySlug } from "@/data/products";
 import { LookbookAlbum } from "@/types";
 
@@ -12,6 +12,7 @@ interface LookbookCollageProps {
 
 export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCollageProps) {
   const [activeAlbumIndex, setActiveAlbumIndex] = useState(0);
+  const [isBoxModalOpen, setIsBoxModalOpen] = useState(false);
   const currentAlbum = albums[activeAlbumIndex] || albums[0];
 
   const featuredProducts = currentAlbum.productSlugs
@@ -26,6 +27,12 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
     }).format(amount);
   };
 
+  const totalKitPrice = featuredProducts.reduce((acc, p) => acc + (p?.price_retail || 0), 0);
+
+  const whatsappKitMessage = encodeURIComponent(
+    `Hola Gordo Ryders, me interesa la CAJA / KIT COMPLETO "${currentAlbum.title}" (${currentAlbum.tag}). ¿Qué precio especial tienen para este kit completo?`
+  );
+
   return (
     <section className="py-12 bg-neutral-950 border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,13 +42,13 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">
               <Sparkles className="w-4 h-4 text-orange-500" />
-              <span>Mini-Álbumes & Lookbook 2026</span>
+              <span>Kits & Cajas de Equipamiento 2026</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight">
               Equípate por Líneas de Ruta
             </h2>
             <p className="text-xs text-neutral-400 mt-1">
-              Explora las combinaciones recomendadas por pilotos profesionales para ciudad, carretera o lluvia.
+              Cada lookbook es una caja de protección completa. Ábrela para explorar los productos de la combinación o verlos en detalle.
             </p>
           </div>
 
@@ -75,7 +82,7 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
             />
             <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/60 to-transparent" />
 
-            <div className="relative z-10 space-y-2">
+            <div className="relative z-10 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/15 border border-orange-500/30 px-3 py-1 rounded-full shadow">
                   {currentAlbum.tag}
@@ -88,14 +95,34 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
               <p className="text-xs text-neutral-300 max-w-lg leading-relaxed">
                 {currentAlbum.description}
               </p>
+
+              {/* Botón Abrir Caja */}
+              <div className="pt-2">
+                <button
+                  onClick={() => setIsBoxModalOpen(true)}
+                  className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs uppercase px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Abrir Caja de este Kit ({featuredProducts.length} productos)</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Right Product Grid in this Album (5 cols) */}
           <div className="lg:col-span-5 flex flex-col justify-between gap-3">
-            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
-              Productos incluidos en este álbum:
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                Productos dentro de esta caja:
+              </span>
+              <button
+                onClick={() => setIsBoxModalOpen(true)}
+                className="text-xs text-orange-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <span>Ver caja completa</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
 
             <div className="space-y-3 flex-1 flex flex-col justify-center">
               {featuredProducts.map((p) => {
@@ -138,13 +165,12 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
 
             {/* Quick action wholesale / catalog link */}
             <div className="pt-2">
-              <Link
-                href="/categoria/all"
-                prefetch={true}
-                className="w-full text-center text-xs font-bold text-neutral-400 hover:text-orange-400 transition-colors block py-1"
+              <button
+                onClick={() => setIsBoxModalOpen(true)}
+                className="w-full text-center text-xs font-bold text-neutral-400 hover:text-orange-400 transition-colors block py-1 cursor-pointer"
               >
-                Ver todos los productos de este lookbook →
-              </Link>
+                Abrir caja interactiva y explorar especificaciones →
+              </button>
             </div>
 
           </div>
@@ -152,6 +178,118 @@ export default function LookbookCollage({ albums = LOOKBOOK_ALBUMS }: LookbookCo
         </div>
 
       </div>
+
+      {/* =========================================================================
+          MODAL: CAJA / KIT DE PRODUCTOS ABIERTO
+          ========================================================================= */}
+      {isBoxModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-8 animate-in fade-in zoom-in-95">
+            
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-neutral-800">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-orange-500 text-neutral-950 text-[10px] font-black uppercase px-2 py-0.5 rounded shadow">
+                    {currentAlbum.tag}
+                  </span>
+                  <span className="text-xs text-neutral-400 font-semibold">• {currentAlbum.subtitle}</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+                  Caja de Equipamiento: {currentAlbum.title}
+                </h3>
+                <p className="text-xs text-neutral-400 mt-1">
+                  {currentAlbum.description}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsBoxModalOpen(false)}
+                className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Products inside this box */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                Productos incluidos en esta combinación ({featuredProducts.length}):
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {featuredProducts.map((prod) => {
+                  if (!prod) return null;
+                  return (
+                    <div
+                      key={prod.id}
+                      className="bg-neutral-950 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 group hover:border-neutral-700 transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={prod.images[0]}
+                          alt={prod.name}
+                          className="w-20 h-20 rounded-xl object-cover bg-neutral-900 border border-neutral-800 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold text-orange-400 uppercase tracking-wider block">
+                            {prod.category_name}
+                          </span>
+                          <h5 className="text-xs font-bold text-white line-clamp-2 leading-snug">
+                            {prod.name}
+                          </h5>
+                          <span className="text-sm font-black text-white font-mono mt-1 block">
+                            {formatCOP(prod.price_retail)}
+                          </span>
+                          {prod.price_wholesale && (
+                            <span className="text-[10px] text-amber-400 font-mono block">
+                              Mayorista: {formatCOP(prod.price_wholesale)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-neutral-900 flex items-center justify-between gap-2">
+                        <Link
+                          href={`/producto/${prod.slug}`}
+                          onClick={() => setIsBoxModalOpen(false)}
+                          className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs py-2 rounded-xl text-center transition-all border border-neutral-700 flex items-center justify-center gap-1.5"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-orange-400" />
+                          <span>Ver Ficha Técnica</span>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer Summary & Kit Purchase */}
+            <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">
+                  Valor estimado del kit individual
+                </span>
+                <strong className="text-lg font-black text-white font-mono">
+                  {formatCOP(totalKitPrice)}
+                </strong>
+              </div>
+
+              <a
+                href={`https://wa.me/573000000000?text=${whatsappKitMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase px-6 py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>Cotizar Kit Completo por WhatsApp</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </section>
   );
 }

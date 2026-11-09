@@ -13,7 +13,8 @@ import {
   ShieldCheck, 
   MessageCircle,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react";
 
 export default function RastreoPage() {
@@ -262,9 +263,28 @@ export default function RastreoPage() {
                 </div>
               )}
             </div>
-            <div className="sm:text-right p-3 rounded-2xl bg-neutral-950 border border-neutral-800">
-              <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">Entrega Estimada</span>
-              <strong className="text-sm font-bold text-emerald-400">{trackingResult.estimatedDelivery}</strong>
+            <div className="sm:text-right p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">Entrega Estimada</span>
+                <strong className="text-sm font-bold text-emerald-400">{trackingResult.estimatedDelivery}</strong>
+              </div>
+              <a
+                href={
+                  trackingResult.carrier.includes("Inter")
+                    ? `https://www.interrapidisimo.com/sigue-tu-envio/?guia=${trackingResult.guide}`
+                    : trackingResult.carrier.includes("Servi")
+                    ? `https://www.servientrega.com/wps/portal/rastreo-envio`
+                    : trackingResult.carrier.includes("Envia")
+                    ? `https://enviacolvanes.com/`
+                    : `https://coordinadora.com/rastreo/rastreo-de-guia/`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-400 hover:text-orange-300 underline"
+              >
+                <span>Portal oficial de {trackingResult.carrier}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
 

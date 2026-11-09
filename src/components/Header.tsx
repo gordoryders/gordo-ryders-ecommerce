@@ -694,17 +694,6 @@ export default function Header({
               >
                 Ingresar con Correo Electrónico
               </button>
-
-              <div className="pt-3 border-t border-neutral-800 text-center">
-                <Link
-                  href="/admin"
-                  onClick={() => setShowAuthModal(false)}
-                  className="text-xs text-orange-400 hover:text-orange-300 font-bold inline-flex items-center gap-1.5"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Acceso Panel de Control / Administrador →</span>
-                </Link>
-              </div>
             </div>
           </div>
         </div>
