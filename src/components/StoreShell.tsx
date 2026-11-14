@@ -6,6 +6,7 @@ import { StoreProvider, useStore } from "@/context/StoreContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SlideOverCart from "@/components/SlideOverCart";
+import CheckoutModal from "@/components/CheckoutModal";
 import LocationModal from "@/components/LocationModal";
 import OrderTrackingModal from "@/components/OrderTrackingModal";
 import ContactModal from "@/components/ContactModal";
@@ -32,6 +33,8 @@ function ShellInner({ children }: { children: ReactNode }) {
     removeItem,
   } = useStore();
 
+  const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
+
   // If in /admin, isolate completely as an independent backoffice application
   if (isAdminRoute) {
     return (
@@ -42,30 +45,8 @@ function ShellInner({ children }: { children: ReactNode }) {
   }
 
   const handleCheckout = () => {
-    const formatCOP = (num: number) =>
-      new Intl.NumberFormat("es-CO", {
-        style: "currency",
-        currency: "COP",
-        maximumFractionDigits: 0,
-      }).format(num);
-
-    const subtotal = cartItems.reduce(
-      (acc, i) => acc + i.product.price_retail * i.quantity,
-      0
-    );
-
-    const message = encodeURIComponent(
-      `Hola Gordo Ryders, deseo pagar y finalizar mi compra:\n\n${cartItems
-        .map(
-          (i) =>
-            `• ${i.product.name} (Talla: ${i.selectedSize}${
-              i.selectedColor ? `, Color: ${i.selectedColor}` : ""
-            }) x${i.quantity} = ${formatCOP(i.product.price_retail * i.quantity)}`
-        )
-        .join("\n")}\n\nTotal Pedido: ${formatCOP(subtotal)}\nCiudad de despacho: ${userCity}\n\n¿Me indican las cuentas para transferencia?`
-    );
-
-    window.open(`https://wa.me/573000000000?text=${message}`, "_blank");
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
   };
 
   return (
@@ -97,6 +78,13 @@ function ShellInner({ children }: { children: ReactNode }) {
         onUpdateQuantity={updateQuantity}
         onRemoveItem={removeItem}
         onCheckout={handleCheckout}
+      />
+
+      {/* 4.1 Modal Oficial de Finalización de Compra (Checkout Nivel 1) */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={cartItems}
       />
 
       {/* 5. Modal Selector de Ciudad de Envío */}

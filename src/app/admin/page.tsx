@@ -35,6 +35,9 @@ import {
   MessageSquareText,
   Calendar,
   Check,
+  Menu,
+  Copy,
+  ChevronRight,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -117,6 +120,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<
     "products" | "combos" | "offers" | "categories" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews"
   >("products");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // 3. PRODUCT MODAL WITH LOCAL PC FILE UPLOADS & LIVE PREVIEW
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -887,93 +891,279 @@ export default function AdminPage() {
   // MAIN STANDALONE BACKOFFICE INTERFACE
   // =========================================================================
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-orange-500 selection:text-neutral-950">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-neutral-950">
       
-      {/* Top Backoffice Header Bar (Limpio, sin aviso 'Panel Separado 2026') */}
-      <header className="sticky top-0 z-40 bg-neutral-900 border-b border-neutral-800 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center font-black text-neutral-950 text-base shadow-md">
+      {/* 1. TOP BAR FOR MOBILE DEVICES */}
+      <header className="lg:hidden sticky top-0 z-40 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            className="p-2 rounded-xl bg-neutral-800 text-neutral-300 hover:text-white"
+          >
+            <Menu className="w-5 h-5 text-orange-400" />
+          </button>
+          <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center font-black text-neutral-950 text-xs">
             GR
           </div>
-          <div>
-            <h1 className="text-sm sm:text-base font-black uppercase text-white tracking-wide">
-              Gordo Ryders • Backoffice Central
-            </h1>
-            <p className="text-[11px] text-neutral-400">
-              Gestión Integral de Catálogo, Anuncios Slider, Collages, Facturas, Envíos y Clientes
-            </p>
-          </div>
+          <span className="text-xs font-black uppercase text-white tracking-wider">Backoffice Central</span>
         </div>
 
         <div className="flex items-center gap-2">
           <Link
             href="/"
             target="_blank"
-            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 border border-neutral-700"
+            className="p-2 rounded-xl bg-neutral-800 text-neutral-300 hover:text-white"
+            title="Ver Tienda"
           >
-            <Eye className="w-3.5 h-3.5 text-orange-400" />
-            <span>Ver Tienda en Vivo</span>
+            <Eye className="w-4 h-4 text-orange-400" />
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30"
+            title="Cerrar Sesión"
+          >
+            <Lock className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* 2. MOBILE BACKDROP */}
+      {isMobileSidebarOpen && (
+        <div
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      {/* 3. VERTICAL SIDEBAR MENU (Sticky on Desktop, Drawer on Mobile) */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-neutral-900 border-r border-neutral-800 flex flex-col justify-between transition-transform duration-300 lg:static lg:translate-x-0 ${
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Sidebar Brand Header */}
+        <div className="p-5 border-b border-neutral-800/80">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-orange-500 text-neutral-950 font-black flex items-center justify-center text-sm shadow-lg shadow-orange-500/20">
+                GR
+              </div>
+              <div>
+                <h1 className="text-sm font-black uppercase text-white tracking-wide">
+                  Gordo Ryders
+                </h1>
+                <p className="text-[10px] text-neutral-400 font-mono">
+                  BACKOFFICE CENTRAL
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="lg:hidden p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800 text-[10px] font-bold text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>SISTEMA BODEGA EN VIVO</span>
+          </div>
+        </div>
+
+        {/* Sidebar Nav Items Grouped */}
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-5 scrollbar-thin scrollbar-thumb-neutral-800">
+          {/* Grupo 1: Catálogo */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
+              Catálogo & Stock
+            </span>
+            {[
+              { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
+              { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
+              { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
+              { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {typeof tab.badge !== "undefined" && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
+                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Grupo 2: Vitrina & Web */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
+              Vitrina & Contenido
+            </span>
+            {[
+              { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
+              { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
+              { id: "reviews", label: "Reseñas Clientes", icon: MessageSquareText, badge: storedReviews.length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {typeof tab.badge !== "undefined" && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
+                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Grupo 3: Ventas & Logística Nivel 1 */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-orange-400/90 px-3 block mb-1">
+              Logística & Ventas Nivel 1
+            </span>
+            {[
+              { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
+              { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
+              { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
+              { id: "wholesale", label: "Mayoristas B2B", icon: Building2, badge: wholesaleInquiries.length },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {typeof tab.badge !== "undefined" && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
+                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Grupo 4: Control & Métricas */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
+              Control & Negocio
+            </span>
+            {[
+              { id: "analytics", label: "Métricas & Análisis", icon: BarChart3 },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sidebar Footer Controls */}
+        <div className="p-4 border-t border-neutral-800 space-y-2 bg-neutral-950/60">
+          <Link
+            href="/"
+            target="_blank"
+            className="w-full bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-between border border-neutral-700"
+          >
+            <div className="flex items-center gap-2">
+              <Eye className="w-3.5 h-3.5 text-orange-400" />
+              <span>Ver Tienda en Vivo</span>
+            </div>
             <ExternalLink className="w-3 h-3 text-neutral-400" />
           </Link>
 
           <button
             onClick={handleLogout}
-            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-3.5 py-2 rounded-xl transition-all border border-red-500/30 flex items-center gap-1.5 cursor-pointer"
+            className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold py-2.5 px-3 rounded-xl transition-all border border-red-500/20 flex items-center gap-2 cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Cerrar Sesión</span>
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Navigation Tabs Bar con Scrollbar estilizada y sin recortes */}
-      <div className="bg-neutral-900/80 border-b border-neutral-800 px-4 sm:px-8 sticky top-[65px] z-30 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-3 scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-neutral-900">
-          {[
-            { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
-            { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
-            { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
-            { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
-            { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
-            { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
-            { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
-            { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
-            { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
-            { id: "wholesale", label: "Mayoristas B2B", icon: Building2, badge: wholesaleInquiries.length },
-            { id: "analytics", label: "Métricas & Análisis", icon: BarChart3 },
-            { id: "reviews", label: "Reseñas Clientes", icon: MessageSquareText, badge: storedReviews.length },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-orange-500 text-neutral-950 shadow-lg shadow-orange-500/20"
-                    : "bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
-                <span>{tab.label}</span>
-                {typeof tab.badge !== "undefined" && (
-                  <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
-                      isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300"
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 4. MAIN CONTENT WORKSPACE (Right side) */}
+      <main className="flex-1 min-w-0 bg-neutral-950 p-4 sm:p-8 lg:p-10 overflow-y-auto min-h-screen">
         
         {/* =========================================================================
             TAB 1: PRODUCTS & INVENTORY
@@ -1775,6 +1965,67 @@ export default function AdminPage() {
             ========================================================================= */}
         {activeTab === "orders" && (
           <div className="space-y-6">
+            
+            {/* Banner Logística Nivel 1 Colombia */}
+            <div className="bg-gradient-to-r from-orange-500/10 via-neutral-900 to-neutral-900 border border-orange-500/30 rounded-3xl p-5 sm:p-6 shadow-xl">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/10 px-2.5 py-0.5 rounded-full">
+                      Módulo Logístico Nivel 1 • Bodega Gordo Ryders
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black uppercase text-white">
+                    Gestión de Envíos & Guías de Transporte
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1 max-w-2xl leading-relaxed">
+                    1. Copia los datos del cliente con 1 clic. 2. Pégalos en el portal de tu transportadora para emitir la guía. 3. Asigna el número de guía aquí para que el cliente la rastree en vivo en la tienda.
+                  </p>
+                </div>
+
+                {/* Portales Oficiales de Transportadoras con 1 Clic */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href="https://interrapidisimo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Inter Rapidísimo</span>
+                    <ExternalLink className="w-3 h-3 text-orange-400" />
+                  </a>
+                  <a
+                    href="https://www.servientrega.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Servientrega</span>
+                    <ExternalLink className="w-3 h-3 text-emerald-400" />
+                  </a>
+                  <a
+                    href="https://envia.co"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Envía</span>
+                    <ExternalLink className="w-3 h-3 text-blue-400" />
+                  </a>
+                  <a
+                    href="https://www.coordinadora.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Coordinadora</span>
+                    <ExternalLink className="w-3 h-3 text-amber-400" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -1807,28 +2058,48 @@ export default function AdminPage() {
                     `Hola ${ord.customerName}, tu pedido de Gordo Ryders ya está en curso con guía ${ord.guideNumber} por ${ord.carrier}. Rastréalo en vivo aquí: https://gordo-ryders-ecommerce.vercel.app/rastreo`
                   );
 
+                  const copyShippingInfo = () => {
+                    const text = `DESTINATARIO: ${ord.customerName}\nTELÉFONO: ${ord.customerPhone}\nCIUDAD: ${ord.city}\nCONTENIDO: ${ord.productsSummary}\nVALOR TOTAL: ${formatCOP(ord.total)}\nTRANSPORTADORA: ${ord.carrier}`;
+                    if (typeof navigator !== "undefined" && navigator.clipboard) {
+                      navigator.clipboard.writeText(text);
+                      alert(`¡Datos de ${ord.customerName} copiados al portapapeles! Listo para pegar en el portal de ${ord.carrier}.`);
+                    }
+                  };
+
                   return (
                     <div
                       key={ord.id}
-                      className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between"
+                      className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between transition-all"
                     >
                       <div>
                         <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
                           <span className="font-mono text-xs font-black text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-lg">
                             GUÍA: {ord.guideNumber}
                           </span>
-                          <span className="text-[11px] font-bold text-neutral-400">{ord.carrier}</span>
+                          <span className="text-[11px] font-bold text-neutral-300 bg-neutral-950 px-2 py-0.5 rounded border border-neutral-800">
+                            {ord.carrier}
+                          </span>
                         </div>
 
                         <div className="mt-3 space-y-1">
                           <h4 className="text-sm font-black text-white">{ord.customerName}</h4>
-                          <p className="text-xs text-neutral-400">📍 {ord.city}</p>
+                          <p className="text-xs text-neutral-400">📱 {ord.customerPhone} • 📍 {ord.city}</p>
                           <p className="text-xs text-neutral-300 font-medium line-clamp-2 mt-1">📦 {ord.productsSummary}</p>
                           <p className="text-xs font-mono font-bold text-emerald-400 mt-1">Total: {formatCOP(ord.total)}</p>
                         </div>
                       </div>
 
                       <div className="space-y-3 pt-3 border-t border-neutral-800">
+                        {/* Botón Copiar Datos para Transportadora */}
+                        <button
+                          type="button"
+                          onClick={copyShippingInfo}
+                          className="w-full bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-orange-400" />
+                          <span>Copiar Datos para Guía</span>
+                        </button>
+
                         <div>
                           <label className="block text-[10px] font-bold uppercase text-neutral-500 tracking-wider mb-1">
                             Estado del Paquete
@@ -1853,7 +2124,7 @@ export default function AdminPage() {
                             className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 text-xs font-bold py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all"
                           >
                             <Eye className="w-3.5 h-3.5 text-orange-400" />
-                            <span>Rastreo en Vivo</span>
+                            <span>Rastreo Tienda</span>
                           </Link>
 
                           <a
@@ -1863,7 +2134,7 @@ export default function AdminPage() {
                             className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all"
                           >
                             <MessageSquareText className="w-3.5 h-3.5" />
-                            <span>Notificar</span>
+                            <span>WhatsApp</span>
                           </a>
                         </div>
                       </div>
