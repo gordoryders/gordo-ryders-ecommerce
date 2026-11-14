@@ -1,11 +1,11 @@
 export default function BrandStrip() {
   const brands = [
-    { name: "SHAFT PRO", tag: "Cascos Certificados" },
+    { name: "ICH HELMETS", tag: "Línea Oficial Inducascos" },
     { name: "PROVIKER", tag: "Protección Urbana" },
+    { name: "SHAFT PRO", tag: "Cascos Certificados" },
+    { name: "HRO HELMETS", tag: "Corazas Termoplásticas" },
     { name: "LS2 HELMETS", tag: "Homologación ECE" },
-    { name: "HJC HELMETS", tag: "Gama Alta" },
     { name: "MT HELMETS", tag: "Tecnología Europea" },
-    { name: "FOX RACING", tag: "Cross & Off-Road" },
   ];
 
   return (

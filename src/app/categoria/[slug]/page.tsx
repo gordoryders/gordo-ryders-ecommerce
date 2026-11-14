@@ -15,7 +15,7 @@ interface CategoryPageProps {
 export default function CategoryPage({ params }: CategoryPageProps) {
   const resolvedParams = use(params);
   const searchParams = useSearchParams();
-  const { addToCart } = useStore();
+  const { addToCart, products } = useStore();
 
   const categorySlug = resolvedParams.slug.toLowerCase();
   const querySearch = searchParams.get("q") || "";
@@ -36,7 +36,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   // Instant in-memory filter
   const filteredProducts = useMemo(() => {
-    let list = [...PRODUCTS];
+    let list = products && products.length > 0 ? [...products] : [...PRODUCTS];
 
     if (categorySlug === "ofertas") {
       list = list.filter((p) => p.badge?.includes("OFERTA") || (p.price_original && p.price_original > p.price_retail));

@@ -52,44 +52,44 @@ const DEFAULT_CATEGORIES: Category[] = [
 const DEFAULT_COMBOS: ProductCombo[] = [
   {
     id: "combo-1",
-    name: "Combo Rutero Urbano 2026",
-    slug: "combo-rutero-urbano",
-    tag: "COMBO RUTERO ESPECIAL",
+    name: "Combo Rutero ICH 3110 + Guantes Proviker",
+    slug: "combo-rutero-ich-3110",
+    tag: "COMBO RUTERO ICH 3110",
     badgeColor: "orange",
-    description: "Casco Shaft Pro 582 ECE 22.06 + Guantes Proviker Ref E44 con touch screen + Soporte CNC antivibración para smartphone.",
-    productIds: ["p-1", "p-2", "p-5"],
-    originalPrice: 439900,
-    price: 389900,
-    savingsAmount: 50000,
-    image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80",
+    description: "Casco Abatible ICH 3110 Doble Visor Top Speed DOT + Guantes Proviker Ref E44 Touch Screen + Soporte CNC Antivibración.",
+    productIds: ["ich-3110-ts", "proviker-e44", "soporte-cnc"],
+    originalPrice: 399900,
+    price: 349000,
+    savingsAmount: 50900,
+    image: "/products/cascos/ich-3110-top-speed.jpg",
     isActive: true,
   },
   {
     id: "combo-2",
-    name: "Combo Lluvia Extrema Náutico",
-    slug: "combo-lluvia-extrema",
-    tag: "AHORRA $35.000 COP",
+    name: "Pack Ciudad Scooter: Casco ICH 501 + Soporte CNC",
+    slug: "pack-ciudad-scooter-ich-501",
+    tag: "AHORRA $31.000 COP",
     badgeColor: "emerald",
-    description: "Impermeable Enterizo 100% Siliconado con tula hermética + Guantes Proviker Protección Urbana.",
-    productIds: ["p-3", "p-2"],
-    originalPrice: 204000,
-    price: 169000,
-    savingsAmount: 35000,
-    image: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1200&q=80",
+    description: "Casco Abierto Urbano ICH 501 Jet Beige Vintage con visor anti-scratch + Soporte CNC Antivibración de Smartphone.",
+    productIds: ["ich-501-beige", "soporte-cnc"],
+    originalPrice: 220000,
+    price: 189000,
+    savingsAmount: 31000,
+    image: "/products/cascos/ich-501-beige.jpg",
     isActive: true,
   },
   {
     id: "combo-3",
-    name: "Pack Protección Total Pista",
-    slug: "pack-proteccion-total",
-    tag: "EDICIÓN BLINDADA",
+    name: "Combo Viajero Extremo: Casco ICH 3110 + Impermeable",
+    slug: "combo-viajero-ich-3110",
+    tag: "EDICIÓN VIAJERA",
     badgeColor: "red",
-    description: "Chaqueta Térmica con Protecciones CE Nivel 2 + Kit de Rodilleras y Coderas Articuladas en Acero Reforzado.",
-    productIds: ["p-4", "p-6"],
-    originalPrice: 323000,
-    price: 269000,
-    savingsAmount: 54000,
-    image: "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80",
+    description: "Casco Abatible ICH 3110 Racing Naranja Neón Sport + Impermeable Enterizo Siliconado con Tula Hermética.",
+    productIds: ["ich-3110-ktm", "imp-siliconado"],
+    originalPrice: 368900,
+    price: 329000,
+    savingsAmount: 39900,
+    image: "/products/cascos/ich-3110-ktm-orange.jpg",
     isActive: true,
   },
 ];
@@ -97,42 +97,42 @@ const DEFAULT_COMBOS: ProductCombo[] = [
 const DEFAULT_BANNERS: HeroBanner[] = [
   {
     id: "banner-1",
-    tag: "OFERTA RELÁMPAGO • HASTA AGOTAR STOCK",
-    title: "CASCOS CERTIFICADOS",
-    highlight: "HASTA 35% OFF",
-    subtitle: "Homologación internacional DOT y ECE 22.06. Calotas de policarbonato reforzado y visor anti-scratch.",
-    buttonText: "VER CASCOS EN OFERTA",
+    tag: "NUEVO INGRESO • EDICIÓN TOP SPEED 2026",
+    title: "CASCOS ABATIBLES ICH 3110",
+    highlight: "DOBLE VISOR HOMOLOGADO",
+    subtitle: "Mentonera modular con accionamiento de un solo toque y gafas solares internas retráctiles. Certificación estadounidense DOT FMVSS 218 y NTC 4533 para rodar seguro por toda Colombia.",
+    buttonText: "VER CASCOS ABATIBLES",
     buttonLink: "#catalogo",
     secondaryText: "Cotizar por WhatsApp",
-    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20cotizar%20cascos%20en%20oferta",
-    bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
-    accentColor: "from-orange-600 via-amber-500 to-yellow-500",
+    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20cotizar%20el%20Casco%20Abatible%20ICH%203110%20Doble%20Visor",
+    bgImage: "/products/cascos/ich-3110-top-speed.jpg",
+    accentColor: "from-orange-500 via-amber-400 to-yellow-400",
     isActive: true,
   },
   {
     id: "banner-2",
-    tag: "LÍNEA OFICIAL PROVIKER 2026",
-    title: "GUANTES URBANOS",
-    highlight: "PROTECCIÓN Y CONFORT",
-    subtitle: "Palma antideslizante con shock-absorber, protecciones rígidas en nudillos y dedos compatibles con pantalla táctil.",
-    buttonText: "EXPLORAR GUANTES",
+    tag: "TENDENCIA SCOOTER & CIUDAD 2026",
+    title: "LÍNEA URBANA ICH 501",
+    highlight: "LILA, BEIGE & MATE",
+    subtitle: "Cascos livianos semi-integrales con visor panorámico transparente anti-scratch. Confort, frescura y visibilidad óptima para rodar fresco en el tráfico diario.",
+    buttonText: "EXPLORAR MODELOS URBANOS",
     buttonLink: "#catalogo",
-    secondaryText: "Ver Ref E44",
+    secondaryText: "Ver Gama Pastel",
     secondaryLink: "#catalogo",
-    bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80",
-    accentColor: "from-amber-500 via-orange-500 to-red-500",
+    bgImage: "/products/cascos/ich-501-lila.jpg",
+    accentColor: "from-purple-400 via-pink-400 to-orange-400",
     isActive: true,
   },
   {
     id: "banner-3",
-    tag: "CANAL MAYORISTA PARA ALMACENES Y TALLERES",
-    title: "PRECIOS DE DISTRIBUIDOR",
+    tag: "CANAL MAYORISTA B2B PARA ALMACENES Y TALLERES",
+    title: "PRECIOS DE BODEGA",
     highlight: "DESDE 6 UNIDADES",
-    subtitle: "Suministro constante con más de 300 referencias listas para despacho inmediato en toda Colombia.",
+    subtitle: "Suministro directo de fábrica con más de 300 referencias listas para despacho nacional. Cascos ICH por docena y guantes Proviker con margen B2B garantizado.",
     buttonText: "SOLICITAR CATÁLOGO MAYORISTA",
-    buttonLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20completo",
-    bgImage: "https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=1920&q=80",
-    accentColor: "from-emerald-500 via-teal-400 to-cyan-400",
+    buttonLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20de%20cascos%20ICH",
+    bgImage: "/products/cascos/ich-3110-ktm-orange.jpg",
+    accentColor: "from-emerald-400 via-teal-300 to-cyan-400",
     isActive: true,
   },
 ];
@@ -183,18 +183,18 @@ const DEFAULT_INVOICES: Invoice[] = [
     guideNumber: "SER-8849201",
     items: [
       {
-        productName: "Casco Integral Shaft Pro 582 Certificado ECE 22.06",
-        sku: "C-SHAFT-582",
-        size: "M",
+        productName: "Casco Abatible ICH 3110 Doble Visor Top Speed DOT",
+        sku: "ICH-3110-TS",
+        size: "L",
         quantity: 1,
-        unitPrice: 289900,
-        subtotal: 289900,
+        unitPrice: 249900,
+        subtotal: 249900,
       },
     ],
-    subtotal: 289900,
+    subtotal: 249900,
     shippingCost: 0,
     tax: 0,
-    total: 289900,
+    total: 249900,
     paymentMethod: "PSE / Nequi",
     paymentStatus: "pagado",
   },
@@ -265,10 +265,10 @@ const DEFAULT_USERS: CustomerUser[] = [
     city: "Bogotá D.C.",
     type: "detal",
     ordersCount: 1,
-    totalSpent: 289900,
+    totalSpent: 249900,
     registrationDate: "Ayer",
     status: "activo",
-    notes: "Compró Casco Shaft Pro 582 para despacho en Bogotá.",
+    notes: "Compró Casco Abatible ICH 3110 Doble Visor Top Speed para despacho en Bogotá.",
   },
 ];
 
@@ -293,7 +293,7 @@ const DEFAULT_WHOLESALE_INQUIRIES: WholesaleInquiry[] = [
     nitOrCedula: "71.382.901",
     phone: "3186543210",
     city: "Medellín, Antioquia",
-    productsInterest: "Lote Cascos Shaft Pro ECE 22.06 (12 unds variadas)",
+    productsInterest: "Lote Cascos Abatibles ICH 3110 Doble Visor (12 unds variadas)",
     estimatedUnits: 12,
     date: "Ayer, 04:30 PM",
     status: "catalogo_enviado",
@@ -504,11 +504,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedCity = localStorage.getItem("gr_user_city");
       if (savedCity) setUserCity(savedCity);
 
-      const savedProducts = localStorage.getItem("gr_admin_products");
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
+      const CATALOG_VERSION = "2026_real_ich_v2";
+      const savedVersion = localStorage.getItem("gr_catalog_version");
 
-      const savedAlbums = localStorage.getItem("gr_admin_albums");
-      if (savedAlbums) setAlbums(JSON.parse(savedAlbums));
+      if (savedVersion !== CATALOG_VERSION) {
+        setProducts(PRODUCTS);
+        setCombos(DEFAULT_COMBOS);
+        setBanners(DEFAULT_BANNERS);
+        setAlbums(LOOKBOOK_ALBUMS);
+        localStorage.setItem("gr_admin_products", JSON.stringify(PRODUCTS));
+        localStorage.setItem("gr_admin_combos", JSON.stringify(DEFAULT_COMBOS));
+        localStorage.setItem("gr_admin_banners", JSON.stringify(DEFAULT_BANNERS));
+        localStorage.setItem("gr_admin_albums", JSON.stringify(LOOKBOOK_ALBUMS));
+        localStorage.setItem("gr_catalog_version", CATALOG_VERSION);
+      } else {
+        const savedProducts = localStorage.getItem("gr_admin_products");
+        if (savedProducts) setProducts(JSON.parse(savedProducts));
+
+        const savedAlbums = localStorage.getItem("gr_admin_albums");
+        if (savedAlbums) setAlbums(JSON.parse(savedAlbums));
+
+        const savedBanners = localStorage.getItem("gr_admin_banners");
+        if (savedBanners) setBanners(JSON.parse(savedBanners));
+
+        const savedCombos = localStorage.getItem("gr_admin_combos");
+        if (savedCombos) setCombos(JSON.parse(savedCombos));
+      }
 
       const savedOrders = localStorage.getItem("gr_admin_orders");
       if (savedOrders) setOrders(JSON.parse(savedOrders));

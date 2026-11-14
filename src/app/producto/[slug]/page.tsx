@@ -45,13 +45,17 @@ interface CustomerReview {
 
 export default function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = use(params);
-  const product = getProductBySlug(resolvedParams.slug);
+  const { addToCart, userCity, products } = useStore();
+  const product =
+    products.find(
+      (p) =>
+        p.slug.toLowerCase() === resolvedParams.slug.toLowerCase() ||
+        p.id.toLowerCase() === resolvedParams.slug.toLowerCase()
+    ) || getProductBySlug(resolvedParams.slug);
 
   if (!product) {
     notFound();
   }
-
-  const { addToCart, userCity } = useStore();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("L");
   const [selectedColor, setSelectedColor] = useState("Negro Mate");

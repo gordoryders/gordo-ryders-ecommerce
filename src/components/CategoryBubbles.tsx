@@ -10,16 +10,16 @@ interface CategoryItem {
 export default function CategoryBubbles() {
   const categories: CategoryItem[] = [
     {
-      name: "Cascos",
-      image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=400&q=80",
+      name: "Cascos Abatibles",
+      image: "/products/cascos/ich-3110-top-speed.jpg",
       href: "/categoria/cascos",
-      subtitle: "Certificación ECE",
+      subtitle: "ICH 3110 Doble Visor",
     },
     {
-      name: "Guantes",
-      image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=400&q=80",
-      href: "/categoria/guantes",
-      subtitle: "Proviker & Cuero",
+      name: "Cascos Urbanos",
+      image: "/products/cascos/ich-501-lila.jpg",
+      href: "/categoria/cascos",
+      subtitle: "ICH 501 Jet Pastel",
     },
     {
       name: "Impermeables",
