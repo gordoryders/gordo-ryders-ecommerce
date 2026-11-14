@@ -128,6 +128,48 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
 
+  const SPECS_TEMPLATES = {
+    cascos: [
+      { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
+      { label: "Referencia", value: "ICH 3110 Modular Doble Visor" },
+      { label: "Certificación", value: "DOT FMVSS 218 y NTC 4533 (Resolución 1080)" },
+      { label: "Material Calota", value: "Termoplástico ABS inyectado de alto impacto" },
+      { label: "Sistema de Visor", value: "Doble Visor: Exterior UV anti-scratch + Gafas solares retráctiles" },
+      { label: "Ventilación", value: "Entradas frontales y superiores regulables con spoiler extractor" },
+      { label: "Interior / Tapizado", value: "Acolchado transpirable hipoalergénico desmontable y lavable" },
+      { label: "Sistema de Cierre", value: "Hebilla micrométrica de ajuste milimétrico rápido" },
+      { label: "Intercomunicador", value: "Cavidades pre-moldeadas para parlantes Bluetooth" },
+      { label: "Garantía Oficial", value: "6 meses directa de fábrica" },
+    ],
+    guantes: [
+      { label: "Marca Oficial", value: "Proviker" },
+      { label: "Referencia", value: "Guante Protección Urbana Ref E44" },
+      { label: "Material Principal", value: "Textil ventilado microperforado de alta resistencia" },
+      { label: "Protección Nudillos", value: "Protección rígida moldeada en polímero anti-impacto" },
+      { label: "Palma / Agarre", value: "Capa antideslizante con textura de silicona antivibración" },
+      { label: "Compatibilidad Táctil", value: "Tecnología Touch Screen en dedos índice y pulgar" },
+      { label: "Cierre", value: "Correa elástica en muñeca con velcro de alta adherencia" },
+      { label: "Garantía Oficial", value: "3 meses por costuras y materiales" },
+    ],
+    impermeables: [
+      { label: "Tipo de Prenda", value: "Enterizo siliconado con capucha ergonómica y zapatones" },
+      { label: "Material", value: "Poliéster siliconado calibre 16 100% impermeable" },
+      { label: "Sellado de Costuras", value: "100% termoselladas vulcanizadas a calor anti-filtración" },
+      { label: "Seguridad Vial", value: "Cintas reflectivas de alta intensidad 360° para noche y lluvia" },
+      { label: "Accesorios Incluidos", value: "Incluye tula transportadora compacta hermética" },
+      { label: "Garantía Oficial", value: "3 meses de impermeabilidad total" },
+    ],
+    chaquetas: [
+      { label: "Marca Oficial", value: "Gordo Ryders Touring Series" },
+      { label: "Material Exterior", value: "Cordura 600D resistente a la abrasión y al viento" },
+      { label: "Protecciones", value: "Insertos CE Nivel 2 en hombros, codos y espalda removibles" },
+      { label: "Forro Térmico", value: "Chaleco térmico interior desmontable para clima frío" },
+      { label: "Ventilación", value: "Cremalleras de ventilación directa en pecho y espalda" },
+      { label: "Ajuste", value: "Correas regulables en cintura, brazos y puños" },
+      { label: "Garantía Oficial", value: "6 meses directa de fábrica" },
+    ],
+  };
+
   const [prodForm, setProdForm] = useState<{
     name: string;
     sku: string;
@@ -151,6 +193,7 @@ export default function AdminPage() {
     img3: string;
     img4: string;
     description: string;
+    specs: { label: string; value: string }[];
   }>({
     name: "",
     sku: "",
@@ -174,7 +217,48 @@ export default function AdminPage() {
     img3: "",
     img4: "",
     description: "Equipamiento certificado para motociclistas de alto rendimiento.",
+    specs: [
+      { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
+      { label: "Referencia", value: "ICH 3110 Modular Doble Visor" },
+      { label: "Certificación", value: "DOT FMVSS 218 y NTC 4533 (Resolución 1080)" },
+      { label: "Material Calota", value: "Termoplástico ABS inyectado de alto impacto" },
+      { label: "Sistema de Visor", value: "Doble Visor: Exterior UV anti-scratch + Gafas solares retráctiles" },
+      { label: "Ventilación", value: "Entradas frontales y superiores regulables con spoiler extractor" },
+      { label: "Interior / Tapizado", value: "Acolchado transpirable hipoalergénico desmontable y lavable" },
+      { label: "Sistema de Cierre", value: "Hebilla micrométrica de ajuste milimétrico rápido" },
+      { label: "Intercomunicador", value: "Cavidades pre-moldeadas para parlantes Bluetooth" },
+      { label: "Garantía Oficial", value: "6 meses directa de fábrica" },
+    ],
   });
+
+  const handleApplySpecTemplate = (key: keyof typeof SPECS_TEMPLATES) => {
+    setProdForm((prev) => ({
+      ...prev,
+      specs: SPECS_TEMPLATES[key].map((s) => ({ ...s })),
+    }));
+  };
+
+  const handleAddSpecRow = () => {
+    setProdForm((prev) => ({
+      ...prev,
+      specs: [...prev.specs, { label: "", value: "" }],
+    }));
+  };
+
+  const handleUpdateSpecRow = (idx: number, field: "label" | "value", val: string) => {
+    setProdForm((prev) => {
+      const copy = [...prev.specs];
+      copy[idx] = { ...copy[idx], [field]: val };
+      return { ...prev, specs: copy };
+    });
+  };
+
+  const handleRemoveSpecRow = (idx: number) => {
+    setProdForm((prev) => ({
+      ...prev,
+      specs: prev.specs.filter((_, i) => i !== idx),
+    }));
+  };
 
   const fileInputRef1 = useRef<HTMLInputElement>(null);
   const fileInputRef2 = useRef<HTMLInputElement>(null);
@@ -221,6 +305,7 @@ export default function AdminPage() {
       img3: "",
       img4: "",
       description: "Equipamiento de alta resistencia certificado internacionalmente.",
+      specs: SPECS_TEMPLATES.cascos.map((s) => ({ ...s })),
     });
     setIsProductModalOpen(true);
   };
@@ -250,6 +335,9 @@ export default function AdminPage() {
       img3: product.images?.[2] || "",
       img4: product.images?.[3] || "",
       description: product.description || "",
+      specs: product.specs && product.specs.length > 0
+        ? product.specs.map((s) => ({ ...s }))
+        : SPECS_TEMPLATES.cascos.map((s) => ({ ...s })),
     });
     setIsProductModalOpen(true);
   };
@@ -294,6 +382,8 @@ export default function AdminPage() {
       offer_badge_text: prodForm.offer_badge_text,
       images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80"],
       description: prodForm.description,
+      specs: prodForm.specs.filter((s) => s.label.trim() && s.value.trim()),
+      color_variants: editingProduct?.color_variants,
       rating: editingProduct?.rating ?? 5.0,
       reviews_count: editingProduct?.reviews_count ?? 1,
     };
@@ -2697,6 +2787,131 @@ export default function AdminPage() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* FICHA TÉCNICA DINÁMICA CON PLANTILLAS PROFESIONALES */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-neutral-800">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-orange-400" />
+                      <h4 className="text-xs font-black uppercase text-white tracking-wider">
+                        Ficha Técnica y Especificaciones Oficiales
+                      </h4>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                      Carga una plantilla rápida por tipo de producto o añade filas personalizadas para tu catálogo.
+                    </p>
+                  </div>
+                  <div className="text-[11px] text-neutral-400 font-mono">
+                    <strong className="text-orange-400">{prodForm.specs.length}</strong> características
+                  </div>
+                </div>
+
+                {/* BOTONES DE PLANTILLAS RÁPIDAS (1 CLIC) */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400">
+                    Cargar Plantilla Oficial (1 Clic):
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleApplySpecTemplate("cascos")}
+                      className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-neutral-700 hover:border-orange-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🛡️</span>
+                      <span>Plantilla Cascos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplySpecTemplate("guantes")}
+                      className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-neutral-700 hover:border-orange-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🧤</span>
+                      <span>Plantilla Guantes</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplySpecTemplate("impermeables")}
+                      className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-neutral-700 hover:border-orange-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🌧️</span>
+                      <span>Plantilla Impermeables</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplySpecTemplate("chaquetas")}
+                      className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-200 border border-neutral-700 hover:border-orange-500 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🧥</span>
+                      <span>Plantilla Chaquetas</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProdForm((prev) => ({ ...prev, specs: [] }))}
+                      className="px-2.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-red-950/40 text-neutral-400 hover:text-red-400 border border-neutral-800 hover:border-red-800 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Limpiar Todo</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* TABLA DE FILAS EDITABLES */}
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1 scrollbar-thin">
+                  {prodForm.specs.length > 0 ? (
+                    prodForm.specs.map((spec, sIdx) => (
+                      <div key={sIdx} className="grid grid-cols-12 gap-2 items-center bg-neutral-900/80 p-2 rounded-xl border border-neutral-800/80">
+                        <div className="col-span-5 sm:col-span-4">
+                          <input
+                            type="text"
+                            placeholder="Ej: Certificación"
+                            value={spec.label}
+                            onChange={(e) => handleUpdateSpecRow(sIdx, "label", e.target.value)}
+                            className="w-full bg-neutral-950 border border-neutral-700/80 rounded-lg px-2.5 py-1.5 text-xs text-orange-400 font-bold focus:outline-none focus:border-orange-500"
+                          />
+                        </div>
+                        <div className="col-span-6 sm:col-span-7">
+                          <input
+                            type="text"
+                            placeholder="Ej: DOT FMVSS 218 y NTC 4533"
+                            value={spec.value}
+                            onChange={(e) => handleUpdateSpecRow(sIdx, "value", e.target.value)}
+                            className="w-full bg-neutral-950 border border-neutral-700/80 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                          />
+                        </div>
+                        <div className="col-span-1 flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSpecRow(sIdx)}
+                            className="p-1 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-neutral-800 transition-colors cursor-pointer"
+                            title="Eliminar característica"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-neutral-800 rounded-xl text-neutral-500 text-xs">
+                      No hay características configuradas. Haz clic en una plantilla rápida de arriba o añade una fila manual.
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-1 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleAddSpecRow}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Añadir Fila / Característica</span>
+                  </button>
+                  <span className="text-[11px] text-neutral-500">
+                    Se guardará en la Ficha Técnica oficial del producto.
+                  </span>
                 </div>
               </div>
 

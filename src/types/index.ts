@@ -16,6 +16,14 @@ export interface ProductVariant {
   stock: number;
 }
 
+export interface ProductColorVariant {
+  name: string;
+  colorHex?: string;
+  image: string;
+  sku?: string;
+  stock?: number;
+}
+
 export interface Product {
   id: string;
   category_id?: string;
@@ -33,6 +41,7 @@ export interface Product {
   reviews_count?: number;
   images: string[];
   specs?: { label: string; value: string }[];
+  color_variants?: ProductColorVariant[];
   is_featured: boolean;
   is_active: boolean;
   is_new_arrival?: boolean;

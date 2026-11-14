@@ -56,9 +56,18 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   if (!product) {
     notFound();
   }
+
+  const defaultVariant = product.color_variants?.find(
+    (v) => v.sku === product.sku || (product.images[0] && v.image.includes(product.images[0]))
+  ) || product.color_variants?.[0];
+
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("L");
-  const [selectedColor, setSelectedColor] = useState("Negro Mate");
+  const [selectedColor, setSelectedColor] = useState(
+    defaultVariant?.name || "Estándar"
+  );
+  const [activeSku, setActiveSku] = useState(defaultVariant?.sku || product.sku);
+  const [customImage, setCustomImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [zoomStyle, setZoomStyle] = useState({ display: "none", transformOrigin: "0% 0%" });
   const [isZooming, setIsZooming] = useState(false);
@@ -104,15 +113,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       maximumFractionDigits: 0,
     }).format(num);
 
-  // Gallery angles
-  const gallery = [
-    { label: "Frontal", url: product.images[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80" },
-    { label: "Lateral", url: product.images[1] || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1200&q=80" },
-    { label: "Posterior", url: product.images[2] || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80" },
-    { label: "Detalle", url: product.images[3] || "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1200&q=80" },
-  ];
+  // Gallery items (clean, NO angle text labels)
+  const galleryItems = (product.color_variants && product.color_variants.length > 0)
+    ? product.color_variants.map((v) => ({ url: v.image, name: v.name, sku: v.sku }))
+    : product.images.length > 0
+    ? product.images.map((img, i) => ({ url: img, name: `${product.name} ${i + 1}`, sku: product.sku }))
+    : [{ url: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80", name: product.name, sku: product.sku }];
 
-  const currentImageUrl = gallery[activeImageIndex]?.url || gallery[0].url;
+  const currentImageUrl = customImage || galleryItems[activeImageIndex]?.url || product.images[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80";
 
   // Smooth hover zoom without clicking (Mercado Libre style)
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -208,29 +216,39 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-4 sm:p-8 shadow-2xl mb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* A. Vertical Thumbnails Column (Desktop: 2 cols, Mobile: row) */}
+          {/* A. Vertical Thumbnails Column (Clean, NO text angle labels) */}
           <div className="lg:col-span-2 order-2 lg:order-1 flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none">
-            {gallery.map((thumb, idx) => (
-              <button
-                key={idx}
-                onMouseEnter={() => setActiveImageIndex(idx)}
-                onClick={() => setActiveImageIndex(idx)}
-                className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-75 active:scale-95 shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-24 bg-neutral-950 cursor-pointer ${
-                  activeImageIndex === idx
-                    ? "border-orange-500 shadow-md shadow-orange-500/20"
-                    : "border-neutral-800 hover:border-neutral-700 opacity-70 hover:opacity-100"
-                }`}
-              >
-                <img
-                  src={thumb.url}
-                  alt={`${product.name} - ${thumb.label}`}
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute bottom-1 left-1 right-1 text-[9px] font-bold text-center bg-black/75 backdrop-blur-sm text-neutral-300 rounded py-0.5 uppercase">
-                  {thumb.label}
-                </span>
-              </button>
-            ))}
+            {galleryItems.map((thumb, idx) => {
+              const isActive = currentImageUrl === thumb.url;
+              return (
+                <button
+                  key={idx}
+                  onMouseEnter={() => {
+                    setActiveImageIndex(idx);
+                    setCustomImage(thumb.url);
+                    if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
+                    if (thumb.sku) setActiveSku(thumb.sku);
+                  }}
+                  onClick={() => {
+                    setActiveImageIndex(idx);
+                    setCustomImage(thumb.url);
+                    if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
+                    if (thumb.sku) setActiveSku(thumb.sku);
+                  }}
+                  className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-75 active:scale-95 shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-24 bg-neutral-950 cursor-pointer ${
+                    isActive
+                      ? "border-orange-500 shadow-md shadow-orange-500/20 ring-1 ring-orange-500"
+                      : "border-neutral-800 hover:border-neutral-700 opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <img
+                    src={thumb.url}
+                    alt={`${product.name} - ${thumb.name || idx}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              );
+            })}
           </div>
 
           {/* B. Primary High-Res Photo with Clean View (100% Clean, NO Text Blockers!) */}
@@ -280,7 +298,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             <div>
               <div className="flex items-center justify-between text-xs text-neutral-400 mb-1">
                 <span>Nuevo • +1.200 vendidos en Colombia</span>
-                <span className="font-mono text-orange-400 font-bold">REF: {product.sku}</span>
+                <span className="font-mono text-orange-400 font-bold">REF: {activeSku}</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight leading-snug">
                 {product.name}
@@ -377,28 +395,64 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             </div>
 
-            {/* Color Selector */}
-            <div>
-              <span className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                Color: <strong className="text-white normal-case">{selectedColor}</strong>
-              </span>
-              <div className="flex items-center gap-2">
-                {["Negro Mate", "Rojo Furia", "Gris Titanio"].map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-75 active:scale-95 cursor-pointer border ${
-                      selectedColor === color
-                        ? "bg-neutral-800 text-orange-400 border-orange-500 shadow"
-                        : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700"
-                    }`}
-                  >
-                    {color}
-                  </button>
-                ))}
+            {/* Color / Variant Selector (Amazon & Mercado Libre style) */}
+            {product.color_variants && product.color_variants.length > 0 ? (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-neutral-300 uppercase tracking-wider">
+                    Color / Gráfico: <strong className="text-white normal-case font-black text-sm ml-1">{selectedColor}</strong>
+                  </span>
+                  <span className="text-[11px] text-neutral-400 font-medium">
+                    {product.color_variants.length} opciones en stock
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {product.color_variants.map((variant) => {
+                    const isSelected = selectedColor === variant.name;
+                    return (
+                      <button
+                        key={variant.name}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(variant.name);
+                          setCustomImage(variant.image);
+                          if (variant.sku) setActiveSku(variant.sku);
+                        }}
+                        className={`flex items-center gap-2.5 p-2 rounded-xl text-left transition-all duration-75 active:scale-95 cursor-pointer border ${
+                          isSelected
+                            ? "bg-neutral-800 text-orange-400 border-orange-500 shadow-md shadow-orange-500/10 ring-1 ring-orange-500"
+                            : "bg-neutral-950 text-neutral-300 border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-neutral-700/80 shrink-0 bg-neutral-900">
+                          <img src={variant.image} alt={variant.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className={`block text-xs truncate ${isSelected ? "font-black text-white" : "font-medium"}`}>
+                            {variant.name}
+                          </span>
+                          {variant.sku && (
+                            <span className="block text-[10px] font-mono text-neutral-500 truncate">
+                              {variant.sku}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <span className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
+                  Color / Acabado: <strong className="text-white normal-case">{selectedColor}</strong>
+                </span>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white">
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                  <span>{selectedColor || "Color Único Original"}</span>
+                </div>
+              </div>
+            )}
 
             {/* Stock & Delivery Info */}
             <div className="space-y-2 text-xs">

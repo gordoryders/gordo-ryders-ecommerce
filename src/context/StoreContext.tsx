@@ -504,7 +504,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedCity = localStorage.getItem("gr_user_city");
       if (savedCity) setUserCity(savedCity);
 
-      const CATALOG_VERSION = "2026_real_ich_v3";
+      const CATALOG_VERSION = "2026_real_ich_v4";
       const savedVersion = localStorage.getItem("gr_catalog_version");
 
       if (savedVersion !== CATALOG_VERSION) {

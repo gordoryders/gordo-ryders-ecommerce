@@ -28,9 +28,15 @@ export default function ProductDetailModal({
   onClose,
   onAddToCart,
 }: ProductDetailModalProps) {
+  const defaultVariant = product?.color_variants?.find(
+    (v) => v.sku === product.sku || (product.images?.[0] && v.image.includes(product.images[0]))
+  ) || product?.color_variants?.[0];
+
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("L");
-  const [selectedColor, setSelectedColor] = useState("Negro Mate");
+  const [selectedColor, setSelectedColor] = useState(defaultVariant?.name || "Estándar");
+  const [customImage, setCustomImage] = useState<string | null>(null);
+  const [activeSku, setActiveSku] = useState(defaultVariant?.sku || product?.sku);
   const [quantity, setQuantity] = useState(1);
   const [zoomStyle, setZoomStyle] = useState({ display: "none", transformOrigin: "0% 0%" });
   const [isZooming, setIsZooming] = useState(false);
@@ -38,17 +44,15 @@ export default function ProductDetailModal({
 
   if (!isOpen || !product) return null;
 
-  // 4 camera angles / views
   const baseImg = (product.images && product.images[0]) || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1000&q=80";
   
-  const gallery = [
-    { label: "Frontal", url: product.images?.[0] || baseImg },
-    { label: "Lateral", url: product.images?.[1] || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1000&q=80" },
-    { label: "Posterior", url: product.images?.[2] || "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1000&q=80" },
-    { label: "Detalle", url: product.images?.[3] || "https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=1000&q=80" },
-  ];
+  const galleryItems = (product.color_variants && product.color_variants.length > 0)
+    ? product.color_variants.map((v) => ({ url: v.image, name: v.name, sku: v.sku }))
+    : product.images && product.images.length > 0
+    ? product.images.map((img, i) => ({ url: img, name: `${product.name} ${i + 1}`, sku: product.sku }))
+    : [{ url: baseImg, name: product.name, sku: product.sku }];
 
-  const currentImageUrl = gallery[activeImageIndex]?.url || baseImg;
+  const currentImageUrl = customImage || galleryItems[activeImageIndex]?.url || baseImg;
 
   // Subtle Mouse Hover Zoom (Mercado Libre / Amazon style without clicking)
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -116,28 +120,33 @@ export default function ProductDetailModal({
             {/* LEFT: 4 ANGLES GALLERY WITH HOVER ZOOM */}
             <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-3">
               
-              {/* 4 Angle Thumbnails */}
+              {/* Thumbnails (Clean, NO label badges) */}
               <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-visible shrink-0 pb-1 sm:pb-0">
-                {gallery.map((thumb, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden border-2 transition-all ${
-                      activeImageIndex === idx
-                        ? "border-orange-500 ring-2 ring-orange-500/30 scale-105"
-                        : "border-neutral-800 opacity-60 hover:opacity-100"
-                    }`}
-                  >
-                    <img
-                      src={thumb.url}
-                      alt={thumb.label}
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/75 text-[9px] font-bold text-center py-0.5 text-neutral-300">
-                      {thumb.label}
-                    </span>
-                  </button>
-                ))}
+                {galleryItems.map((thumb, idx) => {
+                  const isActive = currentImageUrl === thumb.url;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveImageIndex(idx);
+                        setCustomImage(thumb.url);
+                        if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
+                        if (thumb.sku) setActiveSku(thumb.sku);
+                      }}
+                      className={`relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden border-2 transition-all ${
+                        isActive
+                          ? "border-orange-500 ring-2 ring-orange-500/30 scale-105"
+                          : "border-neutral-800 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={thumb.url}
+                        alt={`${product.name} - ${thumb.name || idx}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Main Image with Smooth Hover Magnifier */}
@@ -177,8 +186,8 @@ export default function ProductDetailModal({
                   <span className="text-orange-400 font-extrabold uppercase text-[10px] tracking-widest">
                     {product.category_name || "Gordo Ryders Oficial"}
                   </span>
-                  <span className="text-neutral-500 font-mono text-[10px]">
-                    REF: {product.sku}
+                  <span className="text-orange-400 font-mono text-[11px] font-bold">
+                    REF: {activeSku}
                   </span>
                 </div>
 
@@ -251,25 +260,55 @@ export default function ProductDetailModal({
                 </div>
               </div>
 
-              {/* Color Selector */}
-              <div>
-                <span className="text-xs font-bold text-neutral-300 block mb-2">Color seleccionado: <strong className="text-white">{selectedColor}</strong></span>
-                <div className="flex items-center gap-2">
-                  {colors.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setSelectedColor(c)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                        selectedColor === c
-                          ? "bg-neutral-800 border-orange-500 text-orange-400"
-                          : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
+              {/* Color / Variant Selector (Amazon & Mercado Libre style) */}
+              {product.color_variants && product.color_variants.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-xs font-bold text-neutral-300">
+                      Color / Gráfico: <strong className="text-white ml-1">{selectedColor}</strong>
+                    </span>
+                    <span className="text-[10px] text-neutral-400 font-medium">
+                      {product.color_variants.length} en stock
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1 scrollbar-thin">
+                    {product.color_variants.map((variant) => {
+                      const isSelected = selectedColor === variant.name;
+                      return (
+                        <button
+                          key={variant.name}
+                          type="button"
+                          onClick={() => {
+                            setSelectedColor(variant.name);
+                            setCustomImage(variant.image);
+                            if (variant.sku) setActiveSku(variant.sku);
+                          }}
+                          className={`flex items-center gap-2 p-1.5 rounded-xl text-left transition-all ${
+                            isSelected
+                              ? "bg-neutral-800 border-orange-500 text-orange-400 border ring-1 ring-orange-500/40"
+                              : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white border hover:border-neutral-700"
+                          }`}
+                        >
+                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-neutral-700 shrink-0 bg-neutral-900">
+                            <img src={variant.image} alt={variant.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="block text-[11px] truncate font-medium">{variant.name}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <span className="text-xs font-bold text-neutral-300 block mb-2">Color seleccionado: <strong className="text-white">{selectedColor}</strong></span>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                    <span>{selectedColor}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="flex items-center justify-between pt-1">

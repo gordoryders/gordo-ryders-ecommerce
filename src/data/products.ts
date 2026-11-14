@@ -1,4 +1,4 @@
-import { Product, LookbookAlbum } from "@/types";
+import { Product, LookbookAlbum, ProductColorVariant } from "@/types";
 
 export interface SubCategory {
   name: string;
@@ -15,6 +15,84 @@ export interface MegaCategory {
   highlight?: string;
   subcategories: SubCategory[];
 }
+
+export const ICH_3110_VARIANTS: ProductColorVariant[] = [
+  {
+    name: "Racing Naranja Neón Sport",
+    colorHex: "#f97316",
+    image: "/products/cascos/ich-3110-ktm-orange.jpg",
+    sku: "ICH-3110-KTM",
+  },
+  {
+    name: "Top Speed 'All Or Nothing'",
+    colorHex: "#e2e8f0",
+    image: "/products/cascos/ich-3110-top-speed.jpg",
+    sku: "ICH-3110-TS",
+  },
+  {
+    name: "Flúor Yellow Edición Visibilidad",
+    colorHex: "#eab308",
+    image: "/products/cascos/ich-3110-fluor-yellow.jpg",
+    sku: "ICH-3110-FL",
+  },
+  {
+    name: "Street Red Devil Calavera",
+    colorHex: "#ef4444",
+    image: "/products/cascos/ich-3110-red-smile.jpg",
+    sku: "ICH-3110-RD",
+  },
+  {
+    name: "Neon Camo Violeta & Fucsia",
+    colorHex: "#c084fc",
+    image: "/products/cascos/ich-3110-neon-camo.jpg",
+    sku: "ICH-3110-CAMO",
+  },
+  {
+    name: "Stealth Dark Titanium Mate",
+    colorHex: "#64748b",
+    image: "/products/cascos/ich-3110-dark-titanium.jpg",
+    sku: "ICH-3110-STEALTH",
+  },
+  {
+    name: "Smoke Shadow Brillo",
+    colorHex: "#334155",
+    image: "/products/cascos/ich-3110-smoke-shadow.jpg",
+    sku: "ICH-3110-SHADOW",
+  },
+  {
+    name: "Pink Titanium Sport",
+    colorHex: "#ec4899",
+    image: "/products/cascos/ich-3110-pink-titanium.jpg",
+    sku: "ICH-3110-PINK",
+  },
+];
+
+export const ICH_501_VARIANTS: ProductColorVariant[] = [
+  {
+    name: "Lila Pastel Chic",
+    colorHex: "#c084fc",
+    image: "/products/cascos/ich-501-lila.jpg",
+    sku: "ICH-501-LILA",
+  },
+  {
+    name: "Beige Vintage Arena",
+    colorHex: "#d4b996",
+    image: "/products/cascos/ich-501-beige.jpg",
+    sku: "ICH-501-BEIGE",
+  },
+  {
+    name: "Negro Mate Clásico",
+    colorHex: "#1c1917",
+    image: "/products/cascos/ich-501-negro-mate.jpg",
+    sku: "ICH-501-MBLCK",
+  },
+  {
+    name: "Blanco Puro Brillante",
+    colorHex: "#f8fafc",
+    image: "/products/cascos/ich-501-blanco.jpg",
+    sku: "ICH-501-WHT",
+  },
+];
 
 export const LOOKBOOK_ALBUMS: LookbookAlbum[] = [
   {
@@ -150,7 +228,7 @@ export const MEGA_CATEGORIES: MegaCategory[] = [
 ];
 
 export const PRODUCTS: Product[] = [
-  // 1. CASCO ABATIBLE ICH 3110 TOP SPEED (PROTAGONISTA DEL SCREENSHOT DE WHATSAPP)
+  // 1. CASCO ABATIBLE ICH 3110 TOP SPEED
   {
     id: "ich-3110-ts",
     sku: "ICH-3110-TS",
@@ -168,10 +246,8 @@ export const PRODUCTS: Product[] = [
     description: "El casco modular abatible más codiciado de la línea ICH. Incorpora mentonera elevable monomando de un solo toque y sistema de Doble Visor con gafas oscuras internas retráctiles. Gráfico exclusivo 'Top Speed / All Or Nothing' con acabados mate de alta definición. Homologado bajo la estricta norma estadounidense DOT FMVSS 218 y NTC 4533 (Resolución 1080 del MinTransporte en Colombia).",
     images: [
       "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-dark-titanium.jpg",
-      "/products/cascos/ich-3110-fluor-yellow.jpg",
-      "/products/cascos/ich-3110-ktm-orange.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 Modular Doble Visor" },
@@ -207,10 +283,8 @@ export const PRODUCTS: Product[] = [
     description: "Diseño agresivo inspirado en el motociclismo de pista con los colores distintivos de Gordo Ryders (Naranja Neón, Azul y Plata sobre base Negro Mate). Sistema abatible con botón central inferior y gafas solares retráctiles para proteger tu visión del sol de mediodía sin parar la moto.",
     images: [
       "/products/cascos/ich-3110-ktm-orange.jpg",
-      "/products/cascos/ich-3110-racing-red.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-fluor-yellow.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 Racing Sport" },
@@ -250,10 +324,8 @@ export const PRODUCTS: Product[] = [
     description: "La seguridad es lo primero en carretera y ciudad. Este casco combina base Negro Mate con líneas geométricas en Amarillo Flúor de alta reflectividad diurna y nocturna. Mentonera abatible y visor dual que evita el encandilamiento solar.",
     images: [
       "/products/cascos/ich-3110-fluor-yellow.jpg",
-      "/products/cascos/ich-3110-sport-yellow.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-smoke-shadow.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 High Visibility" },
@@ -286,10 +358,8 @@ export const PRODUCTS: Product[] = [
     description: "Estilo callejero agresivo con gráfica tipo graffiti y smile en rojo intenso sobre negro ahumado. Perfecto para moteros de naked, sport y motos de media/alta cilindrada que buscan personalidad única con máxima certificación.",
     images: [
       "/products/cascos/ich-3110-red-smile.jpg",
-      "/products/cascos/ich-3110-racing-red.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-dark-titanium.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Street Red Devil" },
@@ -322,10 +392,8 @@ export const PRODUCTS: Product[] = [
     description: "Acabado brillante ultra llamativo con camuflaje orgánico en tonos violeta, magenta y fucsia eléctrico sobre negro profundo. Un casco que resalta en cualquier semáforo, combinando la comodidad de su mentonera abatible con gafas solares retráctiles.",
     images: [
       "/products/cascos/ich-3110-neon-camo.jpg",
-      "/products/cascos/ich-3110-pink-titanium.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-ktm-orange.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Neon Camo Gloss" },
@@ -357,10 +425,8 @@ export const PRODUCTS: Product[] = [
     description: "Para los moteros que prefieren la elegancia sobria y oscura sin perder el toque deportivo. Gráfico geométrico tono sobre tono en gris titanio oscuro y negro mate. Doble visor homologado DOT, interior acolchado lavable y broche micrométrico.",
     images: [
       "/products/cascos/ich-3110-dark-titanium.jpg",
-      "/products/cascos/ich-3110-smoke-shadow.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-pink-titanium.jpg",
     ],
+    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Stealth Dark Titanium" },
@@ -392,10 +458,8 @@ export const PRODUCTS: Product[] = [
     description: "El casco más viral para scooters y motos automáticas en Colombia. Acabado brillante en tono Lila Pastel / Lavanda con visor panorámico transparente anti-scratch que cubre todo el rostro protegiendo de la polución y la lluvia sin sofocar. Cumple la norma legal DOT y NTC 4533.",
     images: [
       "/products/cascos/ich-501-lila.jpg",
-      "/products/cascos/ich-501-beige.jpg",
-      "/products/cascos/ich-501-blanco.jpg",
-      "/products/cascos/ich-501-negro-mate.jpg",
     ],
+    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -430,10 +494,8 @@ export const PRODUCTS: Product[] = [
     description: "Estética clásica cafe-racer y scooter europea en tono Beige Arena Brillante. Coraza liviana en termoplástico ABS de alta densidad, visor facial largo con pivote de liberación rápida y acolchado interior lavable super confortable.",
     images: [
       "/products/cascos/ich-501-beige.jpg",
-      "/products/cascos/ich-501-blanco.jpg",
-      "/products/cascos/ich-501-lila.jpg",
-      "/products/cascos/ich-501-negro-brillo.jpg",
     ],
+    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -466,10 +528,8 @@ export const PRODUCTS: Product[] = [
     description: "El rey de las calles. Acabado en negro mate satinado que combina con cualquier moto y estilo de ropa. Visor largo transparente resistente a rasguños que garantiza un campo visual de 180 grados sin distorsión.",
     images: [
       "/products/cascos/ich-501-negro-mate.jpg",
-      "/products/cascos/ich-501-negro-brillo.jpg",
-      "/products/cascos/ich-501-blanco.jpg",
-      "/products/cascos/ich-501-beige.jpg",
     ],
+    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -502,10 +562,8 @@ export const PRODUCTS: Product[] = [
     description: "Máxima visibilidad bajo el sol y la noche. El acabado blanco puro brillante refleja los rayos solares manteniendo el casco fresco en climas cálidos y templados. Certificación DOT garantizada para rodar sin preocupaciones.",
     images: [
       "/products/cascos/ich-501-blanco.jpg",
-      "/products/cascos/ich-501-negro-brillo.jpg",
-      "/products/cascos/ich-501-beige.jpg",
-      "/products/cascos/ich-501-lila.jpg",
     ],
+    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -536,17 +594,16 @@ export const PRODUCTS: Product[] = [
     reviews_count: 94,
     description: "El guante de protección urbana más vendido en Colombia. Diseñado con protecciones de impacto rígidas en nudillos, palma antideslizante con absorción de vibración del manubrio, tela transpirable 3D y tecnología touch screen en dedo índice para manipular celular sin desarmarte.",
     images: [
-      "/products/cascos/ich-3110-ktm-orange.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-fluor-yellow.jpg",
+      "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=800&q=80",
     ],
     specs: [
-      { label: "Marca", value: "Proviker Oficial" },
+      { label: "Marca Oficial", value: "Proviker" },
       { label: "Modelo / Referencia", value: "Ref E44 Urban Tech" },
       { label: "Protección Nudillos", value: "Carcasa rígida ergonómica de impacto" },
-      { label: "Palma", value: "Grip antideslizante con absorción de vibración" },
+      { label: "Palma / Agarre", value: "Grip antideslizante con absorción de vibración" },
       { label: "Compatibilidad", value: "Touch screen capacitivo en dedo índice y pulgar" },
-      { label: "Ajuste", value: "Velcro termofijado en muñeca" },
+      { label: "Ajuste y Cierre", value: "Correa con velcro termofijado en muñeca" },
+      { label: "Garantía Oficial", value: "3 meses por costuras y materiales" },
     ],
     is_featured: true,
     is_active: true,
@@ -570,15 +627,15 @@ export const PRODUCTS: Product[] = [
     reviews_count: 48,
     description: "Cero filtraciones en los peores aguaceros de carretera o ciudad. Confeccionado en tela náutica siliconada con termosellado electrónico en cada costura y entrepierna reforzada sin costura central para máxima durabilidad sobre el sillín de la moto. Bandas reflectivas 3M.",
     images: [
-      "/products/cascos/ich-3110-top-speed.jpg",
-      "/products/cascos/ich-3110-fluor-yellow.jpg",
+      "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=800&q=80",
     ],
     specs: [
-      { label: "Tipo", value: "Enterizo 100% impermeable termosellado" },
+      { label: "Tipo de Prenda", value: "Enterizo 100% impermeable termosellado" },
       { label: "Material", value: "PVC Siliconado extra flexible calibre 16" },
-      { label: "Cierre", value: "Cremallera gruesa con doble solapa hermética" },
-      { label: "Reflectivos", value: "Bandas reflectivas de alta visibilidad nocturna" },
-      { label: "Accesorios", value: "Incluye tula transportadora compacta" },
+      { label: "Sellado de Costuras", value: "Termoselladas con cinta vulcanizada a calor" },
+      { label: "Seguridad Vial", value: "Bandas reflectivas de alta visibilidad nocturna 360°" },
+      { label: "Accesorios Incluidos", value: "Incluye tula transportadora compacta" },
+      { label: "Garantía Oficial", value: "3 meses de impermeabilidad total" },
     ],
     is_featured: true,
     is_active: true,
@@ -602,8 +659,7 @@ export const PRODUCTS: Product[] = [
     reviews_count: 61,
     description: "Mecanizado en aleación de aluminio de aviación por CNC con 4 amortiguadores de silicona especiales para proteger el estabilizador óptico de la cámara de tu smartphone de las vibraciones del motor.",
     images: [
-      "/products/cascos/ich-3110-ktm-orange.jpg",
-      "/products/cascos/ich-3110-top-speed.jpg",
+      "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
     ],
     specs: [
       { label: "Material", value: "Aluminio 6061-T6 mecanizado CNC anodizado" },
