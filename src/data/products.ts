@@ -247,7 +247,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-top-speed.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 Modular Doble Visor" },
@@ -284,7 +283,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-ktm-orange.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 Racing Sport" },
@@ -325,7 +323,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-fluor-yellow.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets (Inducascos Colombia)" },
       { label: "Referencia", value: "ICH 3110 High Visibility" },
@@ -359,7 +356,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-red-smile.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Street Red Devil" },
@@ -393,7 +389,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-neon-camo.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Neon Camo Gloss" },
@@ -426,7 +421,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-3110-dark-titanium.jpg",
     ],
-    color_variants: ICH_3110_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 3110 Stealth Dark Titanium" },
@@ -459,7 +453,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-501-lila.jpg",
     ],
-    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -495,7 +488,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-501-beige.jpg",
     ],
-    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -529,7 +521,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-501-negro-mate.jpg",
     ],
-    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },
@@ -563,7 +554,6 @@ export const PRODUCTS: Product[] = [
     images: [
       "/products/cascos/ich-501-blanco.jpg",
     ],
-    color_variants: ICH_501_VARIANTS,
     specs: [
       { label: "Marca Oficial", value: "ICH Helmets" },
       { label: "Referencia", value: "ICH 501 Jet Urbano" },

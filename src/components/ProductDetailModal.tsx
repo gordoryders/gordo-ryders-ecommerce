@@ -46,9 +46,7 @@ export default function ProductDetailModal({
 
   const baseImg = (product.images && product.images[0]) || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1000&q=80";
   
-  const galleryItems = (product.color_variants && product.color_variants.length > 0)
-    ? product.color_variants.map((v) => ({ url: v.image, name: v.name, sku: v.sku }))
-    : product.images && product.images.length > 0
+  const galleryItems = (product.images && product.images.length > 0)
     ? product.images.map((img, i) => ({ url: img, name: `${product.name} ${i + 1}`, sku: product.sku }))
     : [{ url: baseImg, name: product.name, sku: product.sku }];
 
@@ -120,34 +118,34 @@ export default function ProductDetailModal({
             {/* LEFT: 4 ANGLES GALLERY WITH HOVER ZOOM */}
             <div className="lg:col-span-7 flex flex-col-reverse sm:flex-row gap-3">
               
-              {/* Thumbnails (Clean, NO label badges) */}
-              <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-visible shrink-0 pb-1 sm:pb-0">
-                {galleryItems.map((thumb, idx) => {
-                  const isActive = currentImageUrl === thumb.url;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setActiveImageIndex(idx);
-                        setCustomImage(thumb.url);
-                        if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
-                        if (thumb.sku) setActiveSku(thumb.sku);
-                      }}
-                      className={`relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden border-2 transition-all ${
-                        isActive
-                          ? "border-orange-500 ring-2 ring-orange-500/30 scale-105"
-                          : "border-neutral-800 opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={thumb.url}
-                        alt={`${product.name} - ${thumb.name || idx}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Thumbnails (Only when product has 2+ photos) */}
+              {galleryItems.length > 1 && (
+                <div className="flex sm:flex-col gap-2.5 overflow-x-auto sm:overflow-visible shrink-0 pb-1 sm:pb-0">
+                  {galleryItems.map((thumb, idx) => {
+                    const isActive = currentImageUrl === thumb.url;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setActiveImageIndex(idx);
+                          setCustomImage(thumb.url);
+                        }}
+                        className={`relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden border-2 transition-all ${
+                          isActive
+                            ? "border-orange-500 ring-2 ring-orange-500/30 scale-105"
+                            : "border-neutral-800 opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <img
+                          src={thumb.url}
+                          alt={`${product.name} - Vista ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Main Image with Smooth Hover Magnifier */}
               <div
@@ -260,12 +258,12 @@ export default function ProductDetailModal({
                 </div>
               </div>
 
-              {/* Color / Variant Selector (Amazon & Mercado Libre style) */}
-              {product.color_variants && product.color_variants.length > 0 ? (
+              {/* Color / Variant Selector */}
+              {product.color_variants && product.color_variants.length > 1 ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-xs font-bold text-neutral-300">
-                      Color / Gráfico: <strong className="text-white ml-1">{selectedColor}</strong>
+                      Variante de Color: <strong className="text-white ml-1">{selectedColor}</strong>
                     </span>
                     <span className="text-[10px] text-neutral-400 font-medium">
                       {product.color_variants.length} en stock
@@ -302,9 +300,9 @@ export default function ProductDetailModal({
                 </div>
               ) : (
                 <div>
-                  <span className="text-xs font-bold text-neutral-300 block mb-2">Color seleccionado: <strong className="text-white">{selectedColor}</strong></span>
+                  <span className="text-xs font-bold text-neutral-300 block mb-2">Gráfico / Acabado: <strong className="text-white">{selectedColor}</strong></span>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white">
-                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
                     <span>{selectedColor}</span>
                   </div>
                 </div>

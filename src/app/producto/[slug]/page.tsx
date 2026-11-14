@@ -57,14 +57,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const defaultVariant = product.color_variants?.find(
-    (v) => v.sku === product.sku || (product.images[0] && v.image.includes(product.images[0]))
-  ) || product.color_variants?.[0];
+  const productColorSpec = product.specs?.find(
+    (s) => s.label.toLowerCase().includes("gráfico") || s.label.toLowerCase().includes("color") || s.label.toLowerCase().includes("acabado")
+  )?.value;
+
+  const hasColorVariants = !!(product.color_variants && product.color_variants.length > 1);
+  const defaultVariant = hasColorVariants
+    ? (product.color_variants!.find((v) => v.sku === product.sku) || product.color_variants![0])
+    : null;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState("L");
   const [selectedColor, setSelectedColor] = useState(
-    defaultVariant?.name || "Estándar"
+    defaultVariant?.name || productColorSpec || "Original de Fábrica"
   );
   const [activeSku, setActiveSku] = useState(defaultVariant?.sku || product.sku);
   const [customImage, setCustomImage] = useState<string | null>(null);
@@ -113,11 +118,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       maximumFractionDigits: 0,
     }).format(num);
 
-  // Gallery items (clean, NO angle text labels)
-  const galleryItems = (product.color_variants && product.color_variants.length > 0)
-    ? product.color_variants.map((v) => ({ url: v.image, name: v.name, sku: v.sku }))
-    : product.images.length > 0
-    ? product.images.map((img, i) => ({ url: img, name: `${product.name} ${i + 1}`, sku: product.sku }))
+  // Gallery items: ONLY images belonging strictly to this product
+  const galleryItems = (product.images && product.images.length > 0)
+    ? product.images.map((img, i) => ({ url: img, name: `${product.name} - Vista ${i + 1}`, sku: product.sku }))
     : [{ url: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80", name: product.name, sku: product.sku }];
 
   const currentImageUrl = customImage || galleryItems[activeImageIndex]?.url || product.images[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80";
@@ -216,43 +219,41 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
       <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-4 sm:p-8 shadow-2xl mb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* A. Vertical Thumbnails Column (Clean, NO text angle labels) */}
-          <div className="lg:col-span-2 order-2 lg:order-1 flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none">
-            {galleryItems.map((thumb, idx) => {
-              const isActive = currentImageUrl === thumb.url;
-              return (
-                <button
-                  key={idx}
-                  onMouseEnter={() => {
-                    setActiveImageIndex(idx);
-                    setCustomImage(thumb.url);
-                    if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
-                    if (thumb.sku) setActiveSku(thumb.sku);
-                  }}
-                  onClick={() => {
-                    setActiveImageIndex(idx);
-                    setCustomImage(thumb.url);
-                    if (thumb.name && thumb.name !== product.name) setSelectedColor(thumb.name);
-                    if (thumb.sku) setActiveSku(thumb.sku);
-                  }}
-                  className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-75 active:scale-95 shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-24 bg-neutral-950 cursor-pointer ${
-                    isActive
-                      ? "border-orange-500 shadow-md shadow-orange-500/20 ring-1 ring-orange-500"
-                      : "border-neutral-800 hover:border-neutral-700 opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <img
-                    src={thumb.url}
-                    alt={`${product.name} - ${thumb.name || idx}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              );
-            })}
-          </div>
+          {/* A. Vertical Thumbnails Column (Only shown when there are 2+ photos of this specific product) */}
+          {galleryItems.length > 1 && (
+            <div className="lg:col-span-2 order-2 lg:order-1 flex lg:flex-col gap-2.5 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-none">
+              {galleryItems.map((thumb, idx) => {
+                const isActive = currentImageUrl === thumb.url;
+                return (
+                  <button
+                    key={idx}
+                    onMouseEnter={() => {
+                      setActiveImageIndex(idx);
+                      setCustomImage(thumb.url);
+                    }}
+                    onClick={() => {
+                      setActiveImageIndex(idx);
+                      setCustomImage(thumb.url);
+                    }}
+                    className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-75 active:scale-95 shrink-0 w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-24 bg-neutral-950 cursor-pointer ${
+                      isActive
+                        ? "border-orange-500 shadow-md shadow-orange-500/20 ring-1 ring-orange-500"
+                        : "border-neutral-800 hover:border-neutral-700 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={thumb.url}
+                      alt={`${product.name} - Vista ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* B. Primary High-Res Photo with Clean View (100% Clean, NO Text Blockers!) */}
-          <div className="lg:col-span-5 order-1 lg:order-2">
+          <div className={`${galleryItems.length > 1 ? "lg:col-span-5" : "lg:col-span-7"} order-1 lg:order-2`}>
             <div
               ref={imageContainerRef}
               onMouseMove={handleMouseMove}
@@ -395,19 +396,19 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             </div>
 
-            {/* Color / Variant Selector (Amazon & Mercado Libre style) */}
-            {product.color_variants && product.color_variants.length > 0 ? (
+            {/* Color / Variant Selector */}
+            {hasColorVariants ? (
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-neutral-300 uppercase tracking-wider">
-                    Color / Gráfico: <strong className="text-white normal-case font-black text-sm ml-1">{selectedColor}</strong>
+                    Variante de Color: <strong className="text-white normal-case font-black text-sm ml-1">{selectedColor}</strong>
                   </span>
                   <span className="text-[11px] text-neutral-400 font-medium">
-                    {product.color_variants.length} opciones en stock
+                    {product.color_variants!.length} opciones disponibles
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {product.color_variants.map((variant) => {
+                  {product.color_variants!.map((variant) => {
                     const isSelected = selectedColor === variant.name;
                     return (
                       <button
@@ -445,11 +446,11 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             ) : (
               <div>
                 <span className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Color / Acabado: <strong className="text-white normal-case">{selectedColor}</strong>
+                  Gráfico / Acabado: <strong className="text-white normal-case">{selectedColor}</strong>
                 </span>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white">
-                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                  <span>{selectedColor || "Color Único Original"}</span>
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-white">
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></span>
+                  <span className="font-semibold">{selectedColor}</span>
                 </div>
               </div>
             )}
