@@ -51,12 +51,17 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
     // Filter by active subcategory pill
     if (activeSub !== "all") {
-      const subNorm = activeSub.replace("mayorista-", "").replace("guantes-", "").replace("cascos-", "");
+      const subNorm = activeSub
+        .replace("mayorista-", "")
+        .replace("guantes-", "")
+        .replace("cascos-", "")
+        .replace(/s$/, ""); // e.g. "abatibles" -> "abatible", "urbanos" -> "urbano"
+
       list = list.filter(
         (p) =>
           p.slug.toLowerCase().includes(subNorm) ||
           p.name.toLowerCase().includes(subNorm) ||
-          p.category_name?.toLowerCase().includes(subNorm) ||
+          p.description?.toLowerCase().includes(subNorm) ||
           p.sku.toLowerCase().includes(subNorm)
       );
     }
@@ -182,6 +187,47 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           </button>
         </div>
       )}
+
+      {/* Otras Recomendaciones para complementar tu ruta */}
+      {(() => {
+        const allProds = products && products.length > 0 ? products : PRODUCTS;
+        const recommendations = allProds
+          .filter((p) => p.is_active && !filteredProducts.some((fp) => fp.id === p.id))
+          .slice(0, 3);
+
+        if (recommendations.length === 0) return null;
+
+        return (
+          <div className="mt-16 pt-12 border-t border-neutral-800">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="text-xs font-bold text-orange-400 uppercase tracking-wider block">
+                  Recomendados para tu viaje
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight">
+                  Complementa tu Equipamiento Motero
+                </h3>
+              </div>
+              <Link
+                href="/categoria/all"
+                className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
+              >
+                Ver todo el catálogo →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {recommendations.map((rec) => (
+                <ProductCard
+                  key={rec.id}
+                  product={rec}
+                  onAddToCart={() => addToCart(rec, "M", "Negro", 1)}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

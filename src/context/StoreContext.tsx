@@ -102,7 +102,7 @@ const DEFAULT_BANNERS: HeroBanner[] = [
     highlight: "DOBLE VISOR HOMOLOGADO",
     subtitle: "Mentonera modular con accionamiento de un solo toque y gafas solares internas retráctiles. Certificación estadounidense DOT FMVSS 218 y NTC 4533 para rodar seguro por toda Colombia.",
     buttonText: "VER CASCOS ABATIBLES",
-    buttonLink: "#catalogo",
+    buttonLink: "/categoria/cascos",
     secondaryText: "Cotizar por WhatsApp",
     secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20cotizar%20el%20Casco%20Abatible%20ICH%203110%20Doble%20Visor",
     bgImage: "/products/cascos/ich-3110-top-speed.jpg",
@@ -116,9 +116,9 @@ const DEFAULT_BANNERS: HeroBanner[] = [
     highlight: "LILA, BEIGE & MATE",
     subtitle: "Cascos livianos semi-integrales con visor panorámico transparente anti-scratch. Confort, frescura y visibilidad óptima para rodar fresco en el tráfico diario.",
     buttonText: "EXPLORAR MODELOS URBANOS",
-    buttonLink: "#catalogo",
+    buttonLink: "/categoria/cascos?sub=cascos-urbanos",
     secondaryText: "Ver Gama Pastel",
-    secondaryLink: "#catalogo",
+    secondaryLink: "/categoria/cascos?sub=cascos-urbanos",
     bgImage: "/products/cascos/ich-501-lila.jpg",
     accentColor: "from-purple-400 via-pink-400 to-orange-400",
     isActive: true,
@@ -504,7 +504,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedCity = localStorage.getItem("gr_user_city");
       if (savedCity) setUserCity(savedCity);
 
-      const CATALOG_VERSION = "2026_real_ich_v2";
+      const CATALOG_VERSION = "2026_real_ich_v3";
       const savedVersion = localStorage.getItem("gr_catalog_version");
 
       if (savedVersion !== CATALOG_VERSION) {

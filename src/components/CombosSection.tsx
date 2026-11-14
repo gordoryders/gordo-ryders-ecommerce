@@ -2,7 +2,8 @@
 
 import { useStore } from "@/context/StoreContext";
 import { ProductCombo, Product } from "@/types";
-import { Package, Plus, ShoppingCart, MessageCircle, Sparkles, CheckCircle2 } from "lucide-react";
+import { Package, Plus, Equal, ShoppingCart, MessageCircle, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function CombosSection() {
   const { combos, products, addToCart } = useStore();
@@ -24,8 +25,8 @@ export default function CombosSection() {
       .map((idOrSlug) =>
         products.find(
           (p) =>
-            p.id === idOrSlug ||
-            p.slug === idOrSlug ||
+            p.id.toLowerCase() === idOrSlug.toLowerCase() ||
+            p.slug.toLowerCase() === idOrSlug.toLowerCase() ||
             p.name.toLowerCase().includes(idOrSlug.toLowerCase())
         )
       )
@@ -45,7 +46,7 @@ export default function CombosSection() {
     <section className="py-12 bg-neutral-950 border-b border-neutral-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
+        {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">
@@ -56,13 +57,13 @@ export default function CombosSection() {
               Combos de Equipamiento con Descuento
             </h2>
             <p className="text-xs text-neutral-400 mt-1">
-              Lleva 2 o 3 productos juntos a un precio preferencial. Ahorra comprando el kit completo.
+              Lleva los productos juntos a precio especial de bodega. Fotos completas de cada artículo incluido.
             </p>
           </div>
         </div>
 
-        {/* Combos Cards Grid */}
-        <div className="space-y-6">
+        {/* Combos Visual Showcase */}
+        <div className="space-y-8">
           {activeCombos.map((combo) => {
             const comboProds = getComboProducts(combo);
             const calculatedOriginal = comboProds.reduce((acc, p) => acc + (p?.price_retail || 0), 0);
@@ -70,21 +71,23 @@ export default function CombosSection() {
             const savings = combo.savingsAmount || Math.max(0, originalPrice - combo.price);
 
             const whatsappMessage = encodeURIComponent(
-              `Hola Gordo Ryders, quiero comprar el ${combo.name} por valor de ${formatCOP(combo.price)} (Ahorro de ${formatCOP(savings)}). ¿Tienen disponibilidad inmediata?`
+              `Hola Gordo Ryders, me interesa comprar el "${combo.name}" en promoción por valor de ${formatCOP(combo.price)} (Ahorro de ${formatCOP(savings)}). ¿Tienen disponibilidad en bodega?`
             );
 
             return (
               <div
                 key={combo.id}
-                className="bg-neutral-900 border border-neutral-800 hover:border-orange-500/40 rounded-3xl p-6 sm:p-8 transition-all duration-300 shadow-2xl flex flex-col lg:flex-row items-stretch justify-between gap-6 relative overflow-hidden"
+                className="bg-neutral-900 border border-neutral-800 hover:border-orange-500/40 rounded-3xl p-5 sm:p-7 transition-all duration-300 shadow-2xl flex flex-col xl:flex-row items-stretch justify-between gap-6 relative overflow-hidden group"
               >
-                {/* Accent Background Glow */}
-                <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+                {/* Background ambient lighting */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                {/* Left Side: Combo Details & Products in Combo */}
-                <div className="flex-1 space-y-5">
+                {/* Left / Main Section: Titles + Complete Product Photo Cards */}
+                <div className="flex-1 space-y-6">
+                  
+                  {/* Combo Header Info */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/15 border border-orange-500/30 px-3 py-1 rounded-full shadow-sm">
                         {combo.tag || "COMBO PROMOCIONAL"}
                       </span>
@@ -103,63 +106,97 @@ export default function CombosSection() {
                     </p>
                   </div>
 
-                  {/* Included Products Visual Pills */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                  {/* Complete Products Gallery Showcase (Visual Bundle Row) */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-none">
                     {comboProds.map((prod, idx) => (
-                      <div key={prod.id || idx} className="flex items-center gap-2">
-                        <div className="flex items-center gap-2.5 bg-neutral-950 border border-neutral-800 rounded-2xl p-2 pr-3.5">
-                          <img
-                            src={prod.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80"}
-                            alt={prod.name}
-                            className="w-10 h-10 rounded-xl object-cover bg-neutral-900 border border-neutral-800 shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <span className="text-[9px] font-bold text-orange-400 uppercase tracking-wider block">
-                              {prod.category_name}
+                      <div key={prod.id || idx} className="flex items-center gap-3 w-full sm:w-auto">
+                        
+                        {/* Complete Product Card with Large Image */}
+                        <Link
+                          href={`/producto/${prod.slug}`}
+                          prefetch={true}
+                          className="w-full sm:w-48 bg-neutral-950 border border-neutral-800 hover:border-orange-500/50 rounded-2xl p-3 flex flex-col transition-all group/card shadow-lg hover:shadow-orange-500/10"
+                        >
+                          {/* Complete Photo Container */}
+                          <div className="aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800/80 mb-2 relative">
+                            <img
+                              src={prod.images?.[0] || "/products/cascos/ich-3110-top-speed.jpg"}
+                              alt={prod.name}
+                              className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
+                            {/* Category Pill Overlay */}
+                            <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider bg-neutral-950/85 backdrop-blur-sm text-orange-400 px-2 py-0.5 rounded border border-neutral-800">
+                              {prod.category_name || "Producto"}
                             </span>
-                            <span className="text-xs font-bold text-white truncate max-w-[140px] sm:max-w-[180px] block">
-                              {prod.name}
+                            {/* Price Pill Overlay */}
+                            <span className="absolute bottom-2 right-2 text-[10px] font-mono font-bold text-white bg-neutral-950/90 backdrop-blur-sm px-2 py-0.5 rounded border border-neutral-800">
+                              {formatCOP(prod.price_retail)}
                             </span>
                           </div>
-                        </div>
 
+                          {/* Product Name */}
+                          <h4 className="text-xs font-bold text-neutral-200 line-clamp-2 group-hover/card:text-orange-400 transition-colors leading-snug">
+                            {prod.name}
+                          </h4>
+                          <span className="text-[10px] font-mono text-neutral-400 mt-1 block">
+                            Ref: {prod.sku}
+                          </span>
+                        </Link>
+
+                        {/* Visual '+' Badge Between Items */}
                         {idx < comboProds.length - 1 && (
-                          <div className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-orange-400 font-black text-xs shrink-0">
-                            +
+                          <div className="hidden sm:flex w-8 h-8 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 items-center justify-center font-black text-sm shrink-0 shadow-md">
+                            <Plus className="w-4 h-4 stroke-[3]" />
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex items-center gap-2 text-[11px] text-neutral-400">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Envío seguro a toda Colombia con guía de rastreo oficial incluida.</span>
+                  {/* Trust Footer Note */}
+                  <div className="flex items-center gap-2 text-[11px] text-neutral-400 pt-1">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Los productos se despachan juntos en un solo paquete con guía de rastreo oficial.</span>
                   </div>
                 </div>
 
-                {/* Right Side: Price Box & Actions */}
-                <div className="lg:w-72 bg-neutral-950 border border-neutral-800 rounded-2xl p-5 flex flex-col justify-between space-y-4 shrink-0">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block font-semibold">
-                      Precio de los productos por separado:
-                    </span>
-                    <span className="text-sm font-bold text-neutral-500 line-through font-mono block">
-                      {formatCOP(originalPrice)}
-                    </span>
-
-                    <span className="text-[11px] text-orange-400 uppercase tracking-wider block font-black pt-2">
-                      Precio Especial Combo:
-                    </span>
-                    <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
-                      {formatCOP(combo.price)}
+                {/* Right Side: Total Price Box & Actions */}
+                <div className="xl:w-80 bg-neutral-950 border border-neutral-800 rounded-3xl p-6 flex flex-col justify-between space-y-5 shrink-0 shadow-xl">
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-neutral-400 uppercase tracking-wider font-semibold">
+                        Precio por separado:
+                      </span>
+                      <span className="text-sm font-bold text-neutral-500 line-through font-mono">
+                        {formatCOP(originalPrice)}
+                      </span>
                     </div>
+
+                    <div className="pt-2 border-t border-neutral-800/80">
+                      <span className="text-xs text-orange-400 uppercase tracking-wider block font-black mb-1">
+                        Precio Especial del Combo:
+                      </span>
+                      <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">
+                        {formatCOP(combo.price)}
+                      </div>
+                    </div>
+
+                    {savings > 0 && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2.5 text-center mt-2">
+                        <span className="text-xs font-black text-emerald-400 uppercase tracking-wide">
+                          🎉 Te ahorras {formatCOP(savings)} en este pack
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-2 pt-2">
+                  {/* Actions */}
+                  <div className="space-y-2.5 pt-2">
                     <button
                       onClick={() => handleAddComboToCart(combo)}
-                      className="w-full bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black py-3.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       <span>Llevar Combo al Carrito</span>
@@ -169,12 +206,13 @@ export default function CombosSection() {
                       href={`https://wa.me/573000000000?text=${whatsappMessage}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                      className="w-full bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
                     >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Pedir por WhatsApp</span>
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Comprar por WhatsApp</span>
                     </a>
                   </div>
+
                 </div>
 
               </div>

@@ -858,7 +858,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               Completa tu Equipamiento
             </h2>
           </div>
-          <Link href="/#catalogo" prefetch={true} className="text-xs font-bold text-orange-400 hover:underline">
+          <Link href="/categoria/all" prefetch={true} className="text-xs font-bold text-orange-400 hover:underline">
             Ver todo el catálogo →
           </Link>
         </div>

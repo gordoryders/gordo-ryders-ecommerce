@@ -61,7 +61,7 @@ export default function CategoryBubbles() {
             </p>
           </div>
           <Link
-            href="#catalogo"
+            href="/categoria/all"
             className="text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
           >
             Ver catálogo completo →

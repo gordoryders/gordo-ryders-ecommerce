@@ -31,7 +31,7 @@ export default function HeroBanner() {
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
-                href="#catalogo"
+                href="/categoria/all"
                 className="bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black px-6 py-3.5 rounded-xl text-sm flex items-center gap-2 shadow-xl shadow-orange-500/20 hover:gap-3 transition-all transform hover:-translate-y-0.5"
               >
                 <span>VER CATÁLOGO COMPLETO</span>
