@@ -42,15 +42,17 @@ export default function HeroSlider() {
                 isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
-              {/* Background Image with Dark Vignette */}
+              {/* Background Image with Crisp, Vivid Clarity (No dark muddy layer over products) */}
               <div
-                className="absolute inset-0 bg-cover bg-center"
+                className="absolute inset-0 bg-cover bg-center brightness-105 contrast-105 saturate-110"
                 style={{
                   backgroundImage: `url(${slide.bgImage})`,
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/85 to-neutral-950/40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-transparent to-neutral-950/60" />
+                {/* Soft left vignette to guarantee 100% white text legibility, leaving the right side 100% clear & bright */}
+                <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/95 via-neutral-950/70 sm:via-neutral-950/30 to-transparent sm:w-[65%]" />
+                {/* Subtle bottom fade only where slider meets the next section */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent" />
               </div>
 
               {/* Slide Content */}
@@ -65,10 +67,10 @@ export default function HeroSlider() {
                     </span>
                   </div>
 
-                  {/* Title */}
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-[0.95]">
+                  {/* Title with Luminous Color Highlight */}
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-[0.95] drop-shadow-md">
                     {slide.title} <br />
-                    <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.accentColor}`}>
+                    <span className={`text-transparent bg-clip-text bg-gradient-to-r ${slide.accentColor} filter drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]`}>
                       {slide.highlight}
                     </span>
                   </h1>

@@ -112,28 +112,44 @@ const DEFAULT_BANNERS: HeroBanner[] = [
   },
   {
     id: "banner-2",
-    tag: "TENDENCIA SCOOTER & CIUDAD 2026",
-    title: "LÍNEA URBANA ICH 501",
-    highlight: "LILA, BEIGE & MATE",
-    subtitle: "Cascos livianos semi-integrales con visor panorámico transparente anti-scratch. Confort, frescura y visibilidad óptima para rodar fresco en el tráfico diario.",
-    buttonText: "EXPLORAR MODELOS URBANOS",
-    buttonLink: "/categoria/cascos?sub=cascos-urbanos",
-    secondaryText: "Ver Gama Pastel",
-    secondaryLink: "/categoria/cascos?sub=cascos-urbanos",
-    bgImage: "/products/cascos/ich-501-lila.jpg",
-    accentColor: "from-purple-400 via-pink-400 to-orange-400",
+    tag: "TEMPORADA DE LLUVIAS • 100% SILICONADO",
+    title: "TRAJES IMPERMEABLES DE ALTO RENDIMIENTO",
+    highlight: "CERO FILTRACIONES GARANTIZADO",
+    subtitle: "Costuras termoselladas reforzadas en entrepierna, cremallera hermética con solapa y reflectivos 3M de alta visibilidad nocturna. Incluye zapatones y tula compacta para viaje.",
+    buttonText: "VER TRAJES IMPERMEABLES",
+    buttonLink: "/categoria/impermeables",
+    secondaryText: "Pedir por WhatsApp",
+    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
+    bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-cyan-400 via-blue-500 to-teal-300",
     isActive: true,
   },
   {
     id: "banner-3",
-    tag: "CANAL MAYORISTA B2B PARA ALMACENES Y TALLERES",
-    title: "PRECIOS DE BODEGA",
-    highlight: "DESDE 6 UNIDADES",
-    subtitle: "Suministro directo de fábrica con más de 300 referencias listas para despacho nacional. Cascos ICH por docena y guantes Proviker con margen B2B garantizado.",
-    buttonText: "SOLICITAR CATÁLOGO MAYORISTA",
-    buttonLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20de%20cascos%20ICH",
+    tag: "PROTECCIÓN CERTIFICADA • TOUCH SCREEN ACTIVO",
+    title: "GUANTES URBANOS PROVIKER REF E44",
+    highlight: "MÁXIMO AGARRE & NUDILLOS RÍGIDOS",
+    subtitle: "Protecciones ergonómicas contra impacto, palma antiderrapante con absorción de vibración y tecnología táctil capacitiva para operar tu smartphone o GPS en marcha.",
+    buttonText: "VER GUANTES PROVIKER",
+    buttonLink: "/categoria/guantes",
+    secondaryText: "Elegir mi Talla",
+    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20asesoría%20de%20tallas%20para%20los%20Guantes%20Proviker%20E44",
+    bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-emerald-400 via-green-400 to-lime-300",
+    isActive: true,
+  },
+  {
+    id: "banner-4",
+    tag: "VENTA AL POR MAYOR • DISTRIBUIDORES COLOMBIA",
+    title: "PRECIOS DE BODEGA AL POR MAYOR",
+    highlight: "DESDE 6 UNIDADES • HASTA 40% MARGEN",
+    subtitle: "Suministro directo de fábrica con más de 300 referencias listas para despacho nacional. Cascos ICH por docena y guantes Proviker con rentabilidad garantizada.",
+    buttonText: "PORTAL MAYORISTAS B2B",
+    buttonLink: "/mayoristas",
+    secondaryText: "Descargar Catálogo PDF",
+    secondaryLink: "https://wa.me/573000000000?text=Hola%20Gordo%20Ryders,%20deseo%20el%20catálogo%20mayorista%20B2B",
     bgImage: "/products/cascos/ich-3110-ktm-orange.jpg",
-    accentColor: "from-emerald-400 via-teal-300 to-cyan-400",
+    accentColor: "from-yellow-400 via-amber-300 to-orange-400",
     isActive: true,
   },
 ];
@@ -728,7 +744,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedCity = localStorage.getItem("gr_user_city");
       if (savedCity) setUserCity(savedCity);
 
-      const CATALOG_VERSION = "2026_real_ich_v4";
+      const CATALOG_VERSION = "2026_real_ich_v5";
       const savedVersion = localStorage.getItem("gr_catalog_version");
 
       if (savedVersion !== CATALOG_VERSION) {

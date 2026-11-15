@@ -592,17 +592,19 @@ export default function AdminPage() {
     secondaryText: string;
     secondaryLink: string;
     bgImage: string;
+    accentColor: string;
     isActive: boolean;
   }>({
-    tag: "OFERTA RELÁMPAGO • HASTA AGOTAR STOCK",
-    title: "CASCOS CERTIFICADOS",
-    highlight: "HASTA 35% OFF",
-    subtitle: "Homologación internacional DOT y ECE 22.06. Calotas de policarbonato reforzado.",
-    buttonText: "VER CASCOS EN OFERTA",
-    buttonLink: "/categoria/cascos",
-    secondaryText: "Cotizar por WhatsApp",
-    secondaryLink: "https://wa.me/573000000000",
-    bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
+    tag: "TEMPORADA DE LLUVIAS • 100% SILICONADO",
+    title: "TRAJES IMPERMEABLES DE ALTO RENDIMIENTO",
+    highlight: "CERO FILTRACIONES GARANTIZADO",
+    subtitle: "Costuras termoselladas reforzadas en entrepierna, cremallera hermética con solapa y reflectivos 3M. Incluye zapatones y tula compacta.",
+    buttonText: "VER TRAJES IMPERMEABLES",
+    buttonLink: "/categoria/impermeables",
+    secondaryText: "Pedir por WhatsApp",
+    secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
+    bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+    accentColor: "from-cyan-400 via-blue-500 to-teal-300",
     isActive: true,
   });
 
@@ -611,13 +613,34 @@ export default function AdminPage() {
   const handleBannerFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("La imagen no debe superar los 5 MB.");
-      return;
-    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
-      setBannerForm((prev) => ({ ...prev, bgImage: event.target?.result as string }));
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 1920;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          // Compress to JPEG with 0.82 quality - reduces multi-MB photos down to ~90KB!
+          const compressed = canvas.toDataURL("image/jpeg", 0.82);
+          setBannerForm((prev) => ({ ...prev, bgImage: compressed }));
+        }
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
   };
@@ -625,15 +648,16 @@ export default function AdminPage() {
   const openNewBannerModal = () => {
     setEditingBanner(null);
     setBannerForm({
-      tag: "LANZAMIENTO EXCLUSIVO 2026",
-      title: "NUEVA COLECCIÓN RUTERA",
-      highlight: "EQUÍPATE CON GORDO RYDERS",
-      subtitle: "Lo último en seguridad, cascos de alta gama y guantes con protección rígida.",
-      buttonText: "EXPLORAR COLECCIÓN",
-      buttonLink: "/categoria/all",
-      secondaryText: "Cotizar por WhatsApp",
-      secondaryLink: "https://wa.me/573000000000",
-      bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80",
+      tag: "TEMPORADA DE LLUVIAS • 100% SILICONADO",
+      title: "TRAJES IMPERMEABLES DE ALTO RENDIMIENTO",
+      highlight: "CERO FILTRACIONES GARANTIZADO",
+      subtitle: "Costuras termoselladas reforzadas en entrepierna, cremallera hermética con solapa y reflectivos 3M de alta visibilidad nocturna. Incluye zapatones y tula compacta.",
+      buttonText: "VER TRAJES IMPERMEABLES",
+      buttonLink: "/categoria/impermeables",
+      secondaryText: "Pedir por WhatsApp",
+      secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
+      bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+      accentColor: "from-cyan-400 via-blue-500 to-teal-300",
       isActive: true,
     });
     setIsBannerModalOpen(true);
@@ -651,6 +675,7 @@ export default function AdminPage() {
       secondaryText: banner.secondaryText || "",
       secondaryLink: banner.secondaryLink || "",
       bgImage: banner.bgImage,
+      accentColor: banner.accentColor || "from-orange-500 via-amber-400 to-yellow-400",
       isActive: banner.isActive,
     });
     setIsBannerModalOpen(true);
@@ -669,7 +694,7 @@ export default function AdminPage() {
       secondaryText: bannerForm.secondaryText || undefined,
       secondaryLink: bannerForm.secondaryLink || undefined,
       bgImage: bannerForm.bgImage,
-      accentColor: "from-orange-600 via-amber-500 to-yellow-500",
+      accentColor: bannerForm.accentColor || "from-orange-500 via-amber-400 to-yellow-400",
       isActive: bannerForm.isActive,
     };
 
@@ -2363,7 +2388,7 @@ export default function AdminPage() {
                       </div>
                       <div className="absolute bottom-3 left-3 right-3">
                         <h4 className="text-base font-black text-white uppercase">{b.title}</h4>
-                        <span className="text-xs font-bold text-orange-400 block">{b.highlight}</span>
+                        <span className={`text-xs font-black block text-transparent bg-clip-text bg-gradient-to-r ${b.accentColor || "from-orange-400 to-amber-300"}`}>{b.highlight}</span>
                       </div>
                     </div>
 
@@ -4360,13 +4385,13 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-neutral-400 font-bold uppercase mb-1">Destacado (Naranja / Verde)</label>
+                  <label className="block text-neutral-400 font-bold uppercase mb-1">Palabra o Frase Destacada</label>
                   <input
                     type="text"
                     required
                     value={bannerForm.highlight}
                     onChange={(e) => setBannerForm({ ...bannerForm, highlight: e.target.value })}
-                    placeholder="Ej: HASTA 35% OFF"
+                    placeholder="Ej: CERO FILTRACIONES GARANTIZADO"
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
                   />
                 </div>
@@ -4377,9 +4402,59 @@ export default function AdminPage() {
                     required
                     value={bannerForm.buttonText}
                     onChange={(e) => setBannerForm({ ...bannerForm, buttonText: e.target.value })}
-                    placeholder="Ej: VER CASCOS EN OFERTA"
+                    placeholder="Ej: VER TRAJES IMPERMEABLES"
                     className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
                   />
+                </div>
+              </div>
+
+              {/* Selector de Paleta de Colores de Letras (Múltiples opciones para combinar) */}
+              <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="block text-neutral-300 font-bold uppercase text-[11px]">
+                    🎨 Color de las Letras Destacadas (Elige tu combinación)
+                  </span>
+                  <span className="text-[10px] text-neutral-500 font-mono">7 estilos disponibles</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "orange", label: "🔥 Fuego Naranja", gradient: "from-orange-500 via-amber-400 to-yellow-400" },
+                    { id: "cyan", label: "⚡ Azul Cyan Neón", gradient: "from-cyan-400 via-blue-500 to-teal-300" },
+                    { id: "green", label: "🌿 Verde Lima Cyber", gradient: "from-emerald-400 via-green-400 to-lime-300" },
+                    { id: "gold", label: "👑 Oro Imperial B2B", gradient: "from-yellow-400 via-amber-300 to-orange-400" },
+                    { id: "pink", label: "💜 Fucsia / Magenta", gradient: "from-fuchsia-500 via-pink-400 to-rose-400" },
+                    { id: "red", label: "🔴 Rojo Furia Devil", gradient: "from-red-500 via-rose-500 to-orange-500" },
+                    { id: "silver", label: "❄️ Plata Titanium", gradient: "from-slate-100 via-zinc-200 to-neutral-400" },
+                  ].map((preset) => {
+                    const isSelected = bannerForm.accentColor === preset.gradient;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setBannerForm({ ...bannerForm, accentColor: preset.gradient })}
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                          isSelected
+                            ? "bg-neutral-900 border-orange-500 shadow-md shadow-orange-500/20"
+                            : "bg-neutral-900/60 border-neutral-800 hover:border-neutral-700"
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold text-neutral-200 truncate">{preset.label}</span>
+                        <span className={`w-3.5 h-3.5 rounded-full bg-gradient-to-r ${preset.gradient} shrink-0 shadow-sm border border-black/40`} />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Live Color Preview */}
+                <div className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800/80 text-center">
+                  <span className="text-[10px] text-neutral-400 block mb-0.5">Vista previa del texto:</span>
+                  <div className="text-sm sm:text-base font-black text-white uppercase tracking-tight">
+                    {bannerForm.title || "TÍTULO"}{" "}
+                    <span className={`text-transparent bg-clip-text bg-gradient-to-r ${bannerForm.accentColor}`}>
+                      {bannerForm.highlight || "TEXTO DESTACADO"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -4395,18 +4470,52 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Local PC Upload for Banner Background */}
-              <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2">
-                <span className="block text-neutral-300 font-bold">Foto de Fondo del Anuncio (desde tu PC)</span>
+              {/* Local PC Upload for Banner Background & Presets */}
+              <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2.5">
+                <span className="block text-neutral-300 font-bold">Foto de Fondo del Anuncio</span>
                 <input type="file" ref={bannerFileInputRef} accept="image/*" className="hidden" onChange={handleBannerFileUpload} />
+                
+                {/* Presets de Foto de Alta Definición */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
+                  <span className="text-neutral-500 uppercase text-[10px] font-bold shrink-0">Fotos rápidas:</span>
+                  <button
+                    type="button"
+                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "/products/cascos/ich-3110-top-speed.jpg" })}
+                    className="px-2 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 whitespace-nowrap cursor-pointer"
+                  >
+                    🪖 Cascos Top Speed
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80" })}
+                    className="px-2 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-cyan-400 whitespace-nowrap cursor-pointer"
+                  >
+                    🌧️ Impermeable Lluvia
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1920&q=80" })}
+                    className="px-2 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-emerald-400 whitespace-nowrap cursor-pointer"
+                  >
+                    🥊 Guantes Proviker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "/products/cascos/ich-3110-ktm-orange.jpg" })}
+                    className="px-2 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-amber-400 whitespace-nowrap cursor-pointer"
+                  >
+                    👑 Mayoristas B2B
+                  </button>
+                </div>
+
                 {bannerForm.bgImage ? (
                   <div className="relative h-36 w-full rounded-xl overflow-hidden border border-neutral-700 bg-neutral-900 group">
                     <img src={bannerForm.bgImage} alt="Banner" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => bannerFileInputRef.current?.click()}
-                        className="px-3 py-1.5 rounded-lg bg-orange-500 text-neutral-950 font-bold text-xs"
+                        className="px-3 py-1.5 rounded-lg bg-orange-500 text-neutral-950 font-bold text-xs cursor-pointer shadow-lg"
                       >
                         Cambiar Foto desde PC
                       </button>
@@ -4419,11 +4528,23 @@ export default function AdminPage() {
                     className="h-28 w-full rounded-xl border border-dashed border-neutral-700 hover:border-orange-500 bg-neutral-900/50 flex flex-col items-center justify-center cursor-pointer"
                   >
                     <Upload className="w-5 h-5 text-neutral-500 mb-1" />
-                    <span className="font-bold text-neutral-300 text-xs">Cargar Foto desde PC</span>
+                    <span className="font-bold text-neutral-300 text-xs">Cargar Foto desde PC (Compresión automática)</span>
                   </button>
                 )}
+
+                {/* Direct Image URL input */}
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={bannerForm.bgImage.startsWith("data:") ? "" : bannerForm.bgImage}
+                    onChange={(e) => setBannerForm({ ...bannerForm, bgImage: e.target.value })}
+                    placeholder="O escribe o pega una URL de imagen (https://...)"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-neutral-300 placeholder-neutral-500 focus:outline-none focus:border-orange-500/60"
+                  />
+                </div>
+
                 <p className="text-[10px] text-neutral-400">
-                  Recomendado: <strong className="text-orange-400">1920 x 800 px (Panorámica 16:9 o 21:9)</strong> • Máx 5 MB
+                  Recomendado: <strong className="text-orange-400">1920 x 800 px (Panorámica 16:9 o 21:9)</strong> • Las fotos desde tu PC se optimizan automáticamente para guardar sin límite.
                 </p>
               </div>
 
