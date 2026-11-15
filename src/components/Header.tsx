@@ -24,6 +24,8 @@ import {
   ArrowRight
 } from "lucide-react";
 import { MEGA_CATEGORIES, PRODUCTS, MegaCategory } from "@/data/products";
+import AuthModal from "@/components/AuthModal";
+import UserProfileModal from "@/components/UserProfileModal";
 
 interface HeaderProps {
   cartCount?: number;
@@ -43,7 +45,7 @@ export default function Header({
   onOpenContact,
 }: HeaderProps) {
   const router = useRouter();
-  const { categories, products } = useStore();
+  const { categories, products, currentUser, setIsAuthModalOpen, setIsProfileModalOpen } = useStore();
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -259,17 +261,42 @@ export default function Header({
           {/* Right Utilities (Account, Orders, Cart) */}
           <div className="flex items-center gap-1 sm:gap-2">
             
-            {/* User Account Login */}
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="flex items-center gap-2 p-2 rounded-xl hover:bg-neutral-900 text-left transition-colors text-neutral-300 hover:text-white group"
-            >
-              <User className="w-5 h-5 text-neutral-400 group-hover:text-orange-400 transition-colors shrink-0" />
-              <div className="hidden xl:block leading-tight">
-                <span className="text-[10px] text-neutral-400 block font-medium">¡Hola! Ingresa</span>
-                <span className="text-xs font-bold text-white block">Mi Cuenta</span>
-              </div>
-            </button>
+            {/* User Account Login / Profile Trigger */}
+            {currentUser ? (
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center gap-2 p-1.5 sm:p-2 rounded-xl hover:bg-neutral-900 text-left transition-colors text-neutral-300 hover:text-white group border border-neutral-800 hover:border-orange-500/50 cursor-pointer"
+              >
+                {currentUser.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentUser.name}
+                    className="w-7 h-7 rounded-xl object-cover border border-orange-500 shrink-0"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-xl bg-orange-600 text-neutral-950 font-black text-xs flex items-center justify-center shrink-0">
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "M"}
+                  </div>
+                )}
+                <div className="hidden xl:block leading-tight">
+                  <span className="text-[10px] text-orange-400 block font-bold truncate max-w-[110px]">
+                    ¡Hola, {currentUser.name ? currentUser.name.split(" ")[0] : "Motero"}!
+                  </span>
+                  <span className="text-xs font-bold text-white block">Mi Perfil</span>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex items-center gap-2 p-2 rounded-xl hover:bg-neutral-900 text-left transition-colors text-neutral-300 hover:text-white group cursor-pointer"
+              >
+                <User className="w-5 h-5 text-neutral-400 group-hover:text-orange-400 transition-colors shrink-0" />
+                <div className="hidden xl:block leading-tight">
+                  <span className="text-[10px] text-neutral-400 block font-medium">¡Hola! Ingresa</span>
+                  <span className="text-xs font-bold text-white block">Mi Cuenta</span>
+                </div>
+              </button>
+            )}
 
             {/* Tracking Orders Link */}
             <Link
@@ -541,22 +568,48 @@ export default function Header({
                 </button>
               </div>
 
-              {/* User Login Action in Drawer */}
-              <button
-                onClick={() => {
-                  setMobileDrawerOpen(false);
-                  setShowAuthModal(true);
-                }}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-neutral-950 border border-neutral-800 mb-4 hover:border-neutral-700 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0">
-                  <User className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <span className="text-xs font-bold text-white block">Ingresar a tu Cuenta</span>
-                  <span className="text-[10px] text-neutral-400">Google, Email o Mayorista</span>
-                </div>
-              </button>
+              {/* User Login / Profile Action in Drawer */}
+              {currentUser ? (
+                <button
+                  onClick={() => {
+                    setMobileDrawerOpen(false);
+                    setIsProfileModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-neutral-950 border border-orange-500/40 mb-4 hover:border-orange-500 transition-colors text-left cursor-pointer"
+                >
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt={currentUser.name}
+                      className="w-10 h-10 rounded-xl object-cover border border-orange-500 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-orange-600 text-neutral-950 font-black text-sm flex items-center justify-center shrink-0">
+                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "M"}
+                    </div>
+                  )}
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-white block">¡Hola, {currentUser.name}!</span>
+                    <span className="text-[10px] text-orange-400 font-semibold">Ver Mi Perfil & Direcciones</span>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMobileDrawerOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-neutral-950 border border-neutral-800 mb-4 hover:border-neutral-700 transition-colors text-left cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-white block">Ingresar a tu Cuenta</span>
+                    <span className="text-[10px] text-neutral-400">Google, Email o Mayorista</span>
+                  </div>
+                </button>
+              )}
 
               {/* Categorías Accordion List */}
               <div className="space-y-1">
@@ -664,50 +717,10 @@ export default function Header({
       )}
 
       {/* =========================================================================
-          AUTH MODAL (Google / Email) - Portal to Body to avoid any Header blur / clipping
+          AUTH & PROFILE MODALS (Google OAuth & Mercado Libre Style Profile)
           ========================================================================= */}
-      {showAuthModal && mounted && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[999999] min-h-[100dvh] w-screen flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 text-white shadow-2xl my-auto animate-in fade-in zoom-in-95">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-white p-1.5 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-orange-600 flex items-center justify-center font-black text-neutral-950 text-xl mx-auto mb-3 shadow-lg shadow-orange-600/30">
-                GR
-              </div>
-              <h3 className="text-lg font-black uppercase text-white">Ingresa a tu Cuenta</h3>
-              <p className="text-xs text-neutral-400 mt-1">
-                Guarda tus direcciones y consulta el estado de tus compras en tiempo real.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <button
-                onClick={() => alert("El login con Google se activa con Supabase / Firebase Auth configurado.")}
-                className="w-full flex items-center justify-center gap-3 p-3 rounded-2xl bg-white hover:bg-neutral-100 text-neutral-950 font-bold text-xs transition-colors cursor-pointer shadow-md"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                </svg>
-                Continuar con Google
-              </button>
-              <button
-                onClick={() => alert("El login por correo enviará un Magic Link seguro a tu bandeja.")}
-                className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-colors border border-neutral-700 cursor-pointer"
-              >
-                Ingresar con Correo Electrónico
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      <AuthModal />
+      <UserProfileModal />
 
     </header>
   );

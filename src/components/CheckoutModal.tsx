@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@/context/StoreContext";
 import { CartItem, Order, Invoice } from "@/types";
 import { 
@@ -32,20 +32,35 @@ export default function CheckoutModal({
   items,
   onOrderCompleted,
 }: CheckoutModalProps) {
-  const { addOrder, addInvoice, clearCart, userCity } = useStore();
+  const { addOrder, addInvoice, clearCart, userCity, currentUser, setIsAuthModalOpen, updateUserProfile } = useStore();
 
   const [step, setStep] = useState<"form" | "payment" | "success">("form");
 
   // Shipping Form State (Requisitos transportadoras y DIAN Colombia)
-  const [fullName, setFullName] = useState("");
-  const [cedulaOrNit, setCedulaOrNit] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [city, setCity] = useState(userCity || "Bogotá D.C.");
-  const [department, setDepartment] = useState("Cundinamarca");
-  const [address, setAddress] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [notes, setNotes] = useState("");
+  const [fullName, setFullName] = useState(currentUser?.name || "");
+  const [cedulaOrNit, setCedulaOrNit] = useState(currentUser?.cedulaOrNit || "");
+  const [phone, setPhone] = useState(currentUser?.phone || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
+  const [city, setCity] = useState(currentUser?.city || userCity || "Bogotá D.C.");
+  const [department, setDepartment] = useState(currentUser?.department || "Cundinamarca");
+  const [address, setAddress] = useState(currentUser?.address || "");
+  const [neighborhood, setNeighborhood] = useState(currentUser?.neighborhood || "");
+  const [notes, setNotes] = useState(currentUser?.deliveryNotes || "");
+
+  // Autofill whenever currentUser is loaded or updated
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.name) setFullName(currentUser.name);
+      if (currentUser.cedulaOrNit) setCedulaOrNit(currentUser.cedulaOrNit);
+      if (currentUser.phone) setPhone(currentUser.phone);
+      if (currentUser.email) setEmail(currentUser.email);
+      if (currentUser.city) setCity(currentUser.city);
+      if (currentUser.department) setDepartment(currentUser.department);
+      if (currentUser.address) setAddress(currentUser.address);
+      if (currentUser.neighborhood) setNeighborhood(currentUser.neighborhood);
+      if (currentUser.deliveryNotes) setNotes(currentUser.deliveryNotes);
+    }
+  }, [currentUser]);
 
   // Payment Selection
   const [paymentMethod, setPaymentMethod] = useState<"wompi" | "nequi" | "contraentrega">("wompi");
@@ -146,6 +161,22 @@ export default function CheckoutModal({
       addInvoice(newInvoice);
       setCompletedOrder(newOrder);
       setCompletedInvoice(newInvoice);
+
+      if (currentUser) {
+        updateUserProfile({
+          name: fullName,
+          cedulaOrNit,
+          phone,
+          city,
+          department,
+          address,
+          neighborhood,
+          deliveryNotes: notes,
+          ordersCount: (currentUser.ordersCount || 0) + 1,
+          totalSpent: (currentUser.totalSpent || 0) + total,
+        });
+      }
+
       clearCart();
       setIsProcessing(false);
       setStep("success");
@@ -224,6 +255,31 @@ export default function CheckoutModal({
             {/* STEP 1: FORMULARIO DE ENVÍO */}
             {step === "form" && (
               <form onSubmit={handleProceedToPayment} className="space-y-4">
+
+                {/* 1-Click Autofill Banner */}
+                {currentUser ? (
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between text-xs text-neutral-300">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Comprando como <strong>{currentUser.name}</strong> • Datos de despacho autollenados.
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs text-neutral-300">
+                    <span className="text-[11px] text-neutral-400">
+                      ¿Tienes cuenta? Inicia sesión para autollenar tus datos en 1 clic.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="px-2.5 py-1 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-bold cursor-pointer transition-colors shrink-0"
+                    >
+                      Entrar con Google
+                    </button>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-1">

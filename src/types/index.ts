@@ -162,6 +162,14 @@ export interface CustomerUser {
   status: "activo" | "verificado" | "bloqueado";
   notes?: string;
   recentOrders?: string[];
+  // Campos Mercado Libre (Colombia) para envíos y facturación oficial
+  documentType?: "CC" | "CE" | "NIT" | "Pasaporte";
+  cedulaOrNit?: string;
+  department?: string;
+  address?: string;
+  neighborhood?: string;
+  deliveryNotes?: string;
+  postalCode?: string;
 }
 
 export interface WholesaleInquiry {

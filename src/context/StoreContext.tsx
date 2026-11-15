@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
 import { PRODUCTS, LOOKBOOK_ALBUMS } from "@/data/products";
+import { supabase, isSupabaseConfigured, signInWithGoogle, signOutUser } from "@/lib/supabaseClient";
 
 const DEFAULT_CATEGORIES: Category[] = [
   {
@@ -236,8 +237,15 @@ const DEFAULT_USERS: CustomerUser[] = [
     name: "Carlos Mario Restrepo",
     email: "carlos.mario@gmail.com",
     phone: "3104567890",
-    city: "Medellín, Antioquia",
+    city: "Medellín",
+    department: "Antioquia",
+    documentType: "CC",
+    cedulaOrNit: "1.037.492.180",
+    address: "Calle 10 # 43E-20",
+    neighborhood: "El Poblado",
+    deliveryNotes: "Edificio Castropol, Apto 402. Dejar en portería.",
     type: "detal",
+    authProvider: "Google Workspace",
     ordersCount: 3,
     totalSpent: 649700,
     registrationDate: "15 Oct 2026",
@@ -249,8 +257,15 @@ const DEFAULT_USERS: CustomerUser[] = [
     name: "Almacén Motos El Diamante (B2B)",
     email: "compras@motoseldiamante.com",
     phone: "3209876543",
-    city: "Bucaramanga, Santander",
+    city: "Bucaramanga",
+    department: "Santander",
+    documentType: "NIT",
+    cedulaOrNit: "900.849.201-4",
+    address: "Carrera 27 # 45-12",
+    neighborhood: "Sotomayor",
+    deliveryNotes: "Local comercial frente a estación de servicio.",
     type: "mayorista",
+    authProvider: "Correo / Magic Link",
     ordersCount: 8,
     totalSpent: 4850000,
     registrationDate: "02 Sep 2026",
@@ -263,7 +278,14 @@ const DEFAULT_USERS: CustomerUser[] = [
     email: "paola.parada@outlook.com",
     phone: "3145678901",
     city: "Bogotá D.C.",
+    department: "Cundinamarca",
+    documentType: "CC",
+    cedulaOrNit: "52.849.201",
+    address: "Carrera 15 # 118-45",
+    neighborhood: "Unicentro",
+    deliveryNotes: "Casa de dos pisos reja blanca.",
     type: "detal",
+    authProvider: "Google Workspace",
     ordersCount: 1,
     totalSpent: 249900,
     registrationDate: "Ayer",
@@ -464,6 +486,18 @@ interface StoreContextType {
   deleteInvoice: (id: string) => void;
   getInvoiceByNumber: (invoiceNumber: string) => Invoice | undefined;
 
+  // Auth & Customer Profile (Mercado Libre Style)
+  currentUser: CustomerUser | null;
+  setCurrentUser: (user: CustomerUser | null) => void;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
+  isProfileModalOpen: boolean;
+  setIsProfileModalOpen: (open: boolean) => void;
+  loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, name?: string) => Promise<void>;
+  updateUserProfile: (profileData: Partial<CustomerUser>) => void;
+  logout: () => void;
+
   // Analytics
   whatsappClicks: number;
   trackWhatsAppClick: (label?: string) => void;
@@ -480,6 +514,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+
+  // Auth & Profile Modals & State
+  const [currentUser, setCurrentUser] = useState<CustomerUser | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Dynamic admin synced products
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
@@ -560,8 +599,70 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       const savedViews = localStorage.getItem("gr_views");
       if (savedViews) setProductViews(Number(savedViews));
+
+      const savedUser = localStorage.getItem("gr_current_user");
+      if (savedUser) setCurrentUser(JSON.parse(savedUser));
     } catch {
       // ignore
+    }
+
+    if (isSupabaseConfigured()) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          const u = session.user;
+          const mapped: CustomerUser = {
+            id: u.id,
+            name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Motero Gordo Ryders",
+            email: u.email || "",
+            phone: u.user_metadata?.phone || "",
+            city: u.user_metadata?.city || "Bogotá D.C.",
+            department: u.user_metadata?.department || "Cundinamarca",
+            type: "detal",
+            authProvider: "Google Workspace",
+            avatarUrl: u.user_metadata?.avatar_url || u.user_metadata?.picture || undefined,
+            ordersCount: 0,
+            totalSpent: 0,
+            registrationDate: "Hoy",
+            status: "verificado",
+          };
+          setCurrentUser((prev) => (prev ? { ...mapped, ...prev } : mapped));
+        }
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session?.user) {
+          const u = session.user;
+          const mapped: CustomerUser = {
+            id: u.id,
+            name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Motero Gordo Ryders",
+            email: u.email || "",
+            phone: u.user_metadata?.phone || "",
+            city: u.user_metadata?.city || "Bogotá D.C.",
+            department: u.user_metadata?.department || "Cundinamarca",
+            type: "detal",
+            authProvider: "Google Workspace",
+            avatarUrl: u.user_metadata?.avatar_url || u.user_metadata?.picture || undefined,
+            ordersCount: 0,
+            totalSpent: 0,
+            registrationDate: "Hoy",
+            status: "verificado",
+          };
+          setCurrentUser((prev) => {
+            const finalUser = prev ? { ...mapped, ...prev } : mapped;
+            try {
+              localStorage.setItem("gr_current_user", JSON.stringify(finalUser));
+            } catch {}
+            return finalUser;
+          });
+        } else if (event === "SIGNED_OUT") {
+          setCurrentUser(null);
+          try {
+            localStorage.removeItem("gr_current_user");
+          } catch {}
+        }
+      });
+
+      return () => subscription.unsubscribe();
     }
   }, []);
 
@@ -944,6 +1045,92 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // Auth & Customer Profile (Mercado Libre Style)
+  // Auth & Customer Profile (Mercado Libre Style) Operations
+  const loginWithGoogle = async () => {
+    if (isSupabaseConfigured()) {
+      await signInWithGoogle();
+      return;
+    }
+    // High-fidelity fallback / demo for immediate test
+    const demoGoogleUser: CustomerUser = {
+      id: `usr-google-${Date.now()}`,
+      name: "Michael Ryder (Google)",
+      email: "michael.motero@gmail.com",
+      phone: "3124567890",
+      city: "Bogotá D.C.",
+      department: "Cundinamarca",
+      documentType: "CC",
+      cedulaOrNit: "1.020.849.201",
+      address: "Carrera 7 # 72-41",
+      neighborhood: "Chapinero Alto",
+      deliveryNotes: "Edificio Torre Central, Apto 502 (Dejar en portería)",
+      type: "detal",
+      authProvider: "Google Workspace",
+      avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+      ordersCount: 2,
+      totalSpent: 419900,
+      registrationDate: "Hoy",
+      status: "verificado",
+      notes: "Cuenta verificada con Google OAuth 2.0",
+    };
+    setCurrentUser(demoGoogleUser);
+    try {
+      localStorage.setItem("gr_current_user", JSON.stringify(demoGoogleUser));
+    } catch {}
+    addUser(demoGoogleUser);
+    setIsAuthModalOpen(false);
+  };
+
+  const loginWithEmail = async (email: string, name?: string) => {
+    const userDisplayName = name?.trim() || email.split("@")[0] || "Motero Gordo Ryders";
+    const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const targetUser: CustomerUser = existing || {
+      id: `usr-email-${Date.now()}`,
+      name: userDisplayName,
+      email: email,
+      phone: "3000000000",
+      city: userCity || "Bogotá D.C.",
+      department: "Cundinamarca",
+      documentType: "CC",
+      cedulaOrNit: "",
+      address: "",
+      neighborhood: "",
+      type: "detal",
+      authProvider: "Correo / Magic Link",
+      ordersCount: 0,
+      totalSpent: 0,
+      registrationDate: "Hoy",
+      status: "activo",
+      notes: "Registro rápido por correo",
+    };
+    setCurrentUser(targetUser);
+    try {
+      localStorage.setItem("gr_current_user", JSON.stringify(targetUser));
+    } catch {}
+    if (!existing) addUser(targetUser);
+    setIsAuthModalOpen(false);
+  };
+
+  const updateUserProfile = (profileData: Partial<CustomerUser>) => {
+    if (!currentUser) return;
+    const updated: CustomerUser = { ...currentUser, ...profileData };
+    setCurrentUser(updated);
+    try {
+      localStorage.setItem("gr_current_user", JSON.stringify(updated));
+    } catch {}
+    updateUser(updated);
+  };
+
+  const logout = () => {
+    signOutUser();
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem("gr_current_user");
+    } catch {}
+    setIsProfileModalOpen(false);
+  };
+
   // Analytics Operations
   const trackWhatsAppClick = () => {
     setWhatsappClicks((prev) => {
@@ -1006,6 +1193,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addUser,
         updateUser,
         deleteUser,
+        currentUser,
+        setCurrentUser,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        isProfileModalOpen,
+        setIsProfileModalOpen,
+        loginWithGoogle,
+        loginWithEmail,
+        updateUserProfile,
+        logout,
         wholesaleInquiries,
         addWholesaleInquiry,
         updateWholesaleInquiry,

@@ -2265,6 +2265,16 @@ export default function AdminPage() {
                       <h4 className="text-sm font-black text-white">{usr.name}</h4>
                       <p className="text-xs text-neutral-300">✉️ {usr.email}</p>
                       <p className="text-xs text-neutral-400">📱 {usr.phone} • 📍 {usr.city}</p>
+                      {usr.cedulaOrNit && (
+                        <p className="text-[11px] text-orange-400 font-mono font-semibold">
+                          🪪 {usr.documentType || "CC"}: {usr.cedulaOrNit}
+                        </p>
+                      )}
+                      {usr.address && (
+                        <p className="text-[11px] text-neutral-400 truncate">
+                          🏠 {usr.address} {usr.neighborhood ? `(${usr.neighborhood})` : ""}
+                        </p>
+                      )}
                       
                       <div className="p-3 bg-neutral-950 rounded-2xl border border-neutral-800 text-xs space-y-1 mt-2">
                         <div className="flex justify-between text-neutral-400">
@@ -3538,7 +3548,18 @@ export default function AdminPage() {
                 </div>
                 <p className="text-neutral-300">✉️ Correo: {selectedUserForDetail.email}</p>
                 <p className="text-neutral-300">📱 WhatsApp: {selectedUserForDetail.phone}</p>
-                <p className="text-neutral-300">📍 Ciudad: {selectedUserForDetail.city}</p>
+                <p className="text-neutral-300">📍 Ciudad: {selectedUserForDetail.city} {selectedUserForDetail.department ? `(${selectedUserForDetail.department})` : ""}</p>
+                <p className="text-neutral-300 font-mono text-orange-400">
+                  🪪 {selectedUserForDetail.documentType || "CC"}: <strong>{selectedUserForDetail.cedulaOrNit || "Sin registrar"}</strong>
+                </p>
+                <p className="text-neutral-300">
+                  🏠 Dirección: {selectedUserForDetail.address || "Sin registrar"} {selectedUserForDetail.neighborhood ? `- Barrio: ${selectedUserForDetail.neighborhood}` : ""}
+                </p>
+                {selectedUserForDetail.deliveryNotes && (
+                  <p className="text-neutral-400 italic">
+                    ℹ️ Indicaciones: "{selectedUserForDetail.deliveryNotes}"
+                  </p>
+                )}
                 <p className="text-neutral-400">🔑 Método de inicio: <strong className="text-orange-400">{selectedUserForDetail.authProvider || "Google Workspace"}</strong></p>
               </div>
 
