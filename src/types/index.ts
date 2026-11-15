@@ -216,3 +216,47 @@ export interface AdminMetrics {
   simulatedRevenue: number;
   activeOrders: number;
 }
+
+// Live Chat & Human Support System (WhatsApp Web / Stake Support Style)
+export interface ChatMessage {
+  id: string;
+  sender: "user" | "bot" | "agent";
+  senderName?: string;
+  text: string;
+  timestamp: string;
+  options?: { label: string; action: string; payload?: any }[];
+  productCard?: {
+    id: string;
+    name: string;
+    price: number;
+    price_original?: number;
+    image_url: string;
+    slug: string;
+    category?: string;
+  };
+  orderCard?: {
+    guideNumber: string;
+    carrier: string;
+    status: string;
+    customerName: string;
+    city: string;
+    date: string;
+  };
+}
+
+export interface SupportChatSession {
+  id: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerCity?: string;
+  customerType?: "detal" | "mayorista";
+  status: "bot" | "needs_human" | "agent_replying" | "resolved";
+  unreadCountForAdmin: number;
+  unreadCountForUser: number;
+  lastMessageText: string;
+  lastMessageTime: string;
+  createdAt: string;
+  messages: ChatMessage[];
+  currentProductViewed?: string;
+}

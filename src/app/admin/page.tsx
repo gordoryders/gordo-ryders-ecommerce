@@ -44,6 +44,10 @@ import {
   ArrowRight,
   ShieldCheck,
   Store,
+  Send,
+  MessageSquare,
+  Bot,
+  Phone,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -87,6 +91,10 @@ export default function AdminPage() {
     deleteInvoice,
     whatsappClicks,
     productViews,
+    supportChats,
+    sendMessageFromAgent,
+    markChatStatus,
+    deleteChatSession,
   } = useStore();
 
   // 1. AUTHENTICATION GATEKEEPER
@@ -128,10 +136,14 @@ export default function AdminPage() {
   // Module architecture: "hub" (Pantalla de Inicio / Hub Central) | "store" (CMS Tienda Web) | "operations" (Backoffice Operaciones, Envíos, Clientes)
   const [adminModule, setAdminModule] = useState<"hub" | "store" | "operations">("hub");
   const [activeTab, setActiveTab] = useState<
-    "products" | "combos" | "offers" | "categories" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews"
+    "products" | "combos" | "offers" | "categories" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews" | "support"
   >("products");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [userTypeFilter, setUserTypeFilter] = useState<"all" | "mayorista" | "detal">("all");
+  const [selectedSupportChatId, setSelectedSupportChatId] = useState<string>("");
+  const [agentReplyText, setAgentReplyText] = useState<string>("");
+  const [supportFilter, setSupportFilter] = useState<"all" | "needs_human" | "b2b" | "resolved">("all");
+  const [supportSearch, setSupportSearch] = useState<string>("");
 
   // 3. PRODUCT MODAL WITH LOCAL PC FILE UPLOADS & LIVE PREVIEW
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -929,6 +941,7 @@ export default function AdminPage() {
       case "users": return "Expediente Clientes 360°";
       case "wholesale": return "Mayoristas B2B";
       case "reviews": return "Reseñas Clientes";
+      case "support": return "Chats en Vivo & Soporte";
       case "analytics": return "Métricas & Análisis";
       default: return tabId;
     }
@@ -1250,10 +1263,13 @@ export default function AdminPage() {
                     <span className="text-[10px] text-neutral-400 ml-1">opiniones</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
-                    <span className="text-[10px] text-emerald-400 uppercase font-bold block">Ventas</span>
-                    <strong className="text-emerald-400 text-xs font-black font-mono truncate block">
-                      {formatCOP(totalInvoicedSales)}
+                    <span className="text-[10px] text-amber-400 uppercase font-bold block">Chats en Vivo</span>
+                    <strong className="text-amber-400 text-base font-black font-mono">
+                      {supportChats.length}
                     </strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">
+                      ({supportChats.filter((c) => c.status === "needs_human").length} 🔥)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1292,6 +1308,13 @@ export default function AdminPage() {
                     className="hover:text-emerald-400 underline cursor-pointer"
                   >
                     Clientes 360°
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("support"); }}
+                    className="hover:text-amber-400 underline cursor-pointer font-bold text-amber-300"
+                  >
+                    💬 Chats en Vivo
                   </button>
                   <span>•</span>
                   <button
@@ -1594,6 +1617,12 @@ export default function AdminPage() {
                 { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
                 { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
                 { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
+                {
+                  id: "support",
+                  label: "Chats en Vivo",
+                  icon: MessageSquare,
+                  badge: supportChats.filter((c) => c.status === "needs_human" || c.unreadCountForAdmin > 0).length,
+                },
                 {
                   id: "wholesale",
                   label: "Mayoristas B2B",
@@ -3222,6 +3251,543 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+        {/* =========================================================================
+            TAB 10: BANDEJA DE ENTRADA CHATS EN VIVO (ESTILO WHATSAPP WEB / STAKE)
+            ========================================================================= */}
+        {activeTab === "support" && (() => {
+          const filteredChats = supportChats.filter((chat) => {
+            const matchesSearch =
+              chat.customerName.toLowerCase().includes(supportSearch.toLowerCase()) ||
+              (chat.customerCity && chat.customerCity.toLowerCase().includes(supportSearch.toLowerCase())) ||
+              (chat.customerPhone && chat.customerPhone.includes(supportSearch)) ||
+              chat.lastMessageText.toLowerCase().includes(supportSearch.toLowerCase());
+
+            if (!matchesSearch) return false;
+
+            if (supportFilter === "needs_human") return chat.status === "needs_human";
+            if (supportFilter === "b2b") return chat.customerType === "mayorista";
+            if (supportFilter === "resolved") return chat.status === "resolved";
+            return true;
+          });
+
+          const activeChat =
+            supportChats.find((c) => c.id === selectedSupportChatId) ||
+            filteredChats[0] ||
+            supportChats[0];
+
+          const needsHumanCount = supportChats.filter((c) => c.status === "needs_human").length;
+          const b2bCount = supportChats.filter((c) => c.customerType === "mayorista").length;
+          const resolvedCount = supportChats.filter((c) => c.status === "resolved").length;
+
+          const handleSendAgent = (e?: React.FormEvent) => {
+            if (e) e.preventDefault();
+            if (!agentReplyText.trim() || !activeChat) return;
+            sendMessageFromAgent(activeChat.id, agentReplyText.trim(), "Edwin Bernal (Asesor Oficial)");
+            setAgentReplyText("");
+          };
+
+          const quickReplies = [
+            { label: "👋 Saludo Asesor", text: "¡Hola! Te saluda Edwin Bernal de soporte Gordo Ryders. ¿En qué te puedo asesorar personalmente?" },
+            { label: "📦 Stock Inmediato", text: "¡Sí señor! Tenemos unidades disponibles en bodega para despacho el día de hoy con guía de rastreo." },
+            { label: "🚚 Tiempo de Envío", text: "A ciudades principales como Medellín, Cali o Bogotá tarda de 24 a 48 horas hábiles por Inter Rapidísimo o Envía." },
+            { label: "👑 Descuento Mayorista", text: "Para compras mayoristas a partir de 6 unidades manejamos precios especiales con hasta 40% de descuento y catálogo oficial." },
+            { label: "📏 Asesoría Tallas", text: "Para saber tu talla de casco exacta, mide el contorno de tu cabeza a la altura de la frente con una cinta métrica en centímetros." },
+          ];
+
+          return (
+            <div className="space-y-6">
+              {/* Header Banner */}
+              <div className="bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-950 border border-neutral-800 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400">
+                      <MessageSquare className="w-5 h-5" />
+                    </span>
+                    <h2 className="text-xl font-black text-white uppercase tracking-wider">
+                      Bandeja de Entrada Chats en Vivo (Estilo WhatsApp Web)
+                    </h2>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1 max-w-2xl">
+                    Monitorea en tiempo real las conversaciones de los clientes con el Smart Bot y responde al instante cuando soliciten asesor humano o coticen como mayoristas.
+                  </p>
+                </div>
+
+                {/* Counters / Pills */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span>
+                    <span className="text-xs font-mono font-bold text-white">{supportChats.length}</span>
+                    <span className="text-[10px] text-neutral-400 uppercase">Total Chats</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-xl bg-red-950/40 border border-red-500/30 flex items-center gap-2">
+                    <Flame className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-xs font-mono font-bold text-red-400">{needsHumanCount}</span>
+                    <span className="text-[10px] text-red-300 uppercase">Requieren Asesor</span>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-xl bg-amber-950/40 border border-amber-500/30 flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-xs font-mono font-bold text-amber-400">{b2bCount}</span>
+                    <span className="text-[10px] text-amber-300 uppercase">B2B Mayoristas</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Web Style Main Inbox Container */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl h-[780px] flex flex-col md:flex-row">
+                {/* Left Side: Directory & Conversation Threads */}
+                <div className="w-full md:w-80 lg:w-96 border-b md:border-b-0 md:border-r border-neutral-800 flex flex-col bg-neutral-950/60 h-full">
+                  {/* Search bar */}
+                  <div className="p-3 border-b border-neutral-800">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={supportSearch}
+                        onChange={(e) => setSupportSearch(e.target.value)}
+                        placeholder="Buscar por cliente, ciudad o texto..."
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500/60"
+                      />
+                      {supportSearch && (
+                        <button
+                          onClick={() => setSupportSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
+                      <button
+                        onClick={() => setSupportFilter("all")}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer whitespace-nowrap ${
+                          supportFilter === "all"
+                            ? "bg-neutral-800 text-white font-bold"
+                            : "text-neutral-400 hover:text-white hover:bg-neutral-900"
+                        }`}
+                      >
+                        Todos ({supportChats.length})
+                      </button>
+                      <button
+                        onClick={() => setSupportFilter("needs_human")}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          supportFilter === "needs_human"
+                            ? "bg-red-500/20 text-red-400 font-bold border border-red-500/30"
+                            : "text-neutral-400 hover:text-red-400 hover:bg-neutral-900"
+                        }`}
+                      >
+                        🔥 Piden Humano ({needsHumanCount})
+                      </button>
+                      <button
+                        onClick={() => setSupportFilter("b2b")}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          supportFilter === "b2b"
+                            ? "bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30"
+                            : "text-neutral-400 hover:text-amber-400 hover:bg-neutral-900"
+                        }`}
+                      >
+                        👑 Mayoristas ({b2bCount})
+                      </button>
+                      <button
+                        onClick={() => setSupportFilter("resolved")}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer whitespace-nowrap ${
+                          supportFilter === "resolved"
+                            ? "bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30"
+                            : "text-neutral-400 hover:text-emerald-400 hover:bg-neutral-900"
+                        }`}
+                      >
+                        ✅ Resueltos ({resolvedCount})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Chat Items */}
+                  <div className="flex-1 overflow-y-auto divide-y divide-neutral-900/80">
+                    {filteredChats.length === 0 ? (
+                      <div className="p-8 text-center text-neutral-500">
+                        <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs">No se encontraron chats con este filtro.</p>
+                      </div>
+                    ) : (
+                      filteredChats.map((chat) => {
+                        const isSelected = activeChat?.id === chat.id;
+                        const isHumanNeeded = chat.status === "needs_human";
+                        const isReplying = chat.status === "agent_replying";
+
+                        return (
+                          <div
+                            key={chat.id}
+                            onClick={() => setSelectedSupportChatId(chat.id)}
+                            className={`p-3.5 flex items-start gap-3 cursor-pointer transition relative group ${
+                              isSelected
+                                ? "bg-neutral-900/90 border-l-4 border-orange-500"
+                                : "hover:bg-neutral-900/50"
+                            }`}
+                          >
+                            {/* Avatar */}
+                            <div className="relative shrink-0">
+                              <div
+                                className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm text-white ${
+                                  chat.customerType === "mayorista"
+                                    ? "bg-gradient-to-br from-amber-500 to-orange-700"
+                                    : "bg-gradient-to-br from-neutral-700 to-neutral-900"
+                                }`}
+                              >
+                                {chat.customerName.charAt(0).toUpperCase()}
+                              </div>
+                              {/* Status dot indicator */}
+                              <span
+                                className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-neutral-950 ${
+                                  isHumanNeeded
+                                    ? "bg-red-500 animate-pulse"
+                                    : isReplying
+                                    ? "bg-emerald-500"
+                                    : chat.status === "resolved"
+                                    ? "bg-neutral-500"
+                                    : "bg-blue-400"
+                                }`}
+                                title={chat.status}
+                              />
+                            </div>
+
+                            {/* Chat Preview Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1 mb-0.5">
+                                <h4 className="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                                  {chat.customerName}
+                                  {chat.customerType === "mayorista" && (
+                                    <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-400 text-[9px] font-mono font-bold rounded">
+                                      B2B
+                                    </span>
+                                  )}
+                                </h4>
+                                <span className="text-[10px] text-neutral-500 font-mono shrink-0">
+                                  {chat.lastMessageTime?.replace("Hoy, ", "")}
+                                </span>
+                              </div>
+
+                              <p className="text-[11px] text-neutral-400 truncate mb-1">
+                                {chat.customerCity || "Colombia"} {chat.customerPhone ? `• ${chat.customerPhone}` : ""}
+                              </p>
+
+                              <p
+                                className={`text-xs truncate ${
+                                  chat.unreadCountForAdmin > 0
+                                    ? "text-neutral-200 font-semibold"
+                                    : "text-neutral-400"
+                                }`}
+                              >
+                                {chat.lastMessageText}
+                              </p>
+                            </div>
+
+                            {/* Unread badge & urgent tag */}
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              {chat.unreadCountForAdmin > 0 && (
+                                <span className="w-5 h-5 rounded-full bg-orange-500 text-white font-black text-[10px] flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                  {chat.unreadCountForAdmin}
+                                </span>
+                              )}
+                              {isHumanNeeded && (
+                                <span className="px-1.5 py-0.5 rounded-md bg-red-500/20 text-red-400 text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                                  🔥 Asesor
+                                </span>
+                              )}
+                              {isReplying && (
+                                <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-bold">
+                                  🧑‍💼 Edwin
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Active Conversation Thread & Reply Bar */}
+                {activeChat ? (
+                  <div className="flex-1 flex flex-col bg-neutral-900/40 h-full overflow-hidden">
+                    {/* Conversation Header */}
+                    <div className="p-4 border-b border-neutral-800 bg-neutral-950/40 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white shrink-0 ${
+                            activeChat.customerType === "mayorista"
+                              ? "bg-gradient-to-br from-amber-500 to-orange-700"
+                              : "bg-gradient-to-br from-neutral-700 to-neutral-900"
+                          }`}
+                        >
+                          {activeChat.customerName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-black text-white truncate">
+                              {activeChat.customerName}
+                            </h3>
+                            {activeChat.customerType === "mayorista" ? (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold uppercase">
+                                Mayorista B2B (Min 6 unds)
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-300 text-[10px] font-bold uppercase">
+                                Cliente Detal
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-neutral-400 mt-0.5">
+                            {activeChat.customerPhone && (
+                              <a
+                                href={`https://wa.me/57${activeChat.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${activeChat.customerName}, te saluda Edwin de Gordo Ryders.`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1 hover:text-emerald-400 text-emerald-500 font-mono font-medium transition"
+                              >
+                                <Phone className="w-3 h-3" />
+                                +57 {activeChat.customerPhone}
+                              </a>
+                            )}
+                            {activeChat.customerEmail && (
+                              <span className="truncate hidden sm:inline">{activeChat.customerEmail}</span>
+                            )}
+                            {activeChat.customerCity && (
+                              <span>📍 {activeChat.customerCity}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Header Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Status selector */}
+                        <div className="hidden sm:flex items-center gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-[11px]">
+                          <button
+                            onClick={() => markChatStatus(activeChat.id, "bot")}
+                            className={`px-2 py-1 rounded-lg transition ${
+                              activeChat.status === "bot"
+                                ? "bg-neutral-800 text-white font-bold"
+                                : "text-neutral-400 hover:text-white"
+                            }`}
+                          >
+                            🤖 Bot
+                          </button>
+                          <button
+                            onClick={() => markChatStatus(activeChat.id, "needs_human")}
+                            className={`px-2 py-1 rounded-lg transition ${
+                              activeChat.status === "needs_human"
+                                ? "bg-red-500/20 text-red-400 font-bold"
+                                : "text-neutral-400 hover:text-red-400"
+                            }`}
+                          >
+                            🔥 Humano
+                          </button>
+                          <button
+                            onClick={() => markChatStatus(activeChat.id, "agent_replying")}
+                            className={`px-2 py-1 rounded-lg transition ${
+                              activeChat.status === "agent_replying"
+                                ? "bg-emerald-500/20 text-emerald-400 font-bold"
+                                : "text-neutral-400 hover:text-emerald-400"
+                            }`}
+                          >
+                            🧑‍💼 Asesor
+                          </button>
+                          <button
+                            onClick={() => markChatStatus(activeChat.id, "resolved")}
+                            className={`px-2 py-1 rounded-lg transition ${
+                              activeChat.status === "resolved"
+                                ? "bg-neutral-700 text-neutral-200 font-bold"
+                                : "text-neutral-400 hover:text-white"
+                            }`}
+                          >
+                            ✅ Resuelto
+                          </button>
+                        </div>
+
+                        {/* WhatsApp redirect button */}
+                        {activeChat.customerPhone && (
+                          <a
+                            href={`https://wa.me/57${activeChat.customerPhone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola ${activeChat.customerName}, te escribe Edwin Bernal de Gordo Ryders para darte soporte a tu pedido.`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition text-xs flex items-center gap-1.5 font-bold cursor-pointer"
+                            title="Abrir chat en WhatsApp Web"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span className="hidden xl:inline">WhatsApp</span>
+                          </a>
+                        )}
+
+                        {/* Delete chat button */}
+                        <button
+                          onClick={() => {
+                            if (confirm(`¿Eliminar la conversación con ${activeChat.customerName}?`)) {
+                              deleteChatSession(activeChat.id);
+                            }
+                          }}
+                          className="p-2 rounded-xl bg-neutral-950 hover:bg-red-500/20 text-neutral-500 hover:text-red-400 border border-neutral-800 transition cursor-pointer"
+                          title="Eliminar conversación"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Messages Body */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+                      {/* Product viewed alert */}
+                      {activeChat.currentProductViewed && (
+                        <div className="mx-auto max-w-md bg-neutral-950/80 border border-neutral-800 rounded-xl p-2.5 text-center text-xs text-neutral-400 flex items-center justify-center gap-2">
+                          <Eye className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                          <span>El cliente estuvo viendo: <strong className="text-white">{activeChat.currentProductViewed}</strong></span>
+                        </div>
+                      )}
+
+                      {activeChat.messages.map((msg) => {
+                        const isUser = msg.sender === "user";
+                        const isAgent = msg.sender === "agent";
+                        const isBot = msg.sender === "bot";
+
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex flex-col ${
+                              isUser ? "items-start" : "items-end"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-neutral-500">
+                              {isUser && <span className="font-bold text-neutral-400">{activeChat.customerName}</span>}
+                              {isBot && (
+                                <span className="font-bold text-amber-400 flex items-center gap-1">
+                                  <Bot className="w-3 h-3" /> Smart Bot Gordo Ryders
+                                </span>
+                              )}
+                              {isAgent && (
+                                <span className="font-bold text-emerald-400 flex items-center gap-1">
+                                  🧑‍💼 {msg.senderName || "Edwin Bernal (Asesor)"}
+                                </span>
+                              )}
+                              <span>• {msg.timestamp}</span>
+                            </div>
+
+                            {/* Bubble */}
+                            <div
+                              className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-xs shadow-md ${
+                                isUser
+                                  ? "bg-neutral-800 text-neutral-100 rounded-tl-sm border border-neutral-700/60"
+                                  : isAgent
+                                  ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-tr-sm font-medium shadow-orange-500/10"
+                                  : "bg-neutral-950 text-neutral-200 rounded-tr-sm border border-neutral-800"
+                              }`}
+                            >
+                              <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+
+                              {/* Rich Card: Product */}
+                              {msg.productCard && (
+                                <div className="mt-2.5 p-2 rounded-xl bg-neutral-900 border border-neutral-700/60 flex items-center gap-3 text-left">
+                                  <img
+                                    src={msg.productCard.image_url}
+                                    alt={msg.productCard.name}
+                                    className="w-12 h-12 rounded-lg object-cover bg-neutral-950 shrink-0"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <h5 className="font-bold text-white text-[11px] truncate">
+                                      {msg.productCard.name}
+                                    </h5>
+                                    <div className="text-orange-400 font-mono font-bold text-xs">
+                                      {formatCOP(msg.productCard.price)}
+                                    </div>
+                                    <Link
+                                      href={`/productos/${msg.productCard.slug}`}
+                                      target="_blank"
+                                      className="text-[10px] text-neutral-400 hover:text-white underline inline-flex items-center gap-1 mt-0.5"
+                                    >
+                                      <span>Ver en catálogo</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </Link>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Rich Card: Order */}
+                              {msg.orderCard && (
+                                <div className="mt-2.5 p-2.5 rounded-xl bg-neutral-900 border border-neutral-700/60 text-left space-y-1">
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-neutral-400">Guía de Envío:</span>
+                                    <span className="font-mono font-bold text-white">{msg.orderCard.guideNumber}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-neutral-400">Transportadora:</span>
+                                    <span className="font-bold text-emerald-400">{msg.orderCard.carrier}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-neutral-400">Estado:</span>
+                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                                      {msg.orderCard.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick Canned Responses Bar */}
+                    <div className="p-2.5 bg-neutral-950/80 border-t border-neutral-800/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                      <span className="text-[10px] text-neutral-500 font-bold uppercase shrink-0 px-1">
+                        Plantillas:
+                      </span>
+                      {quickReplies.map((r, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setAgentReplyText(r.text)}
+                          className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-[11px] text-neutral-300 hover:text-white transition whitespace-nowrap cursor-pointer"
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Reply Input Bar */}
+                    <form
+                      onSubmit={handleSendAgent}
+                      className="p-3 bg-neutral-950 border-t border-neutral-800 flex items-center gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={agentReplyText}
+                        onChange={(e) => setAgentReplyText(e.target.value)}
+                        placeholder={`Escribir como Edwin Bernal (Asesor Oficial) a ${activeChat.customerName}...`}
+                        className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500/60"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!agentReplyText.trim()}
+                        className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-orange-600/20 cursor-pointer"
+                      >
+                        <span>Responder</span>
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-neutral-500">
+                    <MessageSquare className="w-12 h-12 mb-3 opacity-30" />
+                    <h3 className="text-base font-bold text-neutral-300">Ningún chat seleccionado</h3>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Elige una conversación del listado izquierdo para responder al cliente en vivo.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       </main>
 

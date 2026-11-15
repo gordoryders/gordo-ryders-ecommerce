@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
+import { Product, CartItem, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, StoreSettings, HeroBanner, Invoice, Category, ProductCombo, SupportChatSession, ChatMessage } from "@/types";
 import { PRODUCTS, LOOKBOOK_ALBUMS } from "@/data/products";
 import { supabase, isSupabaseConfigured, signInWithGoogle, signOutUser } from "@/lib/supabaseClient";
 
@@ -399,6 +399,154 @@ const DEFAULT_ORDERS: Order[] = [
   },
 ];
 
+const DEFAULT_SUPPORT_CHATS: SupportChatSession[] = [
+  {
+    id: "chat-carlos-1",
+    customerName: "Carlos Mario Restrepo",
+    customerEmail: "carlos.mario@gmail.com",
+    customerPhone: "3104567890",
+    customerCity: "Medellín, Antioquia",
+    customerType: "detal",
+    status: "needs_human",
+    unreadCountForAdmin: 1,
+    unreadCountForUser: 0,
+    lastMessageText: "Perfecto, pero necesito confirmar si me llega antes del viernes a Medellín. ¿Puedo hablar con alguien?",
+    lastMessageTime: "Hoy, 10:42 AM",
+    createdAt: "Hoy, 10:35 AM",
+    currentProductViewed: "Casco Abatible ICH 3110 Doble Visor Top Speed",
+    messages: [
+      {
+        id: "msg-1-1",
+        sender: "bot",
+        text: "¡Hola Carlos! 🏍️ Bienvenido a Gordo Ryders. ¿En qué te podemos asesorar hoy?",
+        timestamp: "10:35 AM",
+      },
+      {
+        id: "msg-1-2",
+        sender: "user",
+        senderName: "Carlos Mario Restrepo",
+        text: "Buenas tardes, quiero saber si el Casco ICH 3110 en talla L negro mate lo tienen disponible para despacho inmediato a Medellín.",
+        timestamp: "10:36 AM",
+      },
+      {
+        id: "msg-1-3",
+        sender: "bot",
+        text: "¡Sí tenemos disponibilidad! El Casco ICH 3110 cuenta con doble visor solar retráctil y certificación DOT. Tenemos 14 unidades en bodega.",
+        timestamp: "10:37 AM",
+        productCard: {
+          id: "prod-ich-3110",
+          name: "Casco Abatible ICH 3110 Doble Visor Top Speed",
+          price: 249900,
+          price_original: 289900,
+          image_url: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80",
+          slug: "casco-abatible-ich-3110-doble-visor-top-speed",
+          category: "Cascos",
+        },
+      },
+      {
+        id: "msg-1-4",
+        sender: "user",
+        senderName: "Carlos Mario Restrepo",
+        text: "Perfecto, pero necesito confirmar si me llega antes del viernes a Medellín. ¿Puedo hablar con alguien?",
+        timestamp: "10:42 AM",
+      },
+      {
+        id: "msg-1-5",
+        sender: "bot",
+        text: "Entendido Carlos. Estoy transfiriendo tu chat con Edwin de bodega para confirmar el tiempo exacto de entrega con Inter Rapidísimo 🟢 Un momento por favor.",
+        timestamp: "10:42 AM",
+      },
+    ],
+  },
+  {
+    id: "chat-diamante-2",
+    customerName: "Almacén Motos El Diamante (B2B)",
+    customerEmail: "compras@motoseldiamante.com",
+    customerPhone: "3209876543",
+    customerCity: "Bucaramanga, Santander",
+    customerType: "mayorista",
+    status: "agent_replying",
+    unreadCountForAdmin: 0,
+    unreadCountForUser: 0,
+    lastMessageText: "Excelente Edwin, ya te pasamos el comprobante de Bancolombia.",
+    lastMessageTime: "Ayer, 04:30 PM",
+    createdAt: "Ayer, 03:15 PM",
+    currentProductViewed: "Guantes Proviker Ref E44",
+    messages: [
+      {
+        id: "msg-2-1",
+        sender: "user",
+        senderName: "Almacén Motos El Diamante",
+        text: "Hola Edwin, requerimos cotización de 36 pares de Guantes Proviker Ref E44 surtidos M y L con el descuento del 35% de mayorista.",
+        timestamp: "03:15 PM",
+      },
+      {
+        id: "msg-2-2",
+        sender: "agent",
+        senderName: "Edwin Bernal (Gordo Ryders)",
+        text: "Buenas tardes amigos de El Diamante. Confirmado el inventario de las 36 unidades. Les dejo la guía lista para salir por Envía hoy.",
+        timestamp: "03:45 PM",
+      },
+      {
+        id: "msg-2-3",
+        sender: "user",
+        senderName: "Almacén Motos El Diamante",
+        text: "Excelente Edwin, ya te pasamos el comprobante de Bancolombia.",
+        timestamp: "04:30 PM",
+      },
+    ],
+  },
+  {
+    id: "chat-paola-3",
+    customerName: "Paola Andrea Parada",
+    customerEmail: "paola.parada@outlook.com",
+    customerPhone: "3145678901",
+    customerCity: "Bogotá D.C.",
+    customerType: "detal",
+    status: "resolved",
+    unreadCountForAdmin: 0,
+    unreadCountForUser: 0,
+    lastMessageText: "¡Muchas gracias! Ya hice la compra del casco modular.",
+    lastMessageTime: "12 Nov, 11:20 AM",
+    createdAt: "12 Nov, 11:05 AM",
+    messages: [
+      {
+        id: "msg-3-1",
+        sender: "user",
+        senderName: "Paola Andrea Parada",
+        text: "Hola, ¿cómo puedo saber mi talla exacta de casco?",
+        timestamp: "11:05 AM",
+      },
+      {
+        id: "msg-3-2",
+        sender: "bot",
+        text: "📌 Mide el contorno de tu cabeza con una cinta métrica 2 cm por encima de tus cejas:\n• S: 55-56 cm\n• M: 57-58 cm\n• L: 59-60 cm\n• XL: 61-62 cm",
+        timestamp: "11:06 AM",
+      },
+      {
+        id: "msg-3-3",
+        sender: "user",
+        senderName: "Paola Andrea Parada",
+        text: "Me dio 56 cm.",
+        timestamp: "11:10 AM",
+      },
+      {
+        id: "msg-3-4",
+        sender: "bot",
+        text: "Para 56 cm tu talla perfecta en ICH Helmets es S. Recuerda que los primeros 3 días debe sentirse bien ajustado mientras el tapizado cede un 10%.",
+        timestamp: "11:11 AM",
+      },
+      {
+        id: "msg-3-5",
+        sender: "user",
+        senderName: "Paola Andrea Parada",
+        text: "¡Muchas gracias! Ya hice la compra del casco modular.",
+        timestamp: "11:20 AM",
+      },
+    ],
+  },
+];
+
 interface StoreContextType {
   // Cart
   cartItems: CartItem[];
@@ -521,6 +669,23 @@ interface StoreContextType {
   trackWhatsAppClick: (label?: string) => void;
   productViews: number;
   trackProductView: () => void;
+
+  // Live Chat Support & Inbox (WhatsApp Web / Stake Support Style)
+  supportChats: SupportChatSession[];
+  activeChatSessionId: string | null;
+  setActiveChatSessionId: (id: string | null) => void;
+  sendMessageFromUser: (
+    chatId: string,
+    text: string,
+    senderName?: string,
+    customerInfo?: Partial<SupportChatSession>,
+    productCard?: any,
+    orderCard?: any
+  ) => void;
+  sendMessageFromAgent: (chatId: string, text: string, agentName?: string) => void;
+  markChatStatus: (chatId: string, status: "bot" | "needs_human" | "agent_replying" | "resolved") => void;
+  requestHumanAgent: (chatId: string) => void;
+  deleteChatSession: (chatId: string) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -551,6 +716,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [combos, setCombos] = useState<ProductCombo[]>(DEFAULT_COMBOS);
   const [whatsappClicks, setWhatsappClicks] = useState<number>(38);
   const [productViews, setProductViews] = useState<number>(342);
+  const [supportChats, setSupportChats] = useState<SupportChatSession[]>(DEFAULT_SUPPORT_CHATS);
+  const [activeChatSessionId, setActiveChatSessionId] = useState<string | null>(null);
 
   // Client-side initialization from localStorage
   useEffect(() => {
@@ -620,6 +787,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       const savedUser = localStorage.getItem("gr_current_user");
       if (savedUser) setCurrentUser(JSON.parse(savedUser));
+
+      const savedChats = localStorage.getItem("gr_support_chats");
+      if (savedChats) {
+        setSupportChats(JSON.parse(savedChats));
+      } else {
+        localStorage.setItem("gr_support_chats", JSON.stringify(DEFAULT_SUPPORT_CHATS));
+      }
     } catch {
       // ignore
     }
@@ -682,6 +856,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       return () => subscription.unsubscribe();
     }
+  }, []);
+
+  // Cross-tab live support chat sync
+  useEffect(() => {
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === "gr_support_chats" && e.newValue) {
+        try {
+          setSupportChats(JSON.parse(e.newValue));
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorageUpdate);
+    return () => window.removeEventListener("storage", handleStorageUpdate);
   }, []);
 
   // Sync Cart
@@ -1278,6 +1465,161 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // Support Chats Operations (WhatsApp Web / Stake Support Style)
+  const sendMessageFromUser = (
+    chatId: string,
+    text: string,
+    senderName: string = "Visitante",
+    customerInfo?: Partial<SupportChatSession>,
+    productCard?: any,
+    orderCard?: any
+  ) => {
+    setSupportChats((prev) => {
+      const timeNow = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "numeric", hour12: true }).format(new Date());
+      const newMsg: ChatMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        sender: "user",
+        senderName,
+        text,
+        timestamp: timeNow,
+        productCard,
+        orderCard,
+      };
+
+      const existingIndex = prev.findIndex((c) => c.id === chatId);
+      let updated: SupportChatSession[];
+
+      if (existingIndex >= 0) {
+        const existing = prev[existingIndex];
+        const updatedSession: SupportChatSession = {
+          ...existing,
+          customerName: customerInfo?.customerName || existing.customerName || senderName,
+          customerEmail: customerInfo?.customerEmail || existing.customerEmail,
+          customerPhone: customerInfo?.customerPhone || existing.customerPhone,
+          customerCity: customerInfo?.customerCity || existing.customerCity,
+          customerType: customerInfo?.customerType || existing.customerType,
+          currentProductViewed: customerInfo?.currentProductViewed || existing.currentProductViewed,
+          lastMessageText: text,
+          lastMessageTime: `Hoy, ${timeNow}`,
+          unreadCountForAdmin: existing.unreadCountForAdmin + 1,
+          messages: [...existing.messages, newMsg],
+        };
+        updated = [updatedSession, ...prev.filter((_, idx) => idx !== existingIndex)];
+      } else {
+        const newSession: SupportChatSession = {
+          id: chatId,
+          customerName: customerInfo?.customerName || senderName,
+          customerEmail: customerInfo?.customerEmail || "",
+          customerPhone: customerInfo?.customerPhone || "",
+          customerCity: customerInfo?.customerCity || userCity || "Colombia",
+          customerType: customerInfo?.customerType || "detal",
+          status: "bot",
+          unreadCountForAdmin: 1,
+          unreadCountForUser: 0,
+          lastMessageText: text,
+          lastMessageTime: `Hoy, ${timeNow}`,
+          createdAt: `Hoy, ${timeNow}`,
+          currentProductViewed: customerInfo?.currentProductViewed,
+          messages: [newMsg],
+        };
+        updated = [newSession, ...prev];
+      }
+
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const sendMessageFromAgent = (
+    chatId: string,
+    text: string,
+    agentName: string = "Edwin Bernal (Asesor Oficial Gordo Ryders)"
+  ) => {
+    setSupportChats((prev) => {
+      const timeNow = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "numeric", hour12: true }).format(new Date());
+      const newMsg: ChatMessage = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        sender: "agent",
+        senderName: agentName,
+        text,
+        timestamp: timeNow,
+      };
+
+      const existingIndex = prev.findIndex((c) => c.id === chatId);
+      if (existingIndex === -1) return prev;
+
+      const existing = prev[existingIndex];
+      const updatedSession: SupportChatSession = {
+        ...existing,
+        status: "agent_replying",
+        unreadCountForAdmin: 0,
+        unreadCountForUser: existing.unreadCountForUser + 1,
+        lastMessageText: text,
+        lastMessageTime: `Hoy, ${timeNow}`,
+        messages: [...existing.messages, newMsg],
+      };
+
+      const updated = [updatedSession, ...prev.filter((_, idx) => idx !== existingIndex)];
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const requestHumanAgent = (chatId: string) => {
+    setSupportChats((prev) => {
+      const timeNow = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "numeric", hour12: true }).format(new Date());
+      const botTransferMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        sender: "bot",
+        text: "🔔 Solicitud enviada a Edwin y al equipo de soporte de Gordo Ryders en vivo. Por favor espera unos momentos, te responderemos en esta misma pantalla 🟢",
+        timestamp: timeNow,
+      };
+
+      const updated = prev.map((c) => {
+        if (c.id === chatId) {
+          return {
+            ...c,
+            status: "needs_human" as const,
+            unreadCountForAdmin: c.unreadCountForAdmin + 1,
+            lastMessageText: "🔥 Requiere asesor humano en vivo",
+            lastMessageTime: `Hoy, ${timeNow}`,
+            messages: [...c.messages, botTransferMsg],
+          };
+        }
+        return c;
+      });
+
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const markChatStatus = (chatId: string, status: "bot" | "needs_human" | "agent_replying" | "resolved") => {
+    setSupportChats((prev) => {
+      const updated = prev.map((c) => (c.id === chatId ? { ...c, status, unreadCountForAdmin: 0 } : c));
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteChatSession = (chatId: string) => {
+    setSupportChats((prev) => {
+      const updated = prev.filter((c) => c.id !== chatId);
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cartItems.reduce(
     (acc, item) => acc + item.product.price_retail * item.quantity,
@@ -1360,6 +1702,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         trackWhatsAppClick,
         productViews,
         trackProductView,
+        supportChats,
+        activeChatSessionId,
+        setActiveChatSessionId,
+        sendMessageFromUser,
+        sendMessageFromAgent,
+        markChatStatus,
+        requestHumanAgent,
+        deleteChatSession,
       }}
     >
       {children}
