@@ -498,6 +498,18 @@ interface StoreContextType {
   updateUserProfile: (profileData: Partial<CustomerUser>) => void;
   logout: () => void;
 
+  // B2B Wholesale Functions
+  requestWholesaleAccount: (data: {
+    businessName: string;
+    businessType: "almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital";
+    nitOrRut?: string;
+    city: string;
+    phone: string;
+    addressOrSocial: string;
+  }) => void;
+  approveWholesaleUser: (userId: string) => void;
+  rejectWholesaleUser: (userId: string) => void;
+
   // Analytics
   whatsappClicks: number;
   trackWhatsAppClick: (label?: string) => void;
@@ -1131,6 +1143,114 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setIsProfileModalOpen(false);
   };
 
+  // B2B Wholesale Functions
+  const requestWholesaleAccount = (data: {
+    businessName: string;
+    businessType: "almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital";
+    nitOrRut?: string;
+    city: string;
+    phone: string;
+    addressOrSocial: string;
+  }) => {
+    if (!currentUser) return;
+    const updatedUser: CustomerUser = {
+      ...currentUser,
+      b2bStatus: "pendiente",
+      businessName: data.businessName,
+      businessType: data.businessType,
+      b2bNitOrRut: data.nitOrRut,
+      city: data.city,
+      phone: data.phone,
+      b2bAddressOrSocial: data.addressOrSocial,
+    };
+    setCurrentUser(updatedUser);
+    try {
+      localStorage.setItem("gr_current_user", JSON.stringify(updatedUser));
+    } catch {}
+    updateUser(updatedUser);
+
+    // Also register an inquiry in wholesale pipeline so Admin gets it immediately
+    const newInquiry: WholesaleInquiry = {
+      id: `wh-${Date.now()}`,
+      businessName: data.businessName,
+      contactName: currentUser.name,
+      nitOrCedula: data.nitOrRut || currentUser.cedulaOrNit || "Pendiente",
+      phone: data.phone,
+      city: data.city,
+      productsInterest: `Solicitud de Cuenta Distribuidor B2B (${data.businessType.replace("_", " ").toUpperCase()})`,
+      estimatedUnits: 12,
+      date: "Hoy, " + new Intl.DateTimeFormat("es-CO", { timeStyle: "short" }).format(new Date()),
+      status: "nuevo",
+      notes: `Almacén/Local: ${data.addressOrSocial}. Solicitó estatus de distribuidor B2B desde su perfil.`,
+    };
+    addWholesaleInquiry(newInquiry);
+  };
+
+  const approveWholesaleUser = (userId: string) => {
+    const code = `GR-B2B-${Math.floor(100 + Math.random() * 900)}`;
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            type: "mayorista" as const,
+            b2bStatus: "aprobado" as const,
+            b2bCode: code,
+            b2bDiscountTier: 1 as const,
+          };
+        }
+        return u;
+      });
+      try {
+        localStorage.setItem("gr_admin_users", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (currentUser && currentUser.id === userId) {
+      const updatedUser: CustomerUser = {
+        ...currentUser,
+        type: "mayorista",
+        b2bStatus: "aprobado",
+        b2bCode: code,
+        b2bDiscountTier: 1,
+      };
+      setCurrentUser(updatedUser);
+      try {
+        localStorage.setItem("gr_current_user", JSON.stringify(updatedUser));
+      } catch {}
+    }
+  };
+
+  const rejectWholesaleUser = (userId: string) => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            b2bStatus: "rechazado" as const,
+          };
+        }
+        return u;
+      });
+      try {
+        localStorage.setItem("gr_admin_users", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (currentUser && currentUser.id === userId) {
+      const updatedUser: CustomerUser = {
+        ...currentUser,
+        b2bStatus: "rechazado",
+      };
+      setCurrentUser(updatedUser);
+      try {
+        localStorage.setItem("gr_current_user", JSON.stringify(updatedUser));
+      } catch {}
+    }
+  };
+
   // Analytics Operations
   const trackWhatsAppClick = () => {
     setWhatsappClicks((prev) => {
@@ -1203,6 +1323,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         loginWithEmail,
         updateUserProfile,
         logout,
+        requestWholesaleAccount,
+        approveWholesaleUser,
+        rejectWholesaleUser,
         wholesaleInquiries,
         addWholesaleInquiry,
         updateWholesaleInquiry,

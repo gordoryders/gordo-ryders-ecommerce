@@ -69,6 +69,8 @@ export default function AdminPage() {
     addWholesaleInquiry,
     updateWholesaleInquiry,
     deleteWholesaleInquiry,
+    approveWholesaleUser,
+    rejectWholesaleUser,
     banners,
     addBanner,
     updateBanner,
@@ -2327,6 +2329,77 @@ export default function AdminPage() {
               <p className="text-xs text-neutral-400">
                 Almacenes interesados en comprar por mayor docenas de cascos, impermeables o guantes.
               </p>
+            </div>
+
+            {/* Registered B2B Distributor Accounts */}
+            <div className="p-5 rounded-3xl bg-neutral-900 border border-amber-500/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <span className="text-amber-400">👑</span>
+                    <span>Cuentas de Distribuidores Mayoristas Registradas</span>
+                  </h4>
+                  <p className="text-xs text-neutral-400">
+                    Comercios que solicitaron estatus mayorista desde su cuenta web.
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+                  {users.filter((u) => u.b2bStatus === "pendiente" || u.b2bStatus === "aprobado" || u.type === "mayorista").length} cuentas B2B
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {users.filter((u) => u.b2bStatus === "pendiente" || u.b2bStatus === "aprobado" || u.type === "mayorista").map((b2bUser) => (
+                  <div key={b2bUser.id} className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-white">{b2bUser.businessName || b2bUser.name}</span>
+                      {b2bUser.b2bStatus === "aprobado" ? (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase">
+                          ✓ Aprobado ({b2bUser.b2bCode || "GR-B2B-108"})
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full uppercase animate-pulse">
+                          ⏳ Pendiente Aprobación
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-neutral-400 space-y-1">
+                      <p>👤 Contacto: <strong className="text-neutral-200">{b2bUser.name}</strong></p>
+                      <p>📍 Ciudad: <strong className="text-neutral-200">{b2bUser.city}</strong></p>
+                      <p>📱 WhatsApp: <strong className="text-neutral-200">{b2bUser.phone}</strong></p>
+                      {b2bUser.b2bNitOrRut && <p className="font-mono text-[11px]">🪪 NIT/RUT: {b2bUser.b2bNitOrRut}</p>}
+                      {b2bUser.b2bAddressOrSocial && <p className="text-[11px] truncate">🏠 Local/Redes: {b2bUser.b2bAddressOrSocial}</p>}
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-800 flex items-center gap-2">
+                      {b2bUser.b2bStatus !== "aprobado" ? (
+                        <button
+                          onClick={() => approveWholesaleUser(b2bUser.id)}
+                          className="flex-1 py-1.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs transition-colors cursor-pointer text-center"
+                        >
+                          Aprobar como Mayorista
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-emerald-400 font-bold flex-1">
+                          Tarifas B2B Habilitadas
+                        </span>
+                      )}
+                      <a
+                        href={`https://wa.me/57${b2bUser.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                          `Hola ${b2bUser.name}, te escribe Edwin Bernal de Gordo Ryders Colombia. Tu cuenta mayorista para ${b2bUser.businessName || "tu almacén"} ha sido aprobada con el código ${b2bUser.b2bCode || "GR-B2B-101"}. Ya puedes acceder a precios de bodega desde 6 unidades en la tienda.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
+                        title="Enviar confirmación por WhatsApp"
+                      >
+                        <MessageSquareText className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

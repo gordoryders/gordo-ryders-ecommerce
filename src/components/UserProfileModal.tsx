@@ -53,11 +53,12 @@ export default function UserProfileModal() {
     logout,
     orders,
     invoices,
-    setIsTrackingOpen
+    setIsTrackingOpen,
+    requestWholesaleAccount
   } = useStore();
 
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "shipping" | "orders" | "invoices">("shipping");
+  const [activeTab, setActiveTab] = useState<"profile" | "shipping" | "orders" | "invoices" | "wholesale">("shipping");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Form states initialized with currentUser
@@ -71,6 +72,15 @@ export default function UserProfileModal() {
   const [address, setAddress] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
+
+  // B2B Wholesale Request Form States
+  const [b2bBusinessName, setB2bBusinessName] = useState("");
+  const [b2bBusinessType, setB2bBusinessType] = useState<"almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital">("almacen_repuestos");
+  const [b2bNitOrRut, setB2bNitOrRut] = useState("");
+  const [b2bCity, setB2bCity] = useState("Bogotá D.C.");
+  const [b2bPhone, setB2bPhone] = useState("");
+  const [b2bAddressOrSocial, setB2bAddressOrSocial] = useState("");
+  const [b2bSubmitted, setB2bSubmitted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -88,12 +98,36 @@ export default function UserProfileModal() {
       setAddress(currentUser.address || "");
       setNeighborhood(currentUser.neighborhood || "");
       setDeliveryNotes(currentUser.deliveryNotes || "");
+      if (currentUser.businessName) setB2bBusinessName(currentUser.businessName);
+      if (currentUser.businessType) setB2bBusinessType(currentUser.businessType);
+      if (currentUser.b2bNitOrRut) setB2bNitOrRut(currentUser.b2bNitOrRut);
+      if (currentUser.city) setB2bCity(currentUser.city);
+      if (currentUser.phone) setB2bPhone(currentUser.phone);
+      if (currentUser.b2bAddressOrSocial) setB2bAddressOrSocial(currentUser.b2bAddressOrSocial);
     }
   }, [currentUser]);
 
   if (!isProfileModalOpen || !currentUser || !mounted || typeof document === "undefined") {
     return null;
   }
+
+  const handleWholesaleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!b2bBusinessName || !b2bPhone || !b2bCity) {
+      alert("Por favor completa los datos obligatorios de tu almacén o taller.");
+      return;
+    }
+    requestWholesaleAccount({
+      businessName: b2bBusinessName,
+      businessType: b2bBusinessType,
+      nitOrRut: b2bNitOrRut,
+      city: b2bCity,
+      phone: b2bPhone,
+      addressOrSocial: b2bAddressOrSocial,
+    });
+    setB2bSubmitted(true);
+    setTimeout(() => setB2bSubmitted(false), 3000);
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,10 +199,17 @@ export default function UserProfileModal() {
                 <h3 className="text-lg font-black text-white leading-tight">
                   {currentUser.name}
                 </h3>
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>{currentUser.status || "Activo"}</span>
-                </span>
+                {currentUser.b2bStatus === "aprobado" ? (
+                  <span className="bg-amber-500/20 text-amber-400 border border-amber-500/50 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1 shadow-sm shadow-amber-500/20">
+                    <span>👑</span>
+                    <span>DISTRIBUIDOR B2B • {currentUser.b2bCode || "GR-B2B-101"}</span>
+                  </span>
+                ) : (
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{currentUser.status || "Activo"}</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-neutral-400 mt-0.5">
                 {currentUser.email}
@@ -242,6 +283,22 @@ export default function UserProfileModal() {
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Mis Facturas ({userInvoices.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("wholesale")}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              activeTab === "wholesale"
+                ? "bg-amber-600 text-neutral-950 font-black shadow-md shadow-amber-600/30"
+                : "bg-neutral-950 text-neutral-400 hover:text-white border border-neutral-800"
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-amber-400" />
+            <span>Cuenta Mayorista B2B</span>
+            {currentUser.b2bStatus === "aprobado" && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            )}
           </button>
         </div>
 
@@ -541,6 +598,210 @@ export default function UserProfileModal() {
                   </div>
                 </div>
               ))
+            )}
+          </div>
+        )}
+
+        {/* =========================================================================
+            TAB 5: CUENTA MAYORISTA B2B (ALMACENES & TALLERES)
+            ========================================================================= */}
+        {activeTab === "wholesale" && (
+          <div className="py-4 space-y-4">
+            {currentUser.b2bStatus === "aprobado" ? (
+              <div className="space-y-4 animate-in fade-in">
+                {/* Gold VIP Card */}
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-950/70 via-neutral-900 to-amber-950/40 border border-amber-500/40 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 flex items-center gap-1.5">
+                      <span>👑</span>
+                      <span>Distribuidor Oficial Autorizado</span>
+                    </span>
+                    <span className="text-xs font-mono font-black text-amber-400">
+                      ID: {currentUser.b2bCode || "GR-B2B-101"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-black text-white">{currentUser.businessName || "Almacén Vinculado"}</h4>
+                    <p className="text-xs text-neutral-300">
+                      RUT / NIT: <strong className="font-mono text-white">{currentUser.b2bNitOrRut || currentUser.cedulaOrNit || "Registrado"}</strong> • Ciudad: <strong className="text-white">{currentUser.city}</strong>
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-neutral-800 text-xs text-neutral-300">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Tarifas de Bodega activas (desde 6 unds)</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Despacho prioritario nacional</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Facturación Electrónica DIAN con RUT</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Atención directa con Edwin Bernal</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <a
+                    href="/mayoristas"
+                    onClick={() => setIsProfileModalOpen(false)}
+                    className="flex-1 py-3 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-xs text-center transition-colors shadow-md shadow-orange-600/20"
+                  >
+                    Ir al Catálogo Mayorista y Armar Pedido
+                  </a>
+                  <a
+                    href={`https://wa.me/573000000000?text=${encodeURIComponent(
+                      `Hola Edwin Bernal, soy ${currentUser.name} del almacén ${currentUser.businessName} (Código ${currentUser.b2bCode}). Deseo consultar disponibilidad de bodega.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>Línea VIP WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            ) : currentUser.b2bStatus === "pendiente" ? (
+              <div className="p-6 rounded-3xl bg-neutral-950 border border-amber-500/30 text-center space-y-3 animate-in fade-in">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center mx-auto text-xl font-bold">
+                  ⏳
+                </div>
+                <h4 className="text-base font-black text-white">Solicitud Mayorista en Revisión</h4>
+                <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
+                  Tu solicitud para vincular a <strong className="text-amber-400">{currentUser.businessName || "tu negocio"}</strong> como distribuidor autorizado está siendo revisada por el equipo comercial de Gordo Ryders.
+                </p>
+                <p className="text-[11px] text-neutral-500">
+                  Nos comunicaremos al WhatsApp <strong>{currentUser.phone}</strong> para habilitar tus precios de bodega.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleWholesaleSubmit} className="space-y-4 animate-in fade-in">
+                <div className="bg-neutral-950 p-4 rounded-2xl border border-neutral-800 text-xs text-neutral-300 space-y-1.5">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold">
+                    <Building2 className="w-4 h-4" />
+                    <span>¿Tienes un Almacén, Taller o Tienda de Motos?</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-relaxed">
+                    Solicita tu cuenta de distribuidor autorizado para desbloquear precios de fábrica a partir de 6 unidades surtidas, facturas electrónicas y despacho preferencial.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                      Nombre Comercial del Almacén / Taller *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Repuestos & Motos El Paisa"
+                      value={b2bBusinessName}
+                      onChange={(e) => setB2bBusinessName(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                      Tipo de Negocio *
+                    </label>
+                    <select
+                      value={b2bBusinessType}
+                      onChange={(e) => setB2bBusinessType(e.target.value as any)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
+                    >
+                      <option value="almacen_repuestos">Almacén de Repuestos & Accesorios</option>
+                      <option value="taller_motos">Taller Mecánico de Motos</option>
+                      <option value="tienda_accesorios">Tienda Especializada de Cascos</option>
+                      <option value="concesionario">Concesionario de Motos</option>
+                      <option value="distribuidor_digital">Vendedor Digital / Catálogo</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                      NIT o Cédula Comercial
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: 900.849.201-4"
+                      value={b2bNitOrRut}
+                      onChange={(e) => setB2bNitOrRut(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                      Ciudad o Municipio *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: Medellín, Cali..."
+                      value={b2bCity}
+                      onChange={(e) => setB2bCity(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                      WhatsApp del Contacto *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="310 123 4567"
+                      value={b2bPhone}
+                      onChange={(e) => setB2bPhone(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-neutral-300 mb-1">
+                    Dirección del Local Físico o Enlace de Instagram / Redes
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Calle 33 # 45-12 / @motoselpaisa"
+                    value={b2bAddressOrSocial}
+                    onChange={(e) => setB2bAddressOrSocial(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-between">
+                  {b2bSubmitted ? (
+                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>¡Solicitud enviada a revisión!</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-neutral-400">
+                      Revisión comercial en menos de 2 horas.
+                    </span>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer active:scale-95"
+                  >
+                    <span>Enviar Solicitud Mayorista</span>
+                  </button>
+                </div>
+              </form>
             )}
           </div>
         )}

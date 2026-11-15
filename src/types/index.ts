@@ -170,6 +170,14 @@ export interface CustomerUser {
   neighborhood?: string;
   deliveryNotes?: string;
   postalCode?: string;
+  // Campos B2B Distribuidor Mayorista
+  b2bStatus?: "ninguno" | "pendiente" | "aprobado" | "rechazado";
+  b2bCode?: string;
+  businessName?: string;
+  businessType?: "almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital";
+  b2bNitOrRut?: string;
+  b2bAddressOrSocial?: string;
+  b2bDiscountTier?: 1 | 2 | 3;
 }
 
 export interface WholesaleInquiry {
