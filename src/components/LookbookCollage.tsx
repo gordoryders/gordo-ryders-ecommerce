@@ -131,6 +131,7 @@ export default function LookbookCollage({ albums: propAlbums }: LookbookCollageP
                             alt={prod.name}
                             className="w-full h-full object-cover group-hover/item:scale-105 transition-transform duration-300"
                             loading="lazy"
+                            decoding="async"
                           />
                           <span className="absolute bottom-1 right-1 text-[9px] font-mono font-bold text-white bg-neutral-950/90 px-1.5 py-0.5 rounded backdrop-blur-sm border border-neutral-800">
                             {formatCOP(prod.price_retail)}
@@ -143,7 +144,7 @@ export default function LookbookCollage({ albums: propAlbums }: LookbookCollageP
                     ))
                   ) : (
                     <Link href={catalogUrl} prefetch={true} className="col-span-2 aspect-[4/3] rounded-2xl overflow-hidden border border-neutral-800 block">
-                      <img src={album.coverImage} alt={album.title} className="w-full h-full object-cover" />
+                      <img src={album.coverImage} alt={album.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </Link>
                   )}
                 </div>

@@ -124,6 +124,7 @@ export default function CombosSection() {
                               alt={prod.name}
                               className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-300"
                               loading="lazy"
+                              decoding="async"
                             />
                             {/* Category Pill Overlay */}
                             <span className="absolute top-2 left-2 text-[9px] font-black uppercase tracking-wider bg-neutral-950/85 backdrop-blur-sm text-orange-400 px-2 py-0.5 rounded border border-neutral-800">

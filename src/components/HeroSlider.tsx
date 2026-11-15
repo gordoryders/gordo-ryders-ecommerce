@@ -44,10 +44,9 @@ export default function HeroSlider() {
             >
               {/* Background Image with Dark Vignette */}
               <div
-                className="absolute inset-0 bg-cover bg-center transform scale-105 transition-transform duration-[7000ms]"
+                className="absolute inset-0 bg-cover bg-center"
                 style={{
                   backgroundImage: `url(${slide.bgImage})`,
-                  transform: isActive ? "scale(1)" : "scale(1.08)",
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/85 to-neutral-950/40" />

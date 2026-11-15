@@ -431,7 +431,9 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                           <img
                             src={msg.productCard.image_url}
                             alt={msg.productCard.name}
-                            className="w-12 h-12 rounded-lg object-cover bg-neutral-950"
+                            className="w-12 h-12 rounded-lg object-cover bg-neutral-950 shrink-0"
+                            loading="lazy"
+                            decoding="async"
                           />
                           <div className="flex-1 min-w-0">
                             <span className="text-[9px] text-orange-400 font-bold uppercase block">
