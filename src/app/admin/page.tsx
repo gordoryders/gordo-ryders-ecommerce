@@ -38,6 +38,12 @@ import {
   Menu,
   Copy,
   ChevronRight,
+  Home,
+  Globe,
+  Briefcase,
+  ArrowRight,
+  ShieldCheck,
+  Store,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -118,11 +124,14 @@ export default function AdminPage() {
     } catch {}
   };
 
-  // 2. ACTIVE TABS (Redes sociales eliminada, Combos, Ofertas, Categorías agregadas)
+  // 2. ADMIN MODULE & ACTIVE TABS
+  // Module architecture: "hub" (Pantalla de Inicio / Hub Central) | "store" (CMS Tienda Web) | "operations" (Backoffice Operaciones, Envíos, Clientes)
+  const [adminModule, setAdminModule] = useState<"hub" | "store" | "operations">("hub");
   const [activeTab, setActiveTab] = useState<
     "products" | "combos" | "offers" | "categories" | "banners" | "lookbooks" | "invoices" | "orders" | "users" | "wholesale" | "analytics" | "reviews"
   >("products");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [userTypeFilter, setUserTypeFilter] = useState<"all" | "mayorista" | "detal">("all");
 
   // 3. PRODUCT MODAL WITH LOCAL PC FILE UPLOADS & LIVE PREVIEW
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -907,6 +916,24 @@ export default function AdminPage() {
     updateProduct({ ...prod, stock: (prod.stock || 0) + addQty });
   };
 
+  const getTabLabel = (tabId: string) => {
+    switch (tabId) {
+      case "products": return "Catálogo & Stock";
+      case "categories": return "Categorías";
+      case "combos": return "Combos & Packs";
+      case "offers": return "Ofertas Relámpago";
+      case "banners": return "Anuncios Slider";
+      case "lookbooks": return "Lookbooks & Cajas";
+      case "orders": return "Registro de Envíos";
+      case "invoices": return "Facturación Oficial";
+      case "users": return "Expediente Clientes 360°";
+      case "wholesale": return "Mayoristas B2B";
+      case "reviews": return "Reseñas Clientes";
+      case "analytics": return "Métricas & Análisis";
+      default: return tabId;
+    }
+  };
+
   // =========================================================================
   // GATEKEEPER VIEW (PIN LOGIN)
   // =========================================================================
@@ -980,6 +1007,385 @@ export default function AdminPage() {
   }
 
   // =========================================================================
+  // CENTRAL HUB / SELECTOR DE MÓDULOS (INICIO DE ADMINISTRACIÓN)
+  // =========================================================================
+  if (adminModule === "hub") {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-orange-500 selection:text-neutral-950">
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-40 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-orange-500 text-neutral-950 font-black flex items-center justify-center text-sm shadow-lg shadow-orange-500/20">
+              GR
+            </div>
+            <div>
+              <h1 className="text-sm font-black uppercase text-white tracking-wider flex items-center gap-2">
+                <span>Gordo Ryders</span>
+                <span className="text-[10px] text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded font-mono font-bold">
+                  HUB CENTRAL
+                </span>
+              </h1>
+              <p className="text-[10px] text-neutral-400 font-mono">
+                CENTRO MAESTRO DE CONTROL EMPRESARIAL
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden md:flex items-center gap-2 bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800 text-[10px] font-bold text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>BODEGA EN VIVO • SUPABASE</span>
+            </div>
+
+            <Link
+              href="/"
+              target="_blank"
+              className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold transition-all flex items-center gap-1.5 border border-neutral-700"
+            >
+              <Eye className="w-3.5 h-3.5 text-orange-400" />
+              <span className="hidden sm:inline">Tienda Pública</span>
+              <ExternalLink className="w-3 h-3 text-neutral-400" />
+            </Link>
+
+            <Link
+              href="/mayoristas"
+              target="_blank"
+              className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 border border-amber-500/30"
+            >
+              <span className="text-xs">👑</span>
+              <span className="hidden sm:inline">Portal Mayoristas</span>
+              <ExternalLink className="w-3 h-3 text-amber-400" />
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-all border border-red-500/20 flex items-center gap-1.5 cursor-pointer"
+              title="Cerrar Sesión"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Salir</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Hero Welcome Header */}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 lg:p-10 space-y-8">
+          <div className="text-center sm:text-left space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Centro de Mando & Control Gordo Ryders</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight">
+              ¿Qué área deseas gestionar hoy?
+            </h2>
+            <p className="text-sm text-neutral-400 max-w-2xl leading-relaxed">
+              Hemos separado los controles de la vitrina web de los controles administrativos y logísticos. Selecciona tu área de trabajo para comenzar:
+            </p>
+          </div>
+
+          {/* 2 Primary Choice Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Card 1: GESTIÓN DE TIENDA & PLATAFORMA WEB (CMS) */}
+            <div className="relative group rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-orange-500/50 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-orange-500/10">
+              <div className="space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 shadow-inner">
+                    <Globe className="w-7 h-7" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-full">
+                    MÓDULO 1 • CMS TIENDA WEB
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-black uppercase text-white tracking-wide group-hover:text-orange-400 transition-colors">
+                    Gestión de Tienda & Plataforma Web
+                  </h3>
+                  <p className="text-xs sm:text-sm text-neutral-400 mt-2 leading-relaxed">
+                    Mueve y configura todo lo visible para los clientes: catálogo de cascos y accesorios, stock disponible, combos 2x1, promociones relámpago, anuncios del slider principal y lookbooks.
+                  </p>
+                </div>
+
+                {/* Counters Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Catálogo</span>
+                    <strong className="text-white text-base font-black font-mono">{products.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">prods</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Categorías</span>
+                    <strong className="text-white text-base font-black font-mono">{categories.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">secciones</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Combos</span>
+                    <strong className="text-white text-base font-black font-mono">{combos.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">packs</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-orange-400 uppercase font-bold block">Ofertas</span>
+                    <strong className="text-orange-400 text-base font-black font-mono">
+                      {products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length}
+                    </strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">activas</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Slider</span>
+                    <strong className="text-white text-base font-black font-mono">
+                      {banners.filter((b) => b.isActive).length}
+                    </strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">banners</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Lookbooks</span>
+                    <strong className="text-white text-base font-black font-mono">{albums.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">álbumes</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA & Sub-shortcuts */}
+              <div className="pt-6 space-y-3 mt-6 border-t border-neutral-800/80">
+                <button
+                  onClick={() => {
+                    setAdminModule("store");
+                    setActiveTab("products");
+                  }}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-sm py-3.5 px-6 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer group-hover:scale-[1.01]"
+                >
+                  <span>Entrar a Gestión de Tienda Web</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-neutral-400 pt-1">
+                  <span>Acceso directo:</span>
+                  <button
+                    onClick={() => { setAdminModule("store"); setActiveTab("products"); }}
+                    className="hover:text-orange-400 underline cursor-pointer"
+                  >
+                    Catálogo
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("store"); setActiveTab("combos"); }}
+                    className="hover:text-orange-400 underline cursor-pointer"
+                  >
+                    Combos
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("store"); setActiveTab("offers"); }}
+                    className="hover:text-orange-400 underline cursor-pointer"
+                  >
+                    Ofertas
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("store"); setActiveTab("banners"); }}
+                    className="hover:text-orange-400 underline cursor-pointer"
+                  >
+                    Slider
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("store"); setActiveTab("lookbooks"); }}
+                    className="hover:text-orange-400 underline cursor-pointer"
+                  >
+                    Lookbooks
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: OPERACIONES, LOGÍSTICA & NEGOCIO (ERP) */}
+            <div className="relative group rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-emerald-500/50 p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10">
+              <div className="space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
+                    <Briefcase className="w-7 h-7" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                    MÓDULO 2 • OPERACIONES & CRM
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-black uppercase text-white tracking-wide group-hover:text-emerald-400 transition-colors">
+                    Operaciones, Logística & Clientes
+                  </h3>
+                  <p className="text-xs sm:text-sm text-neutral-400 mt-2 leading-relaxed">
+                    Administra el negocio internamente: expedientes 360° de compradores, canal de mayoristas B2B, registro de guías de envío, facturación oficial legal y métricas del negocio.
+                  </p>
+                </div>
+
+                {/* Counters Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Envíos</span>
+                    <strong className="text-white text-base font-black font-mono">{orders.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">guías</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Facturación</span>
+                    <strong className="text-white text-base font-black font-mono">{invoices.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">facturas</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Clientes 360°</span>
+                    <strong className="text-white text-base font-black font-mono">{users.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">cuentas</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-amber-400 uppercase font-bold block">Mayoristas B2B</span>
+                    <strong className="text-amber-400 text-base font-black font-mono">
+                      {users.filter((u) => u.b2bStatus === "aprobado" || u.type === "mayorista").length + wholesaleInquiries.length}
+                    </strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">comercios</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">Reseñas</span>
+                    <strong className="text-white text-base font-black font-mono">{storedReviews.length}</strong>
+                    <span className="text-[10px] text-neutral-400 ml-1">opiniones</span>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-left">
+                    <span className="text-[10px] text-emerald-400 uppercase font-bold block">Ventas</span>
+                    <strong className="text-emerald-400 text-xs font-black font-mono truncate block">
+                      {formatCOP(totalInvoicedSales)}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA & Sub-shortcuts */}
+              <div className="pt-6 space-y-3 mt-6 border-t border-neutral-800/80">
+                <button
+                  onClick={() => {
+                    setAdminModule("operations");
+                    setActiveTab("orders");
+                  }}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-black text-sm py-3.5 px-6 rounded-2xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer group-hover:scale-[1.01]"
+                >
+                  <span>Entrar a Operaciones & Logística</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-neutral-400 pt-1">
+                  <span>Acceso directo:</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("orders"); }}
+                    className="hover:text-emerald-400 underline cursor-pointer"
+                  >
+                    Envíos
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("invoices"); }}
+                    className="hover:text-emerald-400 underline cursor-pointer"
+                  >
+                    Facturas
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("users"); }}
+                    className="hover:text-emerald-400 underline cursor-pointer"
+                  >
+                    Clientes 360°
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("wholesale"); }}
+                    className="hover:text-amber-400 underline cursor-pointer font-bold text-amber-300"
+                  >
+                    Mayoristas B2B
+                  </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => { setAdminModule("operations"); setActiveTab("analytics"); }}
+                    className="hover:text-emerald-400 underline cursor-pointer"
+                  >
+                    Métricas
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Featured Section: CANAL MAYORISTAS B2B */}
+          <div className="rounded-3xl bg-gradient-to-r from-amber-500/10 via-neutral-900 to-amber-500/10 border border-amber-500/30 p-6 sm:p-8 space-y-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">👑</span>
+                <div>
+                  <h4 className="text-base sm:text-lg font-black uppercase text-white flex items-center gap-2">
+                    <span>Canal Nacional de Distribuidores Mayoristas B2B</span>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase">
+                      ¡Activo en Producción!
+                    </span>
+                  </h4>
+                  <p className="text-xs sm:text-sm text-neutral-300 mt-0.5">
+                    Precios especiales para almacenes y talleres en Colombia con compras desde 6 unidades, cotizador formal con PDF y aprobación de cuentas.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    setAdminModule("operations");
+                    setActiveTab("wholesale");
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs transition-all flex items-center gap-1.5 shadow cursor-pointer"
+                >
+                  <span>Aprobar Distribuidores B2B</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    setAdminModule("operations");
+                    setActiveTab("users");
+                    setUserTypeFilter("mayorista");
+                  }}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-all border border-neutral-700 cursor-pointer"
+                >
+                  Ver Cuentas Mayoristas
+                </button>
+
+                <Link
+                  href="/mayoristas"
+                  target="_blank"
+                  className="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-900 text-amber-300 font-bold text-xs transition-all border border-amber-500/30 flex items-center gap-1.5"
+                >
+                  <span>Visitar Portal Público (/mayoristas)</span>
+                  <ExternalLink className="w-3 h-3 text-amber-400" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+              <div className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800">
+                <span className="text-amber-400 font-bold block mb-1">Nivel 1 • Mayorista Plata (6-11 unds)</span>
+                <p className="text-neutral-400 text-[11px]">Margen del <strong>-28% sobre PVP</strong>. Ideal para pequeños talleres de motos y tiendas locales.</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800">
+                <span className="text-amber-400 font-bold block mb-1">Nivel 2 • Mayorista Oro (12-23 unds)</span>
+                <p className="text-neutral-400 text-[11px]">Margen del <strong>-35% sobre PVP</strong>. Despachos prioritarios con Servientrega e Inter Rapidísimo.</p>
+              </div>
+              <div className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800">
+                <span className="text-amber-400 font-bold block mb-1">Nivel 3 • Distribuidor Platino (24+ unds)</span>
+                <p className="text-neutral-400 text-[11px]">Margen del <strong>-42% sobre PVP</strong>. Factura electrónica DIAN oficial y flete bonificado.</p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // =========================================================================
   // MAIN STANDALONE BACKOFFICE INTERFACE
   // =========================================================================
   return (
@@ -987,17 +1393,26 @@ export default function AdminPage() {
       
       {/* 1. TOP BAR FOR MOBILE DEVICES */}
       <header className="lg:hidden sticky top-0 z-40 bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
             className="p-2 rounded-xl bg-neutral-800 text-neutral-300 hover:text-white"
           >
             <Menu className="w-5 h-5 text-orange-400" />
           </button>
+          <button
+            onClick={() => setAdminModule("hub")}
+            className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/30"
+            title="Volver al Hub Central"
+          >
+            <Home className="w-4 h-4" />
+          </button>
           <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center font-black text-neutral-950 text-xs">
             GR
           </div>
-          <span className="text-xs font-black uppercase text-white tracking-wider">Backoffice Central</span>
+          <span className="text-xs font-black uppercase text-white tracking-wider truncate max-w-[120px]">
+            {adminModule === "store" ? "Tienda Web" : "Operaciones"}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -1034,7 +1449,7 @@ export default function AdminPage() {
         }`}
       >
         {/* Sidebar Brand Header */}
-        <div className="p-5 border-b border-neutral-800/80">
+        <div className="p-4 border-b border-neutral-800/80 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-orange-500 text-neutral-950 font-black flex items-center justify-center text-sm shadow-lg shadow-orange-500/20">
@@ -1058,176 +1473,185 @@ export default function AdminPage() {
             </button>
           </div>
 
-          <div className="mt-3 flex items-center gap-2 bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800 text-[10px] font-bold text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>SISTEMA BODEGA EN VIVO</span>
+          {/* Botón Volver al Menú Central / Hub */}
+          <button
+            onClick={() => {
+              setAdminModule("hub");
+              setIsMobileSidebarOpen(false);
+            }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-black transition-all cursor-pointer shadow-sm"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>← Menú Principal (Hub Central)</span>
+          </button>
+
+          {/* Pill Toggle Switcher between Store & Operations */}
+          <div className="bg-neutral-950 p-1 rounded-xl border border-neutral-800 flex items-center gap-1">
+            <button
+              onClick={() => {
+                setAdminModule("store");
+                if (!["products", "categories", "combos", "offers", "banners", "lookbooks"].includes(activeTab)) {
+                  setActiveTab("products");
+                }
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                adminModule === "store"
+                  ? "bg-orange-500 text-neutral-950 font-black shadow-md shadow-orange-500/20"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Tienda Web</span>
+            </button>
+            <button
+              onClick={() => {
+                setAdminModule("operations");
+                if (!["orders", "invoices", "users", "wholesale", "reviews", "analytics"].includes(activeTab)) {
+                  setActiveTab("orders");
+                }
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                adminModule === "operations"
+                  ? "bg-emerald-500 text-neutral-950 font-black shadow-md shadow-emerald-500/20"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Operaciones</span>
+            </button>
           </div>
         </div>
 
-        {/* Sidebar Nav Items Grouped */}
-        <div className="flex-1 overflow-y-auto p-3.5 space-y-5 scrollbar-thin scrollbar-thumb-neutral-800">
-          {/* Grupo 1: Catálogo */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
-              Catálogo & Stock
-            </span>
-            {[
-              { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
-              { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
-              { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
-              { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id as any);
-                    setIsMobileSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
-                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
-                    <span>{tab.label}</span>
-                  </div>
-                  {typeof tab.badge !== "undefined" && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
-                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        {/* Sidebar Nav Items: Dynamically filtered based on adminModule */}
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-4 scrollbar-thin scrollbar-thumb-neutral-800">
+          {adminModule === "store" ? (
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 px-3 block mb-2">
+                Gestión Tienda Web (CMS)
+              </span>
+              {[
+                { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
+                { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
+                { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
+                { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
+                { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
+                { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as any);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
+                        : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
+                      <span>{tab.label}</span>
+                    </div>
+                    {typeof tab.badge !== "undefined" && (
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
+                          isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
 
-          {/* Grupo 2: Vitrina & Web */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
-              Vitrina & Contenido
-            </span>
-            {[
-              { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
-              { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
-              { id: "reviews", label: "Reseñas Clientes", icon: MessageSquareText, badge: storedReviews.length },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+              <div className="pt-4 mt-4 border-t border-neutral-800">
                 <button
-                  key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id as any);
-                    setIsMobileSidebarOpen(false);
+                    setAdminModule("operations");
+                    setActiveTab("orders");
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
-                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
-                  }`}
+                  className="w-full p-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-[11px] font-bold text-neutral-400 hover:text-emerald-400 flex items-center justify-between transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
-                    <span>{tab.label}</span>
-                  </div>
-                  {typeof tab.badge !== "undefined" && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
-                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-2">
+                    <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Ir a Operaciones & Clientes</span>
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-600" />
                 </button>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 px-3 block mb-2">
+                Operaciones & Clientes (ERP)
+              </span>
+              {[
+                { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
+                { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
+                { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
+                {
+                  id: "wholesale",
+                  label: "Mayoristas B2B",
+                  icon: Building2,
+                  badge: wholesaleInquiries.length + users.filter((u) => u.b2bStatus === "pendiente" || u.b2bStatus === "aprobado" || u.type === "mayorista").length,
+                },
+                { id: "reviews", label: "Reseñas Clientes", icon: MessageSquareText, badge: storedReviews.length },
+                { id: "analytics", label: "Métricas & Análisis", icon: BarChart3 },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as any);
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-emerald-500 text-neutral-950 font-black shadow-lg shadow-emerald-500/20"
+                        : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-emerald-400"}`} />
+                      <span>{tab.label}</span>
+                    </div>
+                    {typeof tab.badge !== "undefined" && (
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
+                          isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
 
-          {/* Grupo 3: Ventas & Logística Nivel 1 */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-orange-400/90 px-3 block mb-1">
-              Logística & Ventas Nivel 1
-            </span>
-            {[
-              { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
-              { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
-              { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
-              { id: "wholesale", label: "Mayoristas B2B", icon: Building2, badge: wholesaleInquiries.length },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+              <div className="pt-4 mt-4 border-t border-neutral-800">
                 <button
-                  key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id as any);
-                    setIsMobileSidebarOpen(false);
+                    setAdminModule("store");
+                    setActiveTab("products");
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
-                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
-                  }`}
+                  className="w-full p-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-[11px] font-bold text-neutral-400 hover:text-orange-400 flex items-center justify-between transition-colors cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
-                    <span>{tab.label}</span>
-                  </div>
-                  {typeof tab.badge !== "undefined" && (
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono ${
-                        isActive ? "bg-neutral-950 text-white" : "bg-neutral-800 text-neutral-300 border border-neutral-700/60"
-                      }`}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Ir a Tienda Web & CMS</span>
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-600" />
                 </button>
-              );
-            })}
-          </div>
-
-          {/* Grupo 4: Control & Métricas */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 px-3 block mb-1">
-              Control & Negocio
-            </span>
-            {[
-              { id: "analytics", label: "Métricas & Análisis", icon: BarChart3 },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id as any);
-                    setIsMobileSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? "bg-orange-500 text-neutral-950 font-black shadow-lg shadow-orange-500/20"
-                      : "text-neutral-400 hover:text-white hover:bg-neutral-800/80"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-neutral-950" : "text-orange-400"}`} />
-                    <span>{tab.label}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Sidebar Footer Controls */}
@@ -1256,6 +1680,66 @@ export default function AdminPage() {
 
       {/* 4. MAIN CONTENT WORKSPACE (Right side) */}
       <main className="flex-1 min-w-0 bg-neutral-950 p-4 sm:p-8 lg:p-10 overflow-y-auto min-h-screen">
+        
+        {/* Navigation Breadcrumb & Fast Module Switcher */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-neutral-800">
+          <div className="flex items-center gap-2 text-xs flex-wrap">
+            <button
+              onClick={() => setAdminModule("hub")}
+              className="text-neutral-400 hover:text-white flex items-center gap-1.5 font-bold cursor-pointer transition-colors"
+            >
+              <Home className="w-3.5 h-3.5 text-orange-400" />
+              <span>Hub Central</span>
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+            <span className={`font-bold ${adminModule === "store" ? "text-orange-400" : "text-emerald-400"}`}>
+              {adminModule === "store" ? "Gestión de Tienda Web (CMS)" : "Operaciones & Logística (ERP)"}
+            </span>
+            <ChevronRight className="w-3.5 h-3.5 text-neutral-600" />
+            <span className="text-white font-black uppercase">
+              {getTabLabel(activeTab)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (adminModule === "store") {
+                  setAdminModule("operations");
+                  if (!["orders", "invoices", "users", "wholesale", "reviews", "analytics"].includes(activeTab)) {
+                    setActiveTab("orders");
+                  }
+                } else {
+                  setAdminModule("store");
+                  if (!["products", "categories", "combos", "offers", "banners", "lookbooks"].includes(activeTab)) {
+                    setActiveTab("products");
+                  }
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-xs font-bold text-neutral-300 flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+            >
+              {adminModule === "store" ? (
+                <>
+                  <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Ir a Operaciones</span>
+                </>
+              ) : (
+                <>
+                  <Globe className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Ir a Tienda Web</span>
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setAdminModule("hub")}
+              className="px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-xs font-bold text-orange-400 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Hub Principal</span>
+            </button>
+          </div>
+        </div>
         
         {/* =========================================================================
             TAB 1: PRODUCTS & INVENTORY
@@ -2242,79 +2726,193 @@ export default function AdminPage() {
             ========================================================================= */}
         {activeTab === "users" && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-black uppercase text-white">Expedientes de Clientes 360°</h3>
-              <p className="text-xs text-neutral-400">
-                Información de cuenta, método de inicio de sesión (Google o Correo), compras recientes y comentarios.
-              </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white flex items-center gap-2">
+                  <span>Expedientes de Clientes 360°</span>
+                  <span className="text-xs text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded font-mono">
+                    {users.length} Registrados
+                  </span>
+                </h3>
+                <p className="text-xs text-neutral-400">
+                  Información de cuenta, cédula/NIT para facturas, datos de despacho, compras y estatus de distribuidores mayoristas.
+                </p>
+              </div>
+
+              {/* Botón rápido a Mayoristas */}
+              <button
+                onClick={() => {
+                  setAdminModule("operations");
+                  setActiveTab("wholesale");
+                }}
+                className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>👑 Ir a Pipeline Mayoristas B2B</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Filter Tabs for Customer Types */}
+            <div className="flex flex-wrap items-center gap-2 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800">
+              <button
+                onClick={() => setUserTypeFilter("all")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userTypeFilter === "all"
+                    ? "bg-orange-500 text-neutral-950 font-black shadow-md shadow-orange-500/20"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Todos los Clientes ({users.length})
+              </button>
+              <button
+                onClick={() => setUserTypeFilter("mayorista")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  userTypeFilter === "mayorista"
+                    ? "bg-amber-500 text-neutral-950 font-black shadow-md shadow-amber-500/20"
+                    : "text-amber-400 hover:bg-neutral-800"
+                }`}
+              >
+                <span>👑 Distribuidores Mayoristas B2B</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-950 text-amber-300 font-mono font-bold">
+                  {users.filter((u) => u.type === "mayorista" || u.b2bStatus === "aprobado" || u.name.toLowerCase().includes("b2b")).length}
+                </span>
+              </button>
+              <button
+                onClick={() => setUserTypeFilter("detal")}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userTypeFilter === "detal"
+                    ? "bg-neutral-200 text-neutral-950 font-black"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Clientes al Detal ({users.filter((u) => u.type !== "mayorista" && u.b2bStatus !== "aprobado" && !u.name.toLowerCase().includes("b2b")).length})
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {users.map((usr) => (
-                <div
-                  key={usr.id}
-                  className="bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-                      <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
-                        {usr.authProvider || "Google Workspace"}
-                      </span>
-                      <span className="text-[10px] text-neutral-500">{usr.registrationDate}</span>
-                    </div>
+              {users
+                .filter((usr) => {
+                  const isWholesale = usr.type === "mayorista" || usr.b2bStatus === "aprobado" || usr.name.toLowerCase().includes("b2b");
+                  if (userTypeFilter === "mayorista") return isWholesale;
+                  if (userTypeFilter === "detal") return !isWholesale;
+                  return true;
+                })
+                .map((usr) => {
+                  const isWholesale = usr.type === "mayorista" || usr.b2bStatus === "aprobado" || usr.name.toLowerCase().includes("b2b");
 
-                    <div className="mt-3 space-y-1.5">
-                      <h4 className="text-sm font-black text-white">{usr.name}</h4>
-                      <p className="text-xs text-neutral-300">✉️ {usr.email}</p>
-                      <p className="text-xs text-neutral-400">📱 {usr.phone} • 📍 {usr.city}</p>
-                      {usr.cedulaOrNit && (
-                        <p className="text-[11px] text-orange-400 font-mono font-semibold">
-                          🪪 {usr.documentType || "CC"}: {usr.cedulaOrNit}
-                        </p>
-                      )}
-                      {usr.address && (
-                        <p className="text-[11px] text-neutral-400 truncate">
-                          🏠 {usr.address} {usr.neighborhood ? `(${usr.neighborhood})` : ""}
-                        </p>
-                      )}
-                      
-                      <div className="p-3 bg-neutral-950 rounded-2xl border border-neutral-800 text-xs space-y-1 mt-2">
-                        <div className="flex justify-between text-neutral-400">
-                          <span>Compras registradas:</span>
-                          <strong className="text-white">{usr.ordersCount} pedidos</strong>
+                  return (
+                    <div
+                      key={usr.id}
+                      className={`bg-neutral-900 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between transition-all ${
+                        isWholesale
+                          ? "border-2 border-amber-500/40 shadow-amber-500/5 hover:border-amber-400"
+                          : "border border-neutral-800 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                          {isWholesale ? (
+                            <span className="text-[10px] font-black uppercase text-amber-300 bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                              <span>👑</span>
+                              <span>MAYORISTA B2B APROBADO</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
+                              {usr.authProvider || "Google Workspace"}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-neutral-500 font-mono">{usr.registrationDate}</span>
                         </div>
-                        <div className="flex justify-between text-neutral-400">
-                          <span>Inversión total:</span>
-                          <strong className="text-emerald-400 font-mono">{formatCOP(usr.totalSpent)}</strong>
+
+                        <div className="mt-3 space-y-1.5">
+                          <h4 className="text-sm font-black text-white flex items-center justify-between">
+                            <span>{usr.name}</span>
+                            {isWholesale && (
+                              <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                {usr.b2bCode || "GR-B2B-108"}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-neutral-300">✉️ {usr.email}</p>
+                          <p className="text-xs text-neutral-400">📱 {usr.phone} • 📍 {usr.city}</p>
+                          {usr.cedulaOrNit && (
+                            <p className="text-[11px] text-orange-400 font-mono font-semibold">
+                              🪪 {usr.documentType || "CC"}: {usr.cedulaOrNit}
+                            </p>
+                          )}
+                          {usr.address && (
+                            <p className="text-[11px] text-neutral-400 truncate">
+                              🏠 {usr.address} {usr.neighborhood ? `(${usr.neighborhood})` : ""}
+                            </p>
+                          )}
+
+                          {/* Tarjeta de Resumen Mayorista B2B Especial */}
+                          {isWholesale && (
+                            <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-1 mt-2">
+                              <div className="flex justify-between items-center text-amber-300">
+                                <span className="font-bold flex items-center gap-1">
+                                  <span>🏷️</span>
+                                  <span>Margen Bodega B2B:</span>
+                                </span>
+                                <strong className="text-emerald-400 font-mono">-35% Mayorista Oro</strong>
+                              </div>
+                              <p className="text-[11px] text-neutral-400">
+                                Habilitado para pedidos al por mayor desde 6 unidades a nivel nacional.
+                              </p>
+                            </div>
+                          )}
+                          
+                          <div className="p-3 bg-neutral-950 rounded-2xl border border-neutral-800 text-xs space-y-1 mt-2">
+                            <div className="flex justify-between text-neutral-400">
+                              <span>Compras registradas:</span>
+                              <strong className="text-white">{usr.ordersCount} pedidos</strong>
+                            </div>
+                            <div className="flex justify-between text-neutral-400">
+                              <span>Inversión total:</span>
+                              <strong className="text-emerald-400 font-mono">{formatCOP(usr.totalSpent)}</strong>
+                            </div>
+                          </div>
+
+                          {usr.notes && (
+                            <p className="text-[11px] text-neutral-400 italic pt-1">
+                              "{usr.notes}"
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      {usr.notes && (
-                        <p className="text-[11px] text-neutral-400 italic pt-1">
-                          "{usr.notes}"
-                        </p>
-                      )}
+                      <div className="pt-3 border-t border-neutral-800 flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedUserForDetail(usr)}
+                          className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs py-2 rounded-xl text-center border border-neutral-700 transition-all cursor-pointer"
+                        >
+                          Ver Expediente Completo
+                        </button>
+                        {isWholesale && (
+                          <button
+                            onClick={() => {
+                              setAdminModule("operations");
+                              setActiveTab("wholesale");
+                            }}
+                            className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-all cursor-pointer"
+                            title="Ver en Gestión Mayoristas B2B"
+                          >
+                            <Building2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <a
+                          href={`https://wa.me/57${usr.phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
+                          title="Contactar por WhatsApp"
+                        >
+                          <MessageSquareText className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-neutral-800 flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedUserForDetail(usr)}
-                      className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs py-2 rounded-xl text-center border border-neutral-700 transition-all cursor-pointer"
-                    >
-                      Ver Expediente Completo
-                    </button>
-                    <a
-                      href={`https://wa.me/57${usr.phone.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
-                    >
-                      <MessageSquareText className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           </div>
         )}
