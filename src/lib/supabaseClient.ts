@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wblhrsbqsnxfbjbluyvx.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_247FpzkxYwVZh49vbqiv-A_-yiY_And";
 
 export const isSupabaseConfigured = (): boolean => {
   return (
@@ -11,18 +11,9 @@ export const isSupabaseConfigured = (): boolean => {
   );
 };
 
-// Safe fallback client to avoid crashes if keys aren't set yet
-export const supabase = createClient(
-  supabaseUrl,
-  isSupabaseConfigured() ? supabaseAnonKey : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy"
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const signInWithGoogle = async (redirectTo?: string) => {
-  if (!isSupabaseConfigured()) {
-    console.warn("Supabase Anon Key no configurada. Usa el modo simulado o ingresa tus llaves.");
-    return { data: null, error: new Error("SUPABASE_KEY_MISSING") };
-  }
-
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const callbackUrl = redirectTo || `${origin}/auth/callback`;
 
