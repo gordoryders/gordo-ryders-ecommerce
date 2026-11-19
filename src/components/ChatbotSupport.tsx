@@ -297,11 +297,11 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
   return (
     <>
       {/* Floating Trigger Button (Bottom Right) */}
-      <div className="fixed bottom-4 right-4 z-40">
+      <div className="fixed bottom-3.5 right-3.5 sm:bottom-5 sm:right-5 z-40">
         {!isOpen && (
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2.5 bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-700/80 p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 transition-all group cursor-pointer"
+            className="flex items-center gap-2 sm:gap-2.5 bg-neutral-900/95 backdrop-blur-md hover:bg-neutral-800 text-white border border-neutral-700/80 p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all group cursor-pointer"
             aria-label="Abrir asistente de soporte en vivo"
           >
             <div className="relative">
@@ -318,8 +318,8 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
               </span>
             </div>
             {activeSession && activeSession.unreadCountForUser > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-orange-500 text-neutral-950 font-black text-[10px] animate-bounce">
-                {activeSession.unreadCountForUser} nuevo
+              <span className="px-2 py-0.5 rounded-full bg-orange-500 text-neutral-950 font-black text-[10px]">
+                {activeSession.unreadCountForUser} <span className="hidden sm:inline">nuevo</span>
               </span>
             )}
           </button>
@@ -328,7 +328,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-[92vw] sm:w-[410px] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl text-white flex flex-col overflow-hidden animate-in fade-in zoom-in-95 max-h-[600px] h-[540px]">
+        <div className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-4 sm:right-4 z-50 sm:w-[410px] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl text-white flex flex-col overflow-hidden animate-in fade-in zoom-in-95 max-h-[580px] h-[76dvh] sm:h-[540px]">
           
           {/* Header */}
           <div className="bg-neutral-950 p-4 border-b border-neutral-800 flex items-center justify-between">

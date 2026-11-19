@@ -63,6 +63,16 @@ export default function Header({
     setMounted(true);
   }, []);
 
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (!mobileDrawerOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileDrawerOpen]);
+
   // Filter products for predictive search preview
   const activeProductsList = products && products.length > 0 ? products : PRODUCTS;
   const searchResults = searchQuery.trim().length >= 2
@@ -114,28 +124,28 @@ export default function Header({
       {/* =========================================================================
           TIER 1: MAIN SEARCH & COMMERCE BAR (Desktop & Mobile)
           ========================================================================= */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">
-        <div className="flex items-center justify-between gap-3 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2 sm:py-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-6">
           
           {/* Mobile Hamburger Menu Toggle */}
           <button
             onClick={() => setMobileDrawerOpen(true)}
-            className="lg:hidden p-2 -ml-2 text-neutral-300 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors"
+            className="lg:hidden p-2 -ml-1.5 text-neutral-300 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors shrink-0"
             aria-label="Abrir menú"
           >
             <Menu className="w-6 h-6" />
           </button>
 
           {/* Logo & Brand Identity */}
-          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-600 flex items-center justify-center font-black text-lg sm:text-xl text-neutral-950 tracking-tighter shadow-md shadow-orange-600/25 group-hover:scale-105 transition-transform">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-600 flex items-center justify-center font-black text-base sm:text-xl text-neutral-950 tracking-tighter shadow-md shadow-orange-600/25 group-hover:scale-105 transition-transform shrink-0">
               GR
             </div>
-            <div className="flex flex-col">
-              <span className="text-base sm:text-xl font-black tracking-wider uppercase text-white flex items-center leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm sm:text-xl font-black tracking-wider uppercase text-white flex items-center leading-none whitespace-nowrap">
                 GORDO <span className="text-orange-500 ml-1">RYDERS</span>
               </span>
-              <span className="text-[9px] sm:text-[10px] tracking-widest text-neutral-400 font-semibold uppercase mt-0.5">
+              <span className="text-[8px] sm:text-[10px] tracking-widest text-neutral-400 font-semibold uppercase mt-0.5 truncate">
                 Equipamiento Motero
               </span>
             </div>
@@ -333,17 +343,17 @@ export default function Header({
         </div>
 
         {/* Mobile Search Row (Clean and prominent on small screens) */}
-        <div className="mt-2.5 md:hidden relative">
+        <div className="mt-2 md:hidden relative">
           <form onSubmit={handleSearchSubmit} className="relative flex items-center">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar cascos, guantes, impermeables..."
-              className="w-full bg-neutral-900 border border-neutral-700 text-xs rounded-2xl pl-9 pr-10 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-neutral-900 border border-neutral-700 text-sm rounded-2xl pl-9 pr-10 py-2 text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
             />
-            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-3 pointer-events-none" />
-            <button type="submit" className="absolute right-2 text-orange-400 p-1">
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-400 p-1" aria-label="Buscar">
               <Search className="w-4 h-4" />
             </button>
           </form>
@@ -537,15 +547,15 @@ export default function Header({
       </nav>
 
       {/* =========================================================================
-          MOBILE SLIDE-OUT DRAWER (Optimized for Phones & Tablets, No Screen Clutter)
+          MOBILE SLIDE-OUT DRAWER (Rendered via Portal so sticky header backdrop-blur never clips it)
           ========================================================================= */}
-      {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {mounted && mobileDrawerOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] lg:hidden">
           <div
             onClick={() => setMobileDrawerOpen(false)}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
           />
-          <div className="absolute inset-y-0 left-0 max-w-sm w-full bg-neutral-900 border-r border-neutral-800 text-white p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 overflow-y-auto">
+          <div className="fixed inset-y-0 left-0 h-[100dvh] w-[88vw] max-w-sm bg-neutral-900 border-r border-neutral-800 text-white p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 overflow-y-auto">
             
             {/* Drawer Header */}
             <div>
@@ -706,14 +716,15 @@ export default function Header({
             </div>
 
             {/* Drawer Bottom Info */}
-            <div className="pt-4 border-t border-neutral-800 text-center">
+            <div className="pt-4 pb-[env(safe-area-inset-bottom)] border-t border-neutral-800 text-center">
               <p className="text-[10px] text-neutral-500">
                 Gordo Ryders Colombia • Envíos a todo el país
               </p>
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================

@@ -61,14 +61,14 @@ export default function ProductCarousel({
             <div className="w-10 h-10 rounded-xl bg-orange-600/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
               <Zap className="w-5 h-5 fill-orange-500 text-orange-500" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
                   {badge}
                 </span>
                 {showCountdown && (
-                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-neutral-300 bg-neutral-900 border border-neutral-800 px-2.5 py-0.5 rounded-full">
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold text-neutral-300 bg-neutral-900 border border-neutral-800 px-2.5 py-0.5 rounded-full">
+                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span>Termina en:</span>
                     <span className="text-orange-400">
                       {String(timeLeft.hours).padStart(2, "0")}:{String(timeLeft.minutes).padStart(2, "0")}:{String(timeLeft.seconds).padStart(2, "0")}
@@ -76,24 +76,24 @@ export default function ProductCarousel({
                   </div>
                 )}
               </div>
-              <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-tight mt-1">
+              <h2 className="text-lg sm:text-2xl font-black uppercase text-white tracking-tight mt-1">
                 {title}
               </h2>
             </div>
           </div>
 
-          {/* Carousel Arrows */}
-          <div className="hidden sm:flex items-center gap-2">
+          {/* Carousel Arrows (Desktop only — Mobile & Tablet swipe naturally) */}
+          <div className="hidden lg:flex items-center gap-2">
             <button
               onClick={() => scroll("left")}
-              className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center transition-colors shadow-md"
+              className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Anterior"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center transition-colors shadow-md"
+              className="w-9 h-9 rounded-full bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center transition-colors shadow-md cursor-pointer"
               aria-label="Siguiente"
             >
               <ChevronRight className="w-5 h-5" />
@@ -104,12 +104,12 @@ export default function ProductCarousel({
         {/* Scrollable Container */}
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory"
+          className="flex gap-4 sm:gap-5 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory"
         >
           {products.map((product) => (
             <div
               key={product.id}
-              className="w-[280px] sm:w-[310px] shrink-0 snap-start"
+              className="w-[260px] sm:w-[300px] shrink-0 snap-start"
             >
               <ProductCard 
                 product={product} 
