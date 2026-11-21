@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  Sparkles,
+  PackageCheck,
   Layers,
   Search,
   Save,
@@ -48,7 +48,7 @@ import {
   Store,
   Send,
   MessageSquare,
-  Bot,
+  Headphones,
   Phone,
   ShoppingBag,
   ClipboardList,
@@ -1686,6 +1686,193 @@ export default function AdminPage() {
   // =========================================================================
   // CENTRAL HUB / SELECTOR DE MÓDULOS (INICIO DE ADMINISTRACIÓN)
   // =========================================================================
+
+
+  // RENDER HELPER: MODAL GOOGLE SHEETS (Available in both Hub and Workspace)
+  const renderGoogleSheetsModal = () => (
+    <>
+      {/* =========================================================================
+          MODAL: CONEXIÓN & SINCRONIZACIÓN AUTOMÁTICA CON GOOGLE SHEETS
+          ========================================================================= */}
+      {isGoogleSheetsModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <span>Sincronización en la Nube con Google Sheets</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                      AUTOMÁTICO
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">Conecta tu hoja contable de Google para registrar ventas y facturas en tiempo real.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsGoogleSheetsModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Webhook Configuration Box */}
+              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+                <span className="text-[10px] uppercase font-bold text-orange-400 block tracking-wider">
+                  1. URL del Webhook de tu Google Apps Script
+                </span>
+                <p className="text-neutral-400 leading-relaxed text-[11px]">
+                  Pega la URL de la aplicación web que te da Google Apps Script (terminada en <code className="text-emerald-400 font-mono">/exec</code>). Cada pedido y factura se enviará solo y creará su fila automáticamente.
+                </p>
+                <input
+                  type="url"
+                  value={googleSheetsUrl}
+                  onChange={(e) => setGoogleSheetsUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
+                  className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-emerald-500"
+                />
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-neutral-500 font-mono">
+                    {googleSheetsUrl ? "🟢 URL vinculada y lista para sincronizar" : "⚪ Sin URL vinculada aún"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isSyncingSheets}
+                    onClick={handleSyncToGoogleSheets}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                  >
+                    <span>{isSyncingSheets ? "Enviando filas a Google Sheets..." : "⚡ Sincronizar Todo Ahora"}</span>
+                  </button>
+                </div>
+
+                {sheetsSyncSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold animate-in fade-in">
+                    ✓ ¡Sincronización exitosa! Las facturas y pedidos fueron inyectados en tu Google Sheets en vivo.
+                  </div>
+                )}
+              </div>
+
+              {/* Copy Script Instructions */}
+              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
+                    2. Script de Google Apps Script (Copiar y Pegar en Google Sheets)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const script = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var sheet = null;
+    try {
+      sheet = SpreadsheetApp.getActiveSpreadsheet();
+    } catch(err) {}
+    if (!sheet) {
+      var files = DriveApp.getFilesByName('Gordo Ryders - Contabilidad Oficial');
+      if (files.hasNext()) {
+        sheet = SpreadsheetApp.open(files.next());
+      } else {
+        sheet = SpreadsheetApp.create('Gordo Ryders - Contabilidad Oficial');
+      }
+    }
+
+    // Sincronización limpia: limpia datos viejos para reflejar ediciones y eliminaciones de inmediato
+    function syncTab(sheetName, headers, rows) {
+      var s = sheet.getSheetByName(sheetName) || sheet.insertSheet(sheetName);
+      if (s.getLastRow() === 0) {
+        s.appendRow(headers);
+        s.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#fed7aa');
+      } else if (s.getLastRow() > 1) {
+        s.getRange(2, 1, s.getLastRow() - 1, s.getLastColumn()).clearContent();
+      }
+      if (rows && rows.length > 0) {
+        s.getRange(2, 1, rows.length, headers.length).setValues(rows);
+      }
+    }
+
+    // 1. FACTURAS OFICIALES
+    if (data.invoices) {
+      var invHeaders = ['N° Factura', 'Fecha', 'Cliente', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'Subtotal', 'Total', 'Método Pago', 'Transportadora', 'Guía'];
+      var invRows = data.invoices.map(function(inv) {
+        return [inv.invoiceNumber || '', inv.date || '', inv.customerName || '', inv.customerNitOrCedula || '', inv.customerPhone || '', inv.customerEmail || '', inv.customerCity || '', inv.customerAddress || '', inv.subtotal || 0, inv.total || 0, inv.paymentMethod || '', inv.carrier || '', inv.guideNumber || ''];
+      });
+      syncTab('Facturas Oficiales', invHeaders, invRows);
+    }
+
+    // 2. PEDIDOS & LOGÍSTICA
+    if (data.orders) {
+      var ordHeaders = ['ID Pedido', 'Fecha', 'Cliente', 'Teléfono', 'Cédula/NIT', 'Ciudad', 'Dirección', 'Productos Solicitados', 'Total', 'Estado Logístico', 'Transportadora', 'Guía'];
+      var ordRows = data.orders.map(function(ord) {
+        return [ord.id || '', ord.date || '', ord.customerName || '', ord.customerPhone || '', ord.customerCedulaOrNit || '', ord.city || '', ord.customerAddress || '', ord.productsSummary || '', ord.total || 0, ord.status || '', ord.carrier || '', ord.guideNumber || ''];
+      });
+      syncTab('Pedidos & Logística', ordHeaders, ordRows);
+    }
+
+    // 3. CLIENTES CRM
+    if (data.users) {
+      var usrHeaders = ['ID Cliente', 'Nombre', 'Tipo', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'N° Pedidos', 'Total Comprado ($COP)', 'Estado', 'Notas'];
+      var usrRows = data.users.map(function(u) {
+        return [u.id || '', u.name || '', u.type || 'detal', u.cedulaOrNit || '', u.phone || '', u.email || '', u.city || '', u.address || '', u.ordersCount || 0, u.totalSpent || 0, u.status || 'activo', u.notes || ''];
+      });
+      syncTab('Clientes CRM', usrHeaders, usrRows);
+    }
+
+    // 4. MAYORISTAS B2B
+    if (data.wholesale) {
+      var whoHeaders = ['Empresa / Almacén', 'Contacto', 'NIT / Cédula', 'Teléfono', 'Ciudad', 'Productos de Interés', 'Unidades Estimadas', 'Estado', 'Notas'];
+      var whoRows = data.wholesale.map(function(w) {
+        return [w.businessName || '', w.contactName || '', w.nitOrCedula || '', w.phone || '', w.city || '', w.productsInterest || '', w.estimatedUnits || 0, w.status || '', w.notes || ''];
+      });
+      syncTab('Mayoristas B2B', whoHeaders, whoRows);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'ok',
+      message: 'Sincronizado con éxito en Gordo Ryders',
+      fileUrl: sheet.getUrl()
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+                      navigator.clipboard.writeText(script);
+                      setCopiedScript(true);
+                      setTimeout(() => setCopiedScript(false), 3000);
+                    }}
+                    className="px-3 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-[10px] flex items-center gap-1"
+                  >
+                    <span>{copiedScript ? "✓ ¡Copiado!" : "Copiar Código"}</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-neutral-400">
+                  En tu Google Sheets ve a <strong>Extensiones → Apps Script</strong>, pega el código, haz clic en <strong>Implementar → Nueva implementación → Aplicación Web (Acceso: Cualquier persona)</strong> y pega la URL arriba.
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex justify-end pt-2 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(false)}
+                  className="px-5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   if (adminModule === "hub") {
     return (
       <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-orange-500 selection:text-neutral-950">
@@ -1711,7 +1898,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden md:flex items-center gap-2 bg-neutral-950 px-3 py-1.5 rounded-xl border border-neutral-800 text-[10px] font-bold text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>BODEGA EN VIVO • SUPABASE</span>
+              <span>SISTEMA CENTRAL CONECTADO • ERP EN VIVO</span>
             </div>
 
             <Link
@@ -1757,9 +1944,9 @@ export default function AdminPage() {
         {/* Hero Welcome Header */}
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 lg:p-10 space-y-8">
           <div className="text-center sm:text-left space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Centro de Mando & Control Gordo Ryders</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs font-bold font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 text-orange-400" />
+              <span>PANEL DE CONTROL CORPORATIVO • GORDO RYDERS ERP</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black uppercase text-white tracking-tight">
               ¿Qué área deseas gestionar hoy?
@@ -2154,6 +2341,7 @@ export default function AdminPage() {
             </div>
           </div>
         </main>
+        {renderGoogleSheetsModal()}
       </div>
     );
   }
@@ -2305,7 +2493,7 @@ export default function AdminPage() {
               {[
                 { id: "products", label: "Catálogo & Stock", icon: Package, badge: products.length },
                 { id: "categories", label: "Categorías", icon: Layers, badge: categories.length },
-                { id: "combos", label: "Combos & Packs", icon: Sparkles, badge: combos.length },
+                { id: "combos", label: "Combos & Packs", icon: PackageCheck, badge: combos.length },
                 { id: "offers", label: "Ofertas Relámpago", icon: Flame, badge: products.filter((p) => p.offer_is_active || (p.price_original && p.price_original > p.price_retail)).length },
                 { id: "banners", label: "Anuncios Slider", icon: Zap, badge: banners.filter((b) => b.isActive).length },
                 { id: "lookbooks", label: "Lookbooks & Cajas", icon: Layers, badge: albums.length },
@@ -2729,7 +2917,7 @@ export default function AdminPage() {
 
             {combos.length === 0 ? (
               <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-12 text-center space-y-4">
-                <Sparkles className="w-12 h-12 text-orange-400 mx-auto" />
+                <PackageCheck className="w-12 h-12 text-orange-400 mx-auto" />
                 <h4 className="text-base font-bold text-white">No tienes combos activos todavía</h4>
                 <p className="text-xs text-neutral-400 max-w-md mx-auto">
                   Arma combos combinando por ejemplo un casco + guantes + soporte para incentivar ventas cruzadas.
@@ -4697,7 +4885,7 @@ export default function AdminPage() {
                                 : "text-neutral-400 hover:text-white"
                             }`}
                           >
-                            🤖 Bot
+                            Asesoría Digital
                           </button>
                           <button
                             onClick={() => markChatStatus(activeChat.id, "needs_human")}
@@ -4786,7 +4974,7 @@ export default function AdminPage() {
                               {isUser && <span className="font-bold text-neutral-400">{activeChat.customerName}</span>}
                               {isBot && (
                                 <span className="font-bold text-amber-400 flex items-center gap-1">
-                                  <Bot className="w-3 h-3" /> Smart Bot Gordo Ryders
+                                  <Headphones className="w-3 h-3 text-neutral-400" /> Asesoría Digital Gordo Ryders
                                 </span>
                               )}
                               {isAgent && (
@@ -7723,185 +7911,7 @@ export default function AdminPage() {
       )}
 
 
-      {/* =========================================================================
-          MODAL: CONEXIÓN & SINCRONIZACIÓN AUTOMÁTICA CON GOOGLE SHEETS
-          ========================================================================= */}
-      {isGoogleSheetsModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
-            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
-                  <FileSpreadsheet className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
-                    <span>Sincronización en la Nube con Google Sheets</span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
-                      AUTOMÁTICO
-                    </span>
-                  </h3>
-                  <p className="text-[11px] text-neutral-400">Conecta tu hoja contable de Google para registrar ventas y facturas en tiempo real.</p>
-                </div>
-              </div>
-              <button onClick={() => setIsGoogleSheetsModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Webhook Configuration Box */}
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
-                <span className="text-[10px] uppercase font-bold text-orange-400 block tracking-wider">
-                  1. URL del Webhook de tu Google Apps Script
-                </span>
-                <p className="text-neutral-400 leading-relaxed text-[11px]">
-                  Pega la URL de la aplicación web que te da Google Apps Script (terminada en <code className="text-emerald-400 font-mono">/exec</code>). Cada pedido y factura se enviará solo y creará su fila automáticamente.
-                </p>
-                <input
-                  type="url"
-                  value={googleSheetsUrl}
-                  onChange={(e) => setGoogleSheetsUrl(e.target.value)}
-                  placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-emerald-500"
-                />
-
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] text-neutral-500 font-mono">
-                    {googleSheetsUrl ? "🟢 URL vinculada y lista para sincronizar" : "⚪ Sin URL vinculada aún"}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={isSyncingSheets}
-                    onClick={handleSyncToGoogleSheets}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50"
-                  >
-                    <span>{isSyncingSheets ? "Enviando filas a Google Sheets..." : "⚡ Sincronizar Todo Ahora"}</span>
-                  </button>
-                </div>
-
-                {sheetsSyncSuccess && (
-                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold animate-in fade-in">
-                    ✓ ¡Sincronización exitosa! Las facturas y pedidos fueron inyectados en tu Google Sheets en vivo.
-                  </div>
-                )}
-              </div>
-
-              {/* Copy Script Instructions */}
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
-                    2. Script de Google Apps Script (Copiar y Pegar en Google Sheets)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const script = `function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var sheet = null;
-    try {
-      sheet = SpreadsheetApp.getActiveSpreadsheet();
-    } catch(err) {}
-    if (!sheet) {
-      var files = DriveApp.getFilesByName('Gordo Ryders - Contabilidad Oficial');
-      if (files.hasNext()) {
-        sheet = SpreadsheetApp.open(files.next());
-      } else {
-        sheet = SpreadsheetApp.create('Gordo Ryders - Contabilidad Oficial');
-      }
-    }
-
-    // Sincronización limpia: limpia datos viejos para reflejar ediciones y eliminaciones de inmediato
-    function syncTab(sheetName, headers, rows) {
-      var s = sheet.getSheetByName(sheetName) || sheet.insertSheet(sheetName);
-      if (s.getLastRow() === 0) {
-        s.appendRow(headers);
-        s.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#fed7aa');
-      } else if (s.getLastRow() > 1) {
-        s.getRange(2, 1, s.getLastRow() - 1, s.getLastColumn()).clearContent();
-      }
-      if (rows && rows.length > 0) {
-        s.getRange(2, 1, rows.length, headers.length).setValues(rows);
-      }
-    }
-
-    // 1. FACTURAS OFICIALES
-    if (data.invoices) {
-      var invHeaders = ['N° Factura', 'Fecha', 'Cliente', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'Subtotal', 'Total', 'Método Pago', 'Transportadora', 'Guía'];
-      var invRows = data.invoices.map(function(inv) {
-        return [inv.invoiceNumber || '', inv.date || '', inv.customerName || '', inv.customerNitOrCedula || '', inv.customerPhone || '', inv.customerEmail || '', inv.customerCity || '', inv.customerAddress || '', inv.subtotal || 0, inv.total || 0, inv.paymentMethod || '', inv.carrier || '', inv.guideNumber || ''];
-      });
-      syncTab('Facturas Oficiales', invHeaders, invRows);
-    }
-
-    // 2. PEDIDOS & LOGÍSTICA
-    if (data.orders) {
-      var ordHeaders = ['ID Pedido', 'Fecha', 'Cliente', 'Teléfono', 'Cédula/NIT', 'Ciudad', 'Dirección', 'Productos Solicitados', 'Total', 'Estado Logístico', 'Transportadora', 'Guía'];
-      var ordRows = data.orders.map(function(ord) {
-        return [ord.id || '', ord.date || '', ord.customerName || '', ord.customerPhone || '', ord.customerCedulaOrNit || '', ord.city || '', ord.customerAddress || '', ord.productsSummary || '', ord.total || 0, ord.status || '', ord.carrier || '', ord.guideNumber || ''];
-      });
-      syncTab('Pedidos & Logística', ordHeaders, ordRows);
-    }
-
-    // 3. CLIENTES CRM
-    if (data.users) {
-      var usrHeaders = ['ID Cliente', 'Nombre', 'Tipo', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'N° Pedidos', 'Total Comprado ($COP)', 'Estado', 'Notas'];
-      var usrRows = data.users.map(function(u) {
-        return [u.id || '', u.name || '', u.type || 'detal', u.cedulaOrNit || '', u.phone || '', u.email || '', u.city || '', u.address || '', u.ordersCount || 0, u.totalSpent || 0, u.status || 'activo', u.notes || ''];
-      });
-      syncTab('Clientes CRM', usrHeaders, usrRows);
-    }
-
-    // 4. MAYORISTAS B2B
-    if (data.wholesale) {
-      var whoHeaders = ['Empresa / Almacén', 'Contacto', 'NIT / Cédula', 'Teléfono', 'Ciudad', 'Productos de Interés', 'Unidades Estimadas', 'Estado', 'Notas'];
-      var whoRows = data.wholesale.map(function(w) {
-        return [w.businessName || '', w.contactName || '', w.nitOrCedula || '', w.phone || '', w.city || '', w.productsInterest || '', w.estimatedUnits || 0, w.status || '', w.notes || ''];
-      });
-      syncTab('Mayoristas B2B', whoHeaders, whoRows);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'ok',
-      message: 'Sincronizado con éxito en Gordo Ryders',
-      fileUrl: sheet.getUrl()
-    })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      error: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-                      navigator.clipboard.writeText(script);
-                      setCopiedScript(true);
-                      setTimeout(() => setCopiedScript(false), 3000);
-                    }}
-                    className="px-3 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-[10px] flex items-center gap-1"
-                  >
-                    <span>{copiedScript ? "✓ ¡Copiado!" : "Copiar Código"}</span>
-                  </button>
-                </div>
-                <p className="text-[11px] text-neutral-400">
-                  En tu Google Sheets ve a <strong>Extensiones → Apps Script</strong>, pega el código, haz clic en <strong>Implementar → Nueva implementación → Aplicación Web (Acceso: Cualquier persona)</strong> y pega la URL arriba.
-                </p>
-              </div>
-
-              {/* Close Button */}
-              <div className="flex justify-end pt-2 border-t border-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => setIsGoogleSheetsModalOpen(false)}
-                  className="px-5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderGoogleSheetsModal()}
 
     </div>
   );

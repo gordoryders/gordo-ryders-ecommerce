@@ -6,9 +6,8 @@ import {
   MessageSquare,
   X,
   Send,
-  Bot,
+  Headphones,
   ShieldCheck,
-  Sparkles,
   User,
   Truck,
   ExternalLink,
@@ -416,7 +415,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
             >
               <div className="relative">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center border border-orange-500/30 group-hover:bg-orange-500 group-hover:text-neutral-950 transition-colors">
-                  <Bot className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4" />
                 </div>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -bottom-0.5 -right-0.5 ring-2 ring-neutral-900 animate-pulse" />
               </div>
@@ -442,7 +441,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
             <div className="flex items-center gap-2.5">
               <div className="relative">
                 <div className="w-8 h-8 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center">
-                  {isAgentConnected ? <User className="w-4 h-4 text-emerald-400" /> : <Bot className="w-4 h-4" />}
+                  {isAgentConnected ? <User className="w-4 h-4 text-emerald-400" /> : <Headphones className="w-4 h-4 text-orange-400" />}
                 </div>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -bottom-0.5 -right-0.5 ring-2 ring-neutral-950" />
               </div>
@@ -451,7 +450,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                   <h3 className="text-xs font-black uppercase text-white tracking-wide">
                     {isAgentConnected ? "Edwin Bernal (Asesor Oficial)" : "Soporte Gordo Ryders"}
                   </h3>
-                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
                 </div>
                 <div className="text-[10px] flex items-center gap-1.5">
                   {isWaitingHuman ? (
@@ -465,7 +464,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                   ) : (
                     <span className="text-neutral-400 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      Asistente Virtual • Respuesta Inmediata
+                      Atención al Cliente • En Línea
                     </span>
                   )}
                 </div>
@@ -504,8 +503,8 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                         </>
                       ) : (
                         <>
-                          <Bot className="w-3 h-3 text-orange-400" />
-                          <span>{msg.senderName || "Asistente Gordo Ryders"}</span>
+                          <Headphones className="w-3 h-3 text-orange-400" />
+                          <span>{msg.senderName || "Asesoría Gordo Ryders"}</span>
                         </>
                       )}
                       <span className="text-neutral-600">• {msg.timestamp}</span>
