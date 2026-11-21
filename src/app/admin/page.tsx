@@ -1167,6 +1167,8 @@ export default function AdminPage() {
           timestamp: new Date().toISOString(),
           invoices: invoices,
           orders: orders.map((o) => ({ ...o, status: getAutoOrderStatus(o) })),
+          users: users,
+          wholesale: wholesaleInquiries,
         }),
       });
       setIsSyncingSheets(false);
