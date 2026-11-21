@@ -698,6 +698,15 @@ interface StoreContextType {
     productCard?: any,
     orderCard?: any
   ) => void;
+  sendMessageFromBot: (
+    chatId: string,
+    text: string,
+    botName?: string,
+    customerInfo?: Partial<SupportChatSession>,
+    productCard?: any,
+    orderCard?: any,
+    options?: { label: string; action: string; payload?: any }[]
+  ) => void;
   sendMessageFromAgent: (chatId: string, text: string, agentName?: string) => void;
   markChatStatus: (chatId: string, status: "bot" | "needs_human" | "agent_replying" | "resolved") => void;
   requestHumanAgent: (chatId: string) => void;
@@ -1548,6 +1557,73 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const sendMessageFromBot = (
+    chatId: string,
+    text: string,
+    botName: string = "Asistente Gordo Ryders",
+    customerInfo?: Partial<SupportChatSession>,
+    productCard?: any,
+    orderCard?: any,
+    options?: { label: string; action: string; payload?: any }[]
+  ) => {
+    setSupportChats((prev) => {
+      const timeNow = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "numeric", hour12: true }).format(new Date());
+      const newMsg: ChatMessage = {
+        id: `msg-bot-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        sender: "bot",
+        senderName: botName,
+        text,
+        timestamp: timeNow,
+        productCard,
+        orderCard,
+        options,
+      };
+
+      const existingIndex = prev.findIndex((c) => c.id === chatId);
+      let updated: SupportChatSession[];
+
+      if (existingIndex >= 0) {
+        const existing = prev[existingIndex];
+        const updatedSession: SupportChatSession = {
+          ...existing,
+          customerName: customerInfo?.customerName || existing.customerName,
+          customerEmail: customerInfo?.customerEmail || existing.customerEmail,
+          customerPhone: customerInfo?.customerPhone || existing.customerPhone,
+          customerCity: customerInfo?.customerCity || existing.customerCity,
+          customerType: customerInfo?.customerType || existing.customerType,
+          currentProductViewed: customerInfo?.currentProductViewed || existing.currentProductViewed,
+          lastMessageText: text,
+          lastMessageTime: `Hoy, ${timeNow}`,
+          messages: [...existing.messages, newMsg],
+        };
+        updated = [updatedSession, ...prev.filter((_, idx) => idx !== existingIndex)];
+      } else {
+        const newSession: SupportChatSession = {
+          id: chatId,
+          customerName: customerInfo?.customerName || "Visitante Web",
+          customerEmail: customerInfo?.customerEmail || "",
+          customerPhone: customerInfo?.customerPhone || "",
+          customerCity: customerInfo?.customerCity || userCity || "Colombia",
+          customerType: customerInfo?.customerType || "detal",
+          status: "bot",
+          unreadCountForAdmin: 0,
+          unreadCountForUser: 0,
+          lastMessageText: text,
+          lastMessageTime: `Hoy, ${timeNow}`,
+          createdAt: `Hoy, ${timeNow}`,
+          currentProductViewed: customerInfo?.currentProductViewed,
+          messages: [newMsg],
+        };
+        updated = [newSession, ...prev];
+      }
+
+      try {
+        localStorage.setItem("gr_support_chats", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const sendMessageFromAgent = (
     chatId: string,
     text: string,
@@ -1722,6 +1798,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         activeChatSessionId,
         setActiveChatSessionId,
         sendMessageFromUser,
+        sendMessageFromBot,
         sendMessageFromAgent,
         markChatStatus,
         requestHumanAgent,

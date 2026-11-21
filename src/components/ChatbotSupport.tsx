@@ -18,6 +18,7 @@ import {
   Phone,
   HelpCircle,
   Package,
+  MessageCircle,
 } from "lucide-react";
 import { useStore } from "@/context/StoreContext";
 import { ChatMessage, SupportChatSession } from "@/types";
@@ -37,6 +38,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
     addToCart,
     supportChats,
     sendMessageFromUser,
+    sendMessageFromBot,
     requestHumanAgent,
   } = useStore();
 
@@ -71,14 +73,15 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
     {
       id: "welcome-1",
       sender: "bot",
-      text: `¡Hola, motero! 🏍️ Bienvenido al asistente oficial de Gordo Ryders Colombia.\n\nPuedes preguntarme por cascos con doble visor, guantes, impermeables, consultar tu guía de envío o solicitar hablar con un asesor humano en vivo. ¿En qué te ayudamos hoy?`,
+      senderName: "Asistente Gordo Ryders",
+      text: `¡Hola, motero! 🏍️ Bienvenido al asistente oficial de Gordo Ryders Colombia.\n\nEstoy aquí para ayudarte a elegir tu talla, recomendarte cascos homologados, cotizar compras al por mayor o conectarte con un asesor en bodega. ¿En qué te ayudamos hoy?`,
       timestamp: "Ahora",
       options: [
-        { label: "🔍 Rastrear mi pedido con guía", action: "track" },
-        { label: "📏 Guía interactiva de tallas", action: "sizes" },
-        { label: "🪖 Cascos con certificación DOT/ECE", action: "helmets" },
-        { label: "👑 Compras por mayor (desde 6 unds)", action: "wholesale" },
-        { label: "🧑‍💼 Hablar con asesor humano en vivo", action: "request_human" },
+        { label: "📏 ¿Cómo sé mi talla de casco y guantes?", action: "sizes" },
+        { label: "🪖 Ver cascos con doble visor homologados", action: "helmets" },
+        { label: "📦 Rastrear un pedido", action: "track" },
+        { label: "👑 Precios al por mayor (desde 6 unds)", action: "wholesale" },
+        { label: "🧑‍💼 Hablar con un asesor humano en vivo", action: "request_human" },
       ],
     },
   ];
@@ -101,6 +104,30 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
       currency: "COP",
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  // Helper to format text with bold formatting and bullets cleanly (no raw **)
+  const renderFormattedText = (text: string) => {
+    return text.split("\n").map((line, lIdx) => {
+      if (!line.trim()) {
+        return <span key={lIdx} className="block h-2" />;
+      }
+      const parts = line.split(/(\*\*[^*]+\*\*)/g);
+      return (
+        <span key={lIdx} className="block leading-relaxed">
+          {parts.map((part, pIdx) => {
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return (
+                <strong key={pIdx} className="text-white font-bold">
+                  {part.slice(2, -2)}
+                </strong>
+              );
+            }
+            return part;
+          })}
+        </span>
+      );
+    });
   };
 
   // Helper to dispatch user message and smart bot reaction
@@ -137,25 +164,46 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
         lower.includes("operador")
       ) {
         requestHumanAgent(effectiveSessionId);
+        sendMessageFromBot(
+          effectiveSessionId,
+          `🔔 **Solicitud enviada al equipo de bodega:**\nEdwin Bernal o uno de nuestros asesores oficiales ha recibido tu conversación. Te responderá directamente en esta pantalla.\n\nSi prefieres una respuesta inmediata a tu celular:`,
+          "Asistente Gordo Ryders",
+          customerInfo,
+          undefined,
+          undefined,
+          [
+            { label: "💬 Continuar por WhatsApp Oficial", action: "open_whatsapp" }
+          ]
+        );
         return;
       }
 
       // CASE B: User asks for order tracking or types a guide number
-      const isGuidePattern = /(INT|SER|ENV|int|ser|env)[\w\d-]+|\d{7,12}/.test(trimmed);
-      if (lower.includes("guia") || lower.includes("guía") || lower.includes("rastreo") || lower.includes("pedido") || lower.includes("envio") || lower.includes("envío") || isGuidePattern) {
+      const isGuidePattern = /(ORD|INT|SER|ENV|ord|int|ser|env)[\w\d-]+|\d{7,12}/.test(trimmed);
+      if (
+        lower.includes("guia") ||
+        lower.includes("guía") ||
+        lower.includes("rastreo") ||
+        lower.includes("pedido") ||
+        lower.includes("envio") ||
+        lower.includes("envío") ||
+        isGuidePattern
+      ) {
         // Try to match order in database
         const foundOrder = orders.find(
           (o) =>
             o.guideNumber.toLowerCase().includes(lower) ||
+            o.id.toLowerCase().includes(lower) ||
             lower.includes(o.guideNumber.toLowerCase()) ||
+            lower.includes(o.id.toLowerCase()) ||
             (currentUser && o.customerName.toLowerCase().includes(currentUser.name.toLowerCase()))
         );
 
         if (foundOrder) {
-          sendMessageFromUser(
+          sendMessageFromBot(
             effectiveSessionId,
-            `📦 Encontré tu despacho: Guía ${foundOrder.guideNumber} con ${foundOrder.carrier}. Estado actual: ${foundOrder.status.replace("_", " ").toUpperCase()}. Destino: ${foundOrder.city}.`,
-            "Bot Gordo Ryders",
+            `📦 **¡Despacho Encontrado!**\nGuía oficial: **${foundOrder.guideNumber}** con transportadora **${foundOrder.carrier}**.\nEstado: **${foundOrder.status.replace("_", " ").toUpperCase()}**.\nDestino: **${foundOrder.city}**.`,
+            "Asistente Gordo Ryders",
             customerInfo,
             undefined,
             {
@@ -165,37 +213,72 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
               customerName: foundOrder.customerName,
               city: foundOrder.city,
               date: foundOrder.date,
-            }
+            },
+            [
+              { label: "🔍 Ver Seguimiento Satelital Completo", action: "open_tracking_page" }
+            ]
           );
         } else {
-          sendMessageFromUser(
+          sendMessageFromBot(
             effectiveSessionId,
-            `🔍 Para consultar el estado de tu paquete en vivo con Inter Rapidísimo o Envía, ingresa tu número de guía exacto (ej. INT-7009482) o abre nuestro rastreador satelital:`,
-            "Bot Gordo Ryders",
-            customerInfo
+            `🔍 **Rastreo de Envíos Nacionales:**\nPara ver el estado en vivo con Inter Rapidísimo o Envía, por favor escribe tu **número de guía** (ej: INT-7009482) o tu **número de orden** (ej: ORD-GR-1024).\n\nTambién puedes abrir la plataforma de rastreo:`,
+            "Asistente Gordo Ryders",
+            customerInfo,
+            undefined,
+            undefined,
+            [
+              { label: "🚀 Abrir Módulo de Rastreo", action: "open_tracking_page" }
+            ]
           );
         }
         return;
       }
 
       // CASE C: Sizing Guide (Fit Finder)
-      if (lower.includes("talla") || lower.includes("tallas") || lower.includes("medir") || lower.includes("medida") || lower.includes("cabeza") || lower.includes("cm")) {
-        sendMessageFromUser(
+      if (
+        lower.includes("talla") ||
+        lower.includes("tallas") ||
+        lower.includes("medir") ||
+        lower.includes("medida") ||
+        lower.includes("cabeza") ||
+        lower.includes("cm")
+      ) {
+        sendMessageFromBot(
           effectiveSessionId,
-          `📏 **GUÍA OFICIAL DE TALLAS GORDO RYDERS:**\n\n🪖 **Cascos ICH y Shaft:**\nMide el contorno de tu cabeza con cinta métrica 2 cm arriba de tus cejas:\n• **S:** 55 - 56 cm\n• **M:** 57 - 58 cm\n• **L:** 59 - 60 cm\n• **XL:** 61 - 62 cm\n*(Nota: Los primeros 3 días debe sentirse ajustado mientras el acolchado cede un 10%)*.\n\n🧤 **Guantes:** Ancho de palma sin pulgar: M (8 cm) | L (9 cm) | XL (10 cm).`,
-          "Bot Gordo Ryders",
-          customerInfo
+          `📏 **GUÍA OFICIAL DE TALLAS GORDO RYDERS:**\n\n🪖 **Cascos ICH, Shaft & HRO:**\nMide el contorno de tu cabeza con una cinta métrica 2 cm arriba de tus cejas:\n• **Talla S:** 55 - 56 cm\n• **Talla M:** 57 - 58 cm\n• **Talla L:** 59 - 60 cm\n• **Talla XL:** 61 - 62 cm\n*(Tip motero: Los primeros 3 días el casco debe sentirse ajustado mientras el acolchado cede un 10%)*.\n\n🧤 **Guantes:** Mide el ancho de tu palma sin incluir el pulgar:\n• **M:** 8 a 8.5 cm | **L:** 9 a 9.5 cm | **XL:** 10 cm en adelante.`,
+          "Asistente Gordo Ryders",
+          customerInfo,
+          undefined,
+          undefined,
+          [
+            { label: "🪖 Ver Cascos Abatibles ICH", action: "helmets" },
+            { label: "🧑‍💼 Confirmar Talla con un Asesor", action: "request_human" },
+          ]
         );
         return;
       }
 
       // CASE D: Wholesale B2B
-      if (lower.includes("mayorista") || lower.includes("por mayor") || lower.includes("al por mayor") || lower.includes("docena") || lower.includes("taller") || lower.includes("distribuidor") || lower.includes("almacen")) {
-        sendMessageFromUser(
+      if (
+        lower.includes("mayorista") ||
+        lower.includes("por mayor") ||
+        lower.includes("al por mayor") ||
+        lower.includes("docena") ||
+        lower.includes("taller") ||
+        lower.includes("distribuidor") ||
+        lower.includes("almacen")
+      ) {
+        sendMessageFromBot(
           effectiveSessionId,
-          `👑 **CANAL MAYORISTA B2B GORDO RYDERS:**\n\nManejamos venta al por mayor a partir de **6 unidades** para talleres y almacenes de motos con despachos a toda Colombia:\n• **Nivel Plata (6-11 unds):** -28% de margen\n• **Nivel Oro (12-23 unds):** -35% de margen\n• **Nivel Platino (24+ unds):** -42% de margen\n\nPuedes generar tu cotización formal con PDF en la sección /mayoristas o solicitar la atención de Edwin.`,
-          "Bot Gordo Ryders",
-          customerInfo
+          `👑 **CANAL MAYORISTA B2B GORDO RYDERS:**\n\nDespachamos al por mayor desde **6 unidades** con precios de importador directo para almacenes, talleres y moteros emprendedores:\n\n• **Nivel Plata (6 a 11 unds):** -28% de descuento\n• **Nivel Oro (12 a 23 unds):** -35% de descuento\n• **Nivel Platino (24+ unds):** -42% de descuento\n\nPuedes armar tu pedido con cotización formal en PDF en nuestra sección mayorista:`,
+          "Asistente Gordo Ryders",
+          customerInfo,
+          undefined,
+          undefined,
+          [
+            { label: "👑 Ver Catálogo y Cotizador Mayorista", action: "open_wholesale_page" },
+            { label: "🧑‍💼 Cotizar por WhatsApp con Bodega", action: "open_whatsapp" },
+          ]
         );
         return;
       }
@@ -212,10 +295,10 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
       );
 
       if (matchedProduct) {
-        sendMessageFromUser(
+        sendMessageFromBot(
           effectiveSessionId,
-          `🏍️ Te recomiendo el **${matchedProduct.name}**:\nCuenta con certificación oficial y garantía directa de fábrica. Tenemos stock disponible para despacho hoy mismo.`,
-          "Bot Gordo Ryders",
+          `🏍️ Te recomiendo el **${matchedProduct.name}**:\nCuenta con certificación oficial para rodar seguro por Colombia y garantía de fábrica. Tenemos stock disponible para despacho inmediato hoy.`,
+          "Asistente Gordo Ryders",
           customerInfo,
           {
             id: matchedProduct.id,
@@ -225,23 +308,39 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
             image_url: matchedProduct.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600",
             slug: matchedProduct.slug,
             category: matchedProduct.category_name,
-          }
+          },
+          undefined,
+          [
+            { label: "📏 ¿Qué talla soy para este producto?", action: "sizes" },
+            { label: "🧑‍💼 Consultar disponibilidad en bodega", action: "request_human" },
+          ]
         );
         return;
       }
 
       // CASE F: Fallback friendly response
-      sendMessageFromUser(
+      sendMessageFromBot(
         effectiveSessionId,
-        `Recibido, motero. Si deseas una recomendación personalizada de cascos, combos o tiempo de entrega a tu ciudad, un asesor del equipo de bodega te puede responder aquí mismo o por WhatsApp.`,
-        "Bot Gordo Ryders",
-        customerInfo
+        `Recibido, motero. Si tienes una consulta sobre referencias de cascos, combos o tiempos de entrega a tu ciudad, un asesor del equipo de bodega te puede responder aquí mismo o por WhatsApp.`,
+        "Asistente Gordo Ryders",
+        customerInfo,
+        undefined,
+        undefined,
+        [
+          { label: "📏 Guía de Tallas", action: "sizes" },
+          { label: "🧑‍💼 Hablar con Asesor en Vivo", action: "request_human" },
+        ]
       );
-    }, 600);
+    }, 500);
   };
 
   const handleOptionClick = (action: string) => {
     if (action === "track") {
+      processUserMessage("Deseo rastrear mi pedido");
+      return;
+    }
+
+    if (action === "open_tracking_page") {
       setIsOpen(false);
       onOpenTracking();
       return;
@@ -253,7 +352,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
     }
 
     if (action === "helmets") {
-      processUserMessage("Muéstrame cascos certificados disponibles");
+      processUserMessage("Muéstrame cascos certificados con doble visor");
       return;
     }
 
@@ -262,8 +361,18 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
       return;
     }
 
+    if (action === "open_wholesale_page") {
+      window.location.href = "/mayoristas";
+      return;
+    }
+
     if (action === "request_human") {
       processUserMessage("Deseo hablar con un asesor humano en vivo");
+      return;
+    }
+
+    if (action === "open_whatsapp") {
+      openWhatsAppWithContext();
       return;
     }
 
@@ -298,67 +407,65 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
     <>
       {/* Floating Trigger Button (Bottom Right) */}
       <div className="fixed bottom-3.5 right-3.5 sm:bottom-5 sm:right-5 z-40">
-        {!isOpen && (
-          <button
-            onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2 sm:gap-2.5 bg-neutral-900/95 backdrop-blur-md hover:bg-neutral-800 text-white border border-neutral-700/80 p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all group cursor-pointer"
-            aria-label="Abrir asistente de soporte en vivo"
-          >
-            <div className="relative">
-              <Bot className="w-5 h-5 text-orange-400" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -top-0.5 -right-0.5 animate-pulse" />
-            </div>
-            <div className="text-left hidden sm:block">
-              <span className="text-xs font-bold block text-white leading-tight">
-                ¿Ayuda en línea?
-              </span>
-              <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Asesor en vivo
-              </span>
-            </div>
-            {activeSession && activeSession.unreadCountForUser > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-orange-500 text-neutral-950 font-black text-[10px]">
-                {activeSession.unreadCountForUser} <span className="hidden sm:inline">nuevo</span>
-              </span>
-            )}
-          </button>
-        )}
+        <div className="relative">
+          {!isOpen && (
+            <button
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-2 sm:gap-2.5 bg-neutral-900/95 backdrop-blur-md hover:bg-neutral-800 text-white border border-neutral-700/80 p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all group cursor-pointer"
+              aria-label="Abrir asistente de soporte en vivo"
+            >
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center border border-orange-500/30 group-hover:bg-orange-500 group-hover:text-neutral-950 transition-colors">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -bottom-0.5 -right-0.5 ring-2 ring-neutral-900 animate-pulse" />
+              </div>
+              <div className="hidden sm:block text-left pr-1">
+                <span className="text-[11px] font-black uppercase tracking-wider block text-white leading-none">
+                  Soporte & Asesoría
+                </span>
+                <span className="text-[9px] text-emerald-400 font-medium">
+                  {isAgentConnected ? "Asesor en vivo" : "En línea • Pregúntanos"}
+                </span>
+              </div>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Chat Window */}
+      {/* Floating Chat Window */}
       {isOpen && (
-        <div className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:bottom-4 sm:right-4 z-50 sm:w-[410px] bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl text-white flex flex-col overflow-hidden animate-in fade-in zoom-in-95 max-h-[580px] h-[76dvh] sm:h-[540px]">
+        <div className="fixed bottom-3.5 right-3.5 sm:bottom-5 sm:right-5 z-50 w-[calc(100vw-1.75rem)] sm:w-96 max-h-[82vh] h-[580px] bg-neutral-950 border border-neutral-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           
-          {/* Header */}
-          <div className="bg-neutral-950 p-4 border-b border-neutral-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          {/* Header Bar */}
+          <div className="bg-neutral-900/90 backdrop-blur-md px-4 py-3 border-b border-neutral-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold border border-orange-500/30">
-                  {isAgentConnected ? <User className="w-5 h-5 text-emerald-400" /> : <Bot className="w-5 h-5" />}
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center">
+                  {isAgentConnected ? <User className="w-4 h-4 text-emerald-400" /> : <Bot className="w-4 h-4" />}
                 </div>
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 absolute -bottom-0.5 -right-0.5 ring-2 ring-neutral-950" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-xs font-black uppercase text-white">
-                    {isAgentConnected ? "Asesor Humano en Vivo" : "Soporte Gordo Ryders"}
+                  <h3 className="text-xs font-black uppercase text-white tracking-wide">
+                    {isAgentConnected ? "Edwin Bernal (Asesor Oficial)" : "Soporte Gordo Ryders"}
                   </h3>
                   <Sparkles className="w-3 h-3 text-amber-400" />
                 </div>
                 <div className="text-[10px] flex items-center gap-1.5">
                   {isWaitingHuman ? (
                     <span className="text-amber-400 font-bold flex items-center gap-1 animate-pulse">
-                      <span>⏳</span> Conectando con asesor...
+                      <span>⏳</span> Conectando con asesor de bodega...
                     </span>
                   ) : isAgentConnected ? (
                     <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <span>🧑‍💼</span> Edwin Bernal atendiendo
+                      <span>🟢</span> Asesor en vivo atendiendo
                     </span>
                   ) : (
                     <span className="text-neutral-400 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      Smart Bot & Asesoría en vivo
+                      Asistente Virtual • Respuesta Inmediata
                     </span>
                   )}
                 </div>
@@ -367,15 +474,9 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
 
             <div className="flex items-center gap-1">
               <button
-                onClick={openWhatsAppWithContext}
-                title="Abrir en WhatsApp"
-                className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-colors cursor-pointer"
-              >
-                <Phone className="w-4 h-4" />
-              </button>
-              <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="p-1.5 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+                aria-label="Cerrar chat"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -398,13 +499,13 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                     <span className="text-[10px] font-bold text-neutral-400 mb-1 flex items-center gap-1">
                       {isAgent ? (
                         <>
-                          <span className="text-emerald-400 font-black">🧑‍💼 {msg.senderName || "Asesor Edwin Bernal"}</span>
-                          <span className="text-[9px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">OFICIAL</span>
+                          <span className="text-emerald-400 font-black">🧑‍💼 {msg.senderName || "Edwin Bernal"}</span>
+                          <span className="text-[9px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">ASESOR OFICIAL</span>
                         </>
                       ) : (
                         <>
                           <Bot className="w-3 h-3 text-orange-400" />
-                          <span>{msg.senderName || "Asistente Virtual"}</span>
+                          <span>{msg.senderName || "Asistente Gordo Ryders"}</span>
                         </>
                       )}
                       <span className="text-neutral-600">• {msg.timestamp}</span>
@@ -413,25 +514,24 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
 
                   {/* Message Bubble */}
                   <div
-                    className={`p-3.5 rounded-2xl max-w-[88%] leading-relaxed ${
+                    className={`p-3.5 rounded-2xl leading-relaxed text-xs ${
                       isUser
-                        ? "bg-orange-500 text-neutral-950 font-bold rounded-tr-none shadow-md shadow-orange-500/10"
+                        ? "bg-orange-500 text-neutral-950 font-bold rounded-tr-sm shadow-md shadow-orange-500/10 ml-auto max-w-[85%]"
                         : isAgent
-                        ? "bg-neutral-900 border-2 border-emerald-500/40 text-neutral-100 rounded-tl-none shadow-md shadow-emerald-500/5"
-                        : "bg-neutral-950 border border-neutral-800 text-neutral-200 rounded-tl-none"
+                        ? "bg-neutral-900 border border-emerald-500/40 text-neutral-100 rounded-tl-sm shadow-md shadow-emerald-500/5 mr-auto max-w-[90%]"
+                        : "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm mr-auto max-w-[90%]"
                     }`}
-                    style={{ whiteSpace: "pre-line" }}
                   >
-                    {msg.text}
+                    {renderFormattedText(msg.text)}
 
                     {/* Integrated Product Card Preview */}
                     {msg.productCard && (
-                      <div className="mt-3 p-2.5 rounded-xl bg-neutral-900 border border-neutral-700/80 space-y-2 text-white">
+                      <div className="mt-3 p-2.5 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2 text-white">
                         <div className="flex items-center gap-2.5">
                           <img
                             src={msg.productCard.image_url}
                             alt={msg.productCard.name}
-                            className="w-12 h-12 rounded-lg object-cover bg-neutral-950 shrink-0"
+                            className="w-12 h-12 rounded-lg object-cover bg-neutral-900 shrink-0"
                             loading="lazy"
                             decoding="async"
                           />
@@ -461,7 +561,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                             onClick={() => setIsOpen(false)}
                             className="flex-1 py-1 px-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-center text-[10px] font-bold text-white transition-colors"
                           >
-                            Ver Producto
+                            Ver en Tienda
                           </Link>
                           <button
                             onClick={() => {
@@ -479,7 +579,7 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
 
                     {/* Integrated Order Tracking Card Preview */}
                     {msg.orderCard && (
-                      <div className="mt-3 p-3 rounded-xl bg-neutral-900 border border-emerald-500/40 space-y-2 text-white">
+                      <div className="mt-3 p-3 rounded-xl bg-neutral-950 border border-emerald-500/40 space-y-2 text-white">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-black uppercase text-emerald-400 flex items-center gap-1">
                             <Truck className="w-3.5 h-3.5" />
@@ -508,14 +608,14 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
                     )}
                   </div>
 
-                  {/* Interactive Options */}
+                  {/* Contextual Suggestion Chips (Under Bot Message) */}
                   {msg.options && (
                     <div className="flex flex-wrap gap-1.5 mt-2 max-w-[90%]">
                       {msg.options.map((opt, oIdx) => (
                         <button
                           key={oIdx}
                           onClick={() => handleOptionClick(opt.action)}
-                          className="text-[11px] font-bold bg-neutral-900 hover:bg-neutral-800 text-neutral-200 hover:text-orange-400 border border-neutral-700/80 px-3 py-1.5 rounded-xl transition-all text-left flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] font-medium bg-neutral-900/90 hover:bg-neutral-800 text-neutral-200 hover:text-orange-400 border border-neutral-800 hover:border-orange-500/40 px-3 py-1.5 rounded-xl transition-all text-left flex items-center gap-1 cursor-pointer active:scale-95"
                         >
                           <span>{opt.label}</span>
                           <ChevronRight className="w-3 h-3 text-neutral-500" />
@@ -529,46 +629,18 @@ export default function ChatbotSupport({ onOpenTracking, onOpenContact }: Chatbo
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Shortcuts Bar */}
-          <div className="px-3 py-2 bg-neutral-950/80 border-t border-neutral-800/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none text-[10px]">
-            <button
-              onClick={() => handleOptionClick("sizes")}
-              className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 cursor-pointer transition-colors"
-            >
-              📏 Tallas
-            </button>
-            <button
-              onClick={() => handleOptionClick("track")}
-              className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 cursor-pointer transition-colors"
-            >
-              🔍 Rastrear
-            </button>
-            <button
-              onClick={() => handleOptionClick("wholesale")}
-              className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 cursor-pointer transition-colors font-bold"
-            >
-              👑 Mayoristas B2B
-            </button>
-            <button
-              onClick={() => handleOptionClick("request_human")}
-              className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 cursor-pointer transition-colors font-bold"
-            >
-              🧑‍💼 Hablar con Asesor
-            </button>
-          </div>
-
-          {/* Input Form */}
-          <form onSubmit={handleSend} className="p-3 bg-neutral-950 border-t border-neutral-800 flex gap-2 items-center">
+          {/* Clean Input Form (No Clunky Static Bottom Bar) */}
+          <form onSubmit={handleSend} className="p-3 bg-neutral-900/90 border-t border-neutral-800 flex gap-2 items-center">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Pregunta por cascos, tallas o tu pedido..."
-              className="flex-1 bg-neutral-900 border border-neutral-800 text-xs rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+              placeholder="Escribe tu duda, talla o número de guía..."
+              className="flex-1 bg-neutral-950 border border-neutral-800 text-xs rounded-xl px-3.5 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
             />
             <button
               type="submit"
-              className="p-2.5 bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 rounded-xl transition-all cursor-pointer font-bold"
+              className="p-2.5 bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 rounded-xl transition-all cursor-pointer font-bold shadow-md shadow-orange-500/20"
               title="Enviar mensaje"
             >
               <Send className="w-4 h-4" />
