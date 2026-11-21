@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useStore } from "@/context/StoreContext";
 import { 
@@ -27,7 +27,9 @@ import {
   Filter,
   Check,
   TrendingUp,
-  PackageCheck
+  PackageCheck,
+  Mail,
+  User
 } from "lucide-react";
 
 export default function MayoristasPage() {
@@ -56,13 +58,25 @@ export default function MayoristasPage() {
   const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
 
   // Form for B2B distributor registration
-  const [b2bName, setB2bName] = useState("");
+  const [b2bEmail, setB2bEmail] = useState(currentUser?.email || "");
+  const [b2bContactName, setB2bContactName] = useState(currentUser?.name || "");
+  const [b2bName, setB2bName] = useState(currentUser?.businessName || "");
   const [b2bType, setB2bType] = useState<"almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital">("almacen_repuestos");
-  const [b2bNit, setB2bNit] = useState("");
-  const [b2bCity, setB2bCity] = useState("Bogotá D.C.");
-  const [b2bPhone, setB2bPhone] = useState("");
-  const [b2bAddress, setB2bAddress] = useState("");
+  const [b2bNit, setB2bNit] = useState(currentUser?.b2bNitOrRut || currentUser?.cedulaOrNit || "");
+  const [b2bCity, setB2bCity] = useState(currentUser?.city || "Bogotá D.C.");
+  const [b2bPhone, setB2bPhone] = useState(currentUser?.phone || "");
+  const [b2bAddress, setB2bAddress] = useState(currentUser?.b2bAddressOrSocial || currentUser?.address || "");
   const [b2bSuccess, setB2bSuccess] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.email && !b2bEmail) setB2bEmail(currentUser.email);
+    if (currentUser?.name && !b2bContactName) setB2bContactName(currentUser.name);
+    if (currentUser?.businessName && !b2bName) setB2bName(currentUser.businessName);
+    if (currentUser?.phone && !b2bPhone) setB2bPhone(currentUser.phone);
+    if (currentUser?.city && !b2bCity) setB2bCity(currentUser.city);
+    if (currentUser?.b2bNitOrRut && !b2bNit) setB2bNit(currentUser.b2bNitOrRut);
+    if (currentUser?.b2bAddressOrSocial && !b2bAddress) setB2bAddress(currentUser.b2bAddressOrSocial);
+  }, [currentUser]);
 
   const formatCOP = (num: number) =>
     new Intl.NumberFormat("es-CO", {
@@ -259,15 +273,19 @@ export default function MayoristasPage() {
 
   const handleRegisterB2B = (e: React.FormEvent) => {
     e.preventDefault();
+    const targetEmail = (b2bEmail || currentUser?.email || "").trim().toLowerCase();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      alert("Por favor ingresa un correo electrónico corporativo válido.");
+      return;
+    }
     if (!b2bName || !b2bPhone || !b2bCity) {
-      alert("Por favor completa los campos obligatorios.");
+      alert("Por favor completa los campos obligatorios del comercio.");
       return;
     }
-    if (!currentUser) {
-      setIsAuthModalOpen(true);
-      return;
-    }
+
     requestWholesaleAccount({
+      email: targetEmail,
+      contactName: b2bContactName || b2bName,
       businessName: b2bName,
       businessType: b2bType,
       nitOrRut: b2bNit,
@@ -275,8 +293,8 @@ export default function MayoristasPage() {
       phone: b2bPhone,
       addressOrSocial: b2bAddress,
     });
+
     setB2bSuccess(true);
-    setTimeout(() => setB2bSuccess(false), 3500);
   };
 
   // Filter products for the table
@@ -973,129 +991,221 @@ export default function MayoristasPage() {
       {/* =========================================================================
           REGISTRO DE COMERCIO / SOLICITAR CUENTA B2B
           ========================================================================= */}
-      <div className="rounded-3xl bg-neutral-950 border border-neutral-800 p-6 sm:p-10 space-y-6">
+      <div className="rounded-3xl bg-gradient-to-b from-neutral-900 via-neutral-950 to-neutral-950 border border-amber-500/30 p-6 sm:p-10 shadow-2xl space-y-6 relative overflow-hidden">
+        
+        {/* Glow de acento superior */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600" />
+        
         <div className="max-w-2xl space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
-            Canal de Afiliación
-          </span>
-          <h3 className="text-xl sm:text-2xl font-black uppercase text-white">
-            Registra tu Almacén o Taller como Distribuidor
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30 font-mono flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Canal de Afiliación B2B Corporativo</span>
+            </span>
+            {currentUser && (
+              <span className="text-[10px] font-mono text-neutral-400">
+                Sesión: <strong className="text-white">{currentUser.email}</strong>
+              </span>
+            )}
+          </div>
+
+          <h3 className="text-xl sm:text-3xl font-black uppercase text-white tracking-tight">
+            Vincula tu Almacén o Taller como Distribuidor
           </h3>
-          <p className="text-xs text-neutral-400">
-            Diligencia los datos de tu establecimiento para vincular tu cuenta con tarifa B2B permanente:
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+            No necesitas crear una cuenta nueva ni contraseñas adicionales. Diligencia los datos de tu establecimiento con tu correo electrónico y nuestro sistema transformará tu perfil para habilitar tarifas mayoristas directas de bodega.
           </p>
         </div>
 
-        <form onSubmit={handleRegisterB2B} className="space-y-4 max-w-2xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {currentUser?.b2bStatus === "aprobado" ? (
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-sm">
+                  👑 ¡Tu cuenta ya es Distribuidor Autorizado Gordo Ryders!
+                </p>
+                <p className="text-neutral-300 text-xs mt-0.5">
+                  Código oficial: <strong className="text-amber-400 font-mono">{currentUser.b2bCode}</strong> • Descuentos aplicados automáticamente en tus pedidos.
+                </p>
+              </div>
+            </div>
+            <a
+              href="#matriz-pedidos"
+              className="py-2 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-wider shrink-0 transition-colors"
+            >
+              Hacer Pedido
+            </a>
+          </div>
+        ) : (
+          <form onSubmit={handleRegisterB2B} className="space-y-4 max-w-3xl">
+            
+            {/* Fila 1: Correo Electrónico (El enlace central) y Razón Social */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-amber-300 mb-1 font-mono uppercase flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Correo Electrónico del Negocio o Comerciante *</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ejemplo@tualmacen.com"
+                  value={b2bEmail}
+                  onChange={(e) => setB2bEmail(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-amber-400 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none font-mono"
+                />
+                <span className="text-[10px] text-neutral-400 font-mono block mt-1">
+                  {currentUser?.email ? (
+                    <span className="text-amber-400 font-semibold">✓ Tu cuenta actual se transformará a estatus Distribuidor Mayorista.</span>
+                  ) : (
+                    <span>Si ya compraste antes, transformaremos tu cuenta. Si eres nuevo, la crearemos de inmediato.</span>
+                  )}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Nombre del Comercio o Razón Social *</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Almacén Motos El Paisa / Taller Del Valle"
+                  value={b2bName}
+                  onChange={(e) => setB2bName(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Fila 2: Nombre de Contacto y Tipo de Negocio */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>Nombre del Titular o Representante Comercial *</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Carlos Gómez / Administrador"
+                  value={b2bContactName}
+                  onChange={(e) => setB2bContactName(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
+                  Tipo de Negocio *
+                </label>
+                <select
+                  value={b2bType}
+                  onChange={(e) => setB2bType(e.target.value as any)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none cursor-pointer font-sans"
+                >
+                  <option value="almacen_repuestos">Almacén de Repuestos & Autopartes</option>
+                  <option value="taller_motos">Taller Mecánico Especializado</option>
+                  <option value="tienda_accesorios">Tienda de Accesorios / Ropa Motera</option>
+                  <option value="concesionario">Concesionario de Motos</option>
+                  <option value="distribuidor_digital">Distribuidor Digital / E-commerce</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Fila 3: NIT/Cédula, Ciudad y WhatsApp */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
+                  NIT o Cédula *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: 900.123.456-7"
+                  value={b2bNit}
+                  onChange={(e) => setB2bNit(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
+                  Ciudad de Despacho *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Medellín, Cali, Bucaramanga..."
+                  value={b2bCity}
+                  onChange={(e) => setB2bCity(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
+                  WhatsApp Directo *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="Ej: 316 149 2880"
+                  value={b2bPhone}
+                  onChange={(e) => setB2bPhone(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Fila 4: Dirección o Instagram */}
             <div>
               <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-                Nombre del Comercio o Razón Social *
+                Dirección del Local Físico o Instagram de la Tienda
               </label>
               <input
                 type="text"
-                required
-                placeholder="Ej: Almacén Motos El Paisa"
-                value={b2bName}
-                onChange={(e) => setB2bName(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                placeholder="Ej: Carrera 15 # 45-20 / @motosalpaisa_oficial"
+                value={b2bAddress}
+                onChange={(e) => setB2bAddress(e.target.value)}
+                className="w-full bg-neutral-900 border border-neutral-700 focus:border-orange-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none"
               />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-                Tipo de Negocio *
-              </label>
-              <select
-                value={b2bType}
-                onChange={(e) => setB2bType(e.target.value as any)}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
-              >
-                <option value="almacen_repuestos">Almacén de Repuestos</option>
-                <option value="taller_motos">Taller Mecánico</option>
-                <option value="tienda_accesorios">Tienda de Accesorios / Lujo</option>
-                <option value="concesionario">Concesionario de Motos</option>
-                <option value="distribuidor_digital">Distribuidor Digital / E-commerce</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-                NIT o Cédula
-              </label>
-              <input
-                type="text"
-                placeholder="900.123.456-7"
-                value={b2bNit}
-                onChange={(e) => setB2bNit(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500 font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-                Ciudad *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Ej: Medellín, Cali..."
-                value={b2bCity}
-                onChange={(e) => setB2bCity(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-                WhatsApp Directo *
-              </label>
-              <input
-                type="tel"
-                required
-                placeholder="316 149 2880"
-                value={b2bPhone}
-                onChange={(e) => setB2bPhone(e.target.value)}
-                className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500 font-mono"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-neutral-300 mb-1 font-mono uppercase">
-              Dirección del Local Físico o Instagram de la Tienda
-            </label>
-            <input
-              type="text"
-              placeholder="Ej: Carrera 7 # 72-41 / @gordoryders.co"
-              value={b2bAddress}
-              onChange={(e) => setB2bAddress(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
-            />
-          </div>
-
-          <div className="pt-2 flex items-center justify-between">
-            {b2bSuccess ? (
-              <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 animate-in fade-in font-mono">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>¡Solicitud enviada a revisión con bodega exitosamente!</span>
-              </span>
-            ) : (
-              <span className="text-[11px] text-neutral-400 font-mono">
-                Respuesta comercial por WhatsApp en menos de 2 horas.
-              </span>
+            {/* Alerta de Éxito o Botón de Envío */}
+            {b2bSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/50 flex items-start gap-3 animate-in fade-in">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold text-emerald-300 text-xs">
+                    ¡Solicitud Mayorista Recibida y Registrada Exitosamente!
+                  </p>
+                  <p className="text-[11px] text-emerald-400/90 leading-relaxed">
+                    Tu correo <strong className="text-white">{b2bEmail}</strong> quedó vinculado en el sistema como solicitud de Distribuidor Mayorista. Ya fue enviada al <strong>Panel de Control Central de Administración y Bodega</strong> para habilitar tus tarifas B2B permanentes.
+                  </p>
+                </div>
+              </div>
             )}
 
-            <button
-              type="submit"
-              className="py-2.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer active:scale-95 uppercase tracking-wider"
-            >
-              <span>Solicitar Código Mayorista</span>
-            </button>
-          </div>
-        </form>
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <span className="text-[11px] text-neutral-400 font-mono">
+                ⚡ Notificación en vivo enviada directamente al ERP corporativo.
+              </span>
+
+              <button
+                type="submit"
+                className="py-3 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs transition-all shadow-lg shadow-amber-500/20 cursor-pointer active:scale-95 uppercase tracking-wider flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                <span>Vincular y Solicitar Código Mayorista</span>
+              </button>
+            </div>
+          </form>
+        )}
 
       </div>
 

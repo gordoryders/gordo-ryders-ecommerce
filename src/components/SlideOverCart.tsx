@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { CartItem } from "@/types";
-import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, MessageCircle } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Truck, MessageCircle, PackageCheck, Check } from "lucide-react";
 
 interface SlideOverCartProps {
   isOpen: boolean;
@@ -58,11 +58,14 @@ export default function SlideOverCart({
 
   const whatsappCheckoutText = encodeURIComponent(
     `Hola Gordo Ryders, deseo finalizar mi pedido:\n\n${items
-      .map(
-        (i) =>
-          `• ${i.product.name} (Talla: ${i.selectedSize}${i.selectedColor ? `, Color: ${i.selectedColor}` : ""}) x${i.quantity} = ${formatCOP(
-            i.product.price_retail * i.quantity
-          )}`
+      .map((i) =>
+        i.isCombo
+          ? `• 📦 [COMBO] ${i.comboName || i.product.name} (${i.comboProducts?.length || 0} artículos incluidos) x${i.quantity} = ${formatCOP(
+              i.product.price_retail * i.quantity
+            )}`
+          : `• ${i.product.name} (Talla: ${i.selectedSize}${i.selectedColor ? `, Color: ${i.selectedColor}` : ""}) x${i.quantity} = ${formatCOP(
+              i.product.price_retail * i.quantity
+            )}`
       )
       .join("\n")}\n\nTotal Pedido: ${formatCOP(subtotal)}\n\n¿Me indican los datos para el pago y despacho?`
   );
@@ -139,6 +142,129 @@ export default function SlideOverCart({
               </div>
             ) : (
               items.map((item, index) => {
+                // RENDERIZADO ESPECIAL: CONTENEDOR DEDICADO PARA COMBOS & PACKS
+                if (item.isCombo) {
+                  const originalTotal = (item.comboOriginalPrice || item.product.price_retail * 1.15) * item.quantity;
+                  const currentTotal = item.product.price_retail * item.quantity;
+                  const savingsTotal = item.comboSavings ? item.comboSavings * item.quantity : Math.max(0, originalTotal - currentTotal);
+
+                  return (
+                    <div
+                      key={`combo-${item.comboId || item.product.id}-${index}`}
+                      className="bg-neutral-950 rounded-2xl border-2 border-orange-500/40 p-3.5 space-y-3 relative overflow-hidden shadow-lg shadow-orange-500/5 transition-all"
+                    >
+                      {/* Barra superior de acento degradado */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-600" />
+
+                      {/* Header del Combo: Tag, Ahorro y Botón Eliminar */}
+                      <div className="flex items-start justify-between gap-2 pt-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+                            <PackageCheck className="w-3 h-3 text-orange-400" />
+                            <span>{item.comboTag || "COMBO PROMOCIONAL"}</span>
+                          </span>
+                          {savingsTotal > 0 && (
+                            <span className="text-[9px] font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
+                              Ahorras {formatCOP(savingsTotal)}
+                            </span>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => onRemoveItem(index)}
+                          className="text-neutral-500 hover:text-red-400 transition-colors p-1 shrink-0 cursor-pointer"
+                          title="Eliminar combo completo del carrito"
+                          aria-label="Eliminar combo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Título del Combo */}
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black text-white leading-tight">
+                          {item.comboName || item.product.name}
+                        </h4>
+                        <p className="text-[10px] text-neutral-400 mt-0.5">
+                          Paquete de equipamiento con precio especial unificado de bodega.
+                        </p>
+                      </div>
+
+                      {/* Sub-contenedor de Artículos Incluidos */}
+                      {item.comboProducts && item.comboProducts.length > 0 && (
+                        <div className="bg-neutral-900/90 rounded-xl p-2.5 border border-neutral-800 space-y-2">
+                          <span className="text-[9px] uppercase font-bold text-neutral-400 font-mono block">
+                            Artículos incluidos en este pack ({item.comboProducts.length}):
+                          </span>
+                          <div className="space-y-1.5">
+                            {item.comboProducts.map((cp, cIdx) => (
+                              <div key={cIdx} className="flex items-center gap-2">
+                                <img
+                                  src={cp.image || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=150&q=80"}
+                                  alt={cp.name}
+                                  className="w-8 h-8 rounded-lg object-cover bg-neutral-950 border border-neutral-800 shrink-0"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold text-neutral-200 truncate leading-snug">
+                                    {cp.name}
+                                  </p>
+                                  {cp.sku && (
+                                    <span className="text-[9px] font-mono text-neutral-500 block">
+                                      SKU: {cp.sku}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-emerald-400 font-mono font-bold shrink-0 flex items-center gap-0.5">
+                                  <Check className="w-3 h-3" />
+                                  <span>Incluido</span>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fila de Precios y Controles de Cantidad del Combo */}
+                      <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between gap-2">
+                        <div>
+                          {originalTotal > currentTotal && (
+                            <span className="text-[10px] text-neutral-500 line-through font-mono block">
+                              {formatCOP(originalTotal)}
+                            </span>
+                          )}
+                          <span className="text-sm sm:text-base font-black text-amber-400 font-mono whitespace-nowrap">
+                            {formatCOP(currentTotal)}
+                          </span>
+                        </div>
+
+                        {/* Selector de cantidad para el combo completo */}
+                        <div className="flex items-center border border-neutral-800 rounded-lg bg-neutral-900 text-xs shrink-0">
+                          <button
+                            onClick={() => onUpdateQuantity(index, Math.max(1, item.quantity - 1))}
+                            className="w-7 h-7 flex items-center justify-center text-neutral-400 hover:text-white cursor-pointer"
+                            aria-label="Disminuir combos"
+                            title="Restar 1 combo"
+                          >
+                            -
+                          </button>
+                          <span className="w-7 text-center font-bold text-white text-[11px] font-mono">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => onUpdateQuantity(index, item.quantity + 1)}
+                            className="w-7 h-7 flex items-center justify-center text-neutral-400 hover:text-white cursor-pointer"
+                            aria-label="Aumentar combos"
+                            title="Sumar 1 combo"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // RENDERIZADO ESTÁNDAR: PRODUCTO INDIVIDUAL SEPARADO
                 const img = (item.product.images && item.product.images[0]) || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=300&q=80";
                 return (
                   <div

@@ -6,7 +6,7 @@ import { Package, Plus, Equal, ShoppingCart, MessageCircle, Sparkles, CheckCircl
 import Link from "next/link";
 
 export default function CombosSection() {
-  const { combos, products, addToCart } = useStore();
+  const { combos, products, addComboToCart } = useStore();
 
   const activeCombos = combos.filter((c) => c.isActive);
 
@@ -35,11 +35,7 @@ export default function CombosSection() {
 
   const handleAddComboToCart = (combo: ProductCombo) => {
     const comboProds = getComboProducts(combo);
-    if (comboProds.length === 0) return;
-    comboProds.forEach((prod) => {
-      addToCart(prod, "M", "Negro", 1);
-    });
-    alert(`¡Combo "${combo.name}" agregado al carrito con precio especial!`);
+    addComboToCart(combo, comboProds);
   };
 
   return (

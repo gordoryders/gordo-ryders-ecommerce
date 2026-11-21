@@ -325,6 +325,7 @@ interface StoreContextType {
   // Cart
   cartItems: CartItem[];
   addToCart: (product: Product, size?: string, color?: string, quantity?: number) => void;
+  addComboToCart: (combo: ProductCombo, comboProducts?: Product[]) => void;
   updateQuantity: (index: number, quantity: number) => void;
   removeItem: (index: number) => void;
   clearCart: () => void;
@@ -433,13 +434,15 @@ interface StoreContextType {
 
   // B2B Wholesale Functions
   requestWholesaleAccount: (data: {
+    email?: string;
+    contactName?: string;
     businessName: string;
     businessType: "almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital";
     nitOrRut?: string;
     city: string;
     phone: string;
     addressOrSocial: string;
-  }) => void;
+  }) => { success: boolean; isNew: boolean };
   approveWholesaleUser: (userId: string) => void;
   rejectWholesaleUser: (userId: string) => void;
 
@@ -770,6 +773,71 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         },
       ];
     });
+    setIsCartOpen(true);
+  };
+
+  const addComboToCart = (combo: ProductCombo, comboProducts?: Product[]) => {
+    // 1. Resolve products inside combo if not provided
+    const prods = (comboProducts && comboProducts.length > 0)
+      ? comboProducts
+      : (combo.productIds || [])
+          .map((idOrSlug) =>
+            products.find(
+              (p) =>
+                p.id.toLowerCase() === idOrSlug.toLowerCase() ||
+                p.slug.toLowerCase() === idOrSlug.toLowerCase() ||
+                p.name.toLowerCase().includes(idOrSlug.toLowerCase())
+            )
+          )
+          .filter(Boolean) as Product[];
+
+    const calculatedOriginal = prods.reduce((acc, p) => acc + (p?.price_retail || 0), 0);
+    const originalPrice = combo.originalPrice || calculatedOriginal;
+    const savings = combo.savingsAmount || Math.max(0, originalPrice - combo.price);
+
+    const comboCartItem: CartItem = {
+      product: {
+        id: `combo-pack-${combo.id}`,
+        sku: `COMBO-${combo.slug.toUpperCase()}`,
+        name: combo.name,
+        slug: combo.slug,
+        description: combo.description,
+        price_retail: combo.price, // PRECIO ESPECIAL DEL COMBO (ej: 349000)
+        price_original: originalPrice,
+        images: prods.map((p) => (p.images && p.images[0]) || "").filter(Boolean),
+        is_featured: true,
+        is_active: true,
+      },
+      selectedSize: "Pack Oficial",
+      selectedColor: "Surtido Oficial",
+      quantity: 1,
+      isCombo: true,
+      comboId: combo.id,
+      comboName: combo.name,
+      comboTag: combo.tag || "COMBO PROMOCIONAL",
+      comboPrice: combo.price,
+      comboOriginalPrice: originalPrice,
+      comboSavings: savings,
+      comboProducts: prods.map((p) => ({
+        id: p.id,
+        name: p.name,
+        image: (p.images && p.images[0]) || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=300&q=80",
+        sku: p.sku,
+        price: p.price_retail,
+        category: p.category_name,
+      })),
+    };
+
+    setCartItems((prev) => {
+      const existingIndex = prev.findIndex((item) => item.isCombo && item.comboId === combo.id);
+      if (existingIndex > -1) {
+        const copy = [...prev];
+        copy[existingIndex].quantity += 1;
+        return copy;
+      }
+      return [...prev, comboCartItem];
+    });
+
     setIsCartOpen(true);
   };
 
@@ -1315,45 +1383,114 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // B2B Wholesale Functions
   const requestWholesaleAccount = (data: {
+    email?: string;
+    contactName?: string;
     businessName: string;
     businessType: "almacen_repuestos" | "taller_motos" | "tienda_accesorios" | "concesionario" | "distribuidor_digital";
     nitOrRut?: string;
     city: string;
     phone: string;
     addressOrSocial: string;
-  }) => {
-    if (!currentUser) return;
-    const updatedUser: CustomerUser = {
-      ...currentUser,
-      b2bStatus: "pendiente",
-      businessName: data.businessName,
-      businessType: data.businessType,
-      b2bNitOrRut: data.nitOrRut,
-      city: data.city,
-      phone: data.phone,
-      b2bAddressOrSocial: data.addressOrSocial,
-    };
-    setCurrentUser(updatedUser);
-    try {
-      localStorage.setItem("gr_current_user", JSON.stringify(updatedUser));
-    } catch {}
-    updateUser(updatedUser);
+  }): { success: boolean; isNew: boolean } => {
+    const cleanEmail = (data.email || currentUser?.email || "").trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, isNew: false };
+    }
 
-    // Also register an inquiry in wholesale pipeline so Admin gets it immediately
+    let isNewUser = false;
+    let targetUser: CustomerUser;
+
+    setUsers((prev) => {
+      const existingIdx = prev.findIndex((u) => u.email.toLowerCase() === cleanEmail);
+      if (existingIdx > -1) {
+        // TRANSFORMAR CUENTA EXISTENTE ASOCIADA A ESTE CORREO
+        const existing = prev[existingIdx];
+        targetUser = {
+          ...existing,
+          name: data.contactName || existing.name || data.businessName,
+          phone: data.phone || existing.phone,
+          city: data.city || existing.city,
+          type: "mayorista",
+          b2bStatus: "pendiente",
+          businessName: data.businessName,
+          businessType: data.businessType,
+          b2bNitOrRut: data.nitOrRut || existing.b2bNitOrRut || existing.cedulaOrNit,
+          b2bAddressOrSocial: data.addressOrSocial || existing.b2bAddressOrSocial,
+        };
+        const copy = [...prev];
+        copy[existingIdx] = targetUser;
+        try {
+          localStorage.setItem("gr_admin_users", JSON.stringify(copy));
+        } catch {}
+        return copy;
+      } else {
+        // VINCULAR NUEVA CUENTA DE DISTRIBUIDOR CON ESTE CORREO
+        isNewUser = true;
+        targetUser = {
+          id: `usr-b2b-${Date.now()}`,
+          name: data.contactName || data.businessName,
+          email: cleanEmail,
+          phone: data.phone,
+          city: data.city,
+          type: "mayorista",
+          b2bStatus: "pendiente",
+          businessName: data.businessName,
+          businessType: data.businessType,
+          b2bNitOrRut: data.nitOrRut,
+          b2bAddressOrSocial: data.addressOrSocial,
+          ordersCount: 0,
+          totalSpent: 0,
+          registrationDate: "Hoy, " + new Intl.DateTimeFormat("es-CO", { dateStyle: "short" }).format(new Date()),
+          status: "activo",
+        };
+        const updated = [targetUser, ...prev];
+        try {
+          localStorage.setItem("gr_admin_users", JSON.stringify(updated));
+        } catch {}
+        return updated;
+      }
+    });
+
+    // Actualizar usuario actual si está conectado con este correo o vincularlo
+    setCurrentUser((prev) => {
+      const base = (prev && prev.email.toLowerCase() === cleanEmail) ? prev : targetUser;
+      const updated: CustomerUser = {
+        ...base,
+        name: data.contactName || base.name || data.businessName,
+        email: cleanEmail,
+        type: "mayorista",
+        b2bStatus: "pendiente",
+        businessName: data.businessName,
+        businessType: data.businessType,
+        b2bNitOrRut: data.nitOrRut || base.b2bNitOrRut,
+        city: data.city || base.city,
+        phone: data.phone || base.phone,
+        b2bAddressOrSocial: data.addressOrSocial || base.b2bAddressOrSocial,
+      };
+      try {
+        localStorage.setItem("gr_current_user", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Registrar solicitud oficial en el pipeline de mayoristas para el panel de administración
     const newInquiry: WholesaleInquiry = {
       id: `wh-${Date.now()}`,
       businessName: data.businessName,
-      contactName: currentUser.name,
-      nitOrCedula: data.nitOrRut || currentUser.cedulaOrNit || "Pendiente",
+      contactName: data.contactName || data.businessName,
+      email: cleanEmail,
+      nitOrCedula: data.nitOrRut || "Pendiente",
       phone: data.phone,
       city: data.city,
-      productsInterest: `Solicitud de Cuenta Distribuidor B2B (${data.businessType.replace("_", " ").toUpperCase()})`,
+      productsInterest: `Solicitud Mayorista B2B (${data.businessType.replace(/_/g, " ").toUpperCase()})`,
       estimatedUnits: 12,
       date: "Hoy, " + new Intl.DateTimeFormat("es-CO", { timeStyle: "short" }).format(new Date()),
       status: "nuevo",
-      notes: `Almacén/Local: ${data.addressOrSocial}. Solicitó estatus de distribuidor B2B desde su perfil.`,
+      notes: `Correo Oficial: ${cleanEmail}. Local/Instagram: ${data.addressOrSocial}. Solicitud enviada desde el portal web B2B.`,
     };
     addWholesaleInquiry(newInquiry);
+
+    return { success: true, isNew: isNewUser };
   };
 
   const approveWholesaleUser = (userId: string) => {
@@ -1675,6 +1812,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       value={{
         cartItems,
         addToCart,
+        addComboToCart,
         updateQuantity,
         removeItem,
         clearCart,

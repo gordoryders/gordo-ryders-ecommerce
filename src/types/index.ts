@@ -60,6 +60,22 @@ export interface CartItem {
   selectedSize: string;
   selectedColor?: string;
   quantity: number;
+  // Soporte Oficial para Packs & Combos en Carrito
+  isCombo?: boolean;
+  comboId?: string;
+  comboName?: string;
+  comboTag?: string;
+  comboPrice?: number;
+  comboOriginalPrice?: number;
+  comboSavings?: number;
+  comboProducts?: {
+    id: string;
+    name: string;
+    image: string;
+    sku?: string;
+    price?: number;
+    category?: string;
+  }[];
 }
 
 export interface LookbookAlbum {
@@ -192,6 +208,7 @@ export interface WholesaleInquiry {
   id: string;
   businessName: string;
   contactName: string;
+  email?: string;
   nitOrCedula: string;
   phone: string;
   city: string;

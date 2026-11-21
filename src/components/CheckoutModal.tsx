@@ -104,7 +104,11 @@ export default function CheckoutModal({
       }).format(new Date());
 
       const productsSummary = items
-        .map((i) => `${i.quantity}x ${i.product.name} (${i.selectedSize})`)
+        .map((i) =>
+          i.isCombo
+            ? `${i.quantity}x Combo: ${i.comboName || i.product.name} (${i.comboProducts?.length || 0} unds)`
+            : `${i.quantity}x ${i.product.name} (${i.selectedSize})`
+        )
         .join(", ");
 
       const autoGuide = `INT-${Math.floor(7000000 + Math.random() * 2000000)}`;
@@ -151,9 +155,9 @@ export default function CheckoutModal({
         carrier: "Inter Rapidísimo",
         guideNumber: autoGuide,
         items: items.map((i) => ({
-          productName: i.product.name,
+          productName: i.isCombo ? `[COMBO] ${i.comboName || i.product.name}` : i.product.name,
           sku: i.product.sku,
-          size: i.selectedSize,
+          size: i.isCombo ? "Pack Completo" : i.selectedSize,
           quantity: i.quantity,
           unitPrice: i.product.price_retail,
           subtotal: i.product.price_retail * i.quantity,
