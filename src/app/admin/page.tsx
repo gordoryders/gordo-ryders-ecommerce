@@ -1018,7 +1018,7 @@ export default function AdminPage() {
 
 
   // --- ACCOUNTING EXPORT TO EXCEL / CSV & GOOGLE SHEETS LIVE SYNC ---
-  const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string>("");
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string>("https://script.google.com/macros/s/AKfycbzgXqSCCF8yxfHPzwVHn4lbbg8M8DxdQ9glIBYPG_vwE32tDf7X2hF_9akeJwJGniqggg/exec");
   const [isGoogleSheetsModalOpen, setIsGoogleSheetsModalOpen] = useState(false);
   const [isSyncingSheets, setIsSyncingSheets] = useState(false);
   const [sheetsSyncSuccess, setSheetsSyncSuccess] = useState(false);
@@ -1027,7 +1027,7 @@ export default function AdminPage() {
   useEffect(() => {
     try {
       const savedUrl = localStorage.getItem("gr_google_sheets_url");
-      if (savedUrl) setGoogleSheetsUrl(savedUrl);
+      setGoogleSheetsUrl(savedUrl || "https://script.google.com/macros/s/AKfycbzgXqSCCF8yxfHPzwVHn4lbbg8M8DxdQ9glIBYPG_vwE32tDf7X2hF_9akeJwJGniqggg/exec");
     } catch {}
   }, []);
 
@@ -1682,6 +1682,15 @@ export default function AdminPage() {
               <ExternalLink className="w-3 h-3 text-neutral-400" />
             </Link>
 
+            <button
+              type="button"
+              onClick={() => setIsGoogleSheetsModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-bold transition-all flex items-center gap-1.5 border border-emerald-500/30 cursor-pointer shadow-sm"
+              title="Conectar o sincronizar Google Sheets"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>⚡ Google Sheets</span>
+            </button>
             <Link
               href="/mayoristas"
               target="_blank"
@@ -1952,10 +1961,79 @@ export default function AdminPage() {
                   >
                     Métricas
                   </button>
+                  <span>•</span>
+                  <button
+                    onClick={() => setIsGoogleSheetsModalOpen(true)}
+                    className="hover:text-emerald-400 underline cursor-pointer font-bold text-emerald-300 flex items-center gap-1"
+                  >
+                    <span>📊 Google Sheets & Contabilidad</span>
+                  </button>
                 </div>
               </div>
             </div>
 
+          </div>
+
+          {/* Featured Section: GOOGLE SHEETS & CONTABILIDAD AUTOMATIZADA */}
+          <div className="rounded-3xl bg-gradient-to-r from-emerald-950/40 via-neutral-900 to-teal-950/40 border border-emerald-500/30 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+            <div className="space-y-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>MÓDULO DE INTEGRACIÓN CONTABLE • EN VIVO</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black uppercase text-white tracking-wide flex items-center gap-2 justify-center md:justify-start">
+                <span>Google Sheets & Exportación Contable ERP</span>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase">
+                  4 Hojas Activas
+                </span>
+              </h3>
+              <p className="text-xs text-neutral-400 max-w-2xl leading-relaxed">
+                Conectado con tu cuenta <strong className="text-white">gordoryders@gmail.com</strong>. Sincroniza en la nube: Facturas Oficiales de Venta, Pedidos de Despacho, Fichas de Clientes CRM y Solicitudes Mayoristas B2B.
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
+                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-neutral-950/80 border border-neutral-800 text-emerald-300 font-mono">
+                  ✓ Facturas Oficiales
+                </span>
+                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-neutral-950/80 border border-neutral-800 text-emerald-300 font-mono">
+                  ✓ Pedidos & Logística
+                </span>
+                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-neutral-950/80 border border-neutral-800 text-emerald-300 font-mono">
+                  ✓ Clientes CRM 360°
+                </span>
+                <span className="text-[10px] px-2.5 py-1 rounded-lg bg-neutral-950/80 border border-neutral-800 text-emerald-300 font-mono">
+                  ✓ Mayoristas B2B
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsGoogleSheetsModalOpen(true)}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-neutral-950 font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/20 active:scale-95"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>⚡ Conectar Google Sheets</span>
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={exportInvoicesToExcelCSV}
+                  className="flex-1 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Facturas .CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={exportOrdersToExcelCSV}
+                  className="flex-1 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Pedidos .CSV</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Featured Section: CANAL MAYORISTAS B2B */}
@@ -2320,6 +2398,17 @@ export default function AdminPage() {
           </Link>
 
           <button
+            type="button"
+            onClick={() => setIsGoogleSheetsModalOpen(true)}
+            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold py-2.5 px-3 rounded-xl transition-all border border-emerald-500/25 flex items-center justify-between cursor-pointer mb-2"
+          >
+            <span className="flex items-center gap-2">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Google Sheets & Excel</span>
+            </span>
+            <span className="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded font-mono font-bold text-emerald-300">AUTO</span>
+          </button>
+          <button
             onClick={handleLogout}
             className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold py-2.5 px-3 rounded-xl transition-all border border-red-500/20 flex items-center gap-2 cursor-pointer"
           >
@@ -2386,6 +2475,15 @@ export default function AdminPage() {
               )}
             </button>
             
+            <button
+              type="button"
+              onClick={() => setIsGoogleSheetsModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-xs font-bold text-emerald-400 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Conectar y sincronizar con Google Sheets"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>⚡ Google Sheets</span>
+            </button>
             <button
               onClick={() => setAdminModule("hub")}
               className="px-3 py-1.5 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-xs font-bold text-orange-400 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
@@ -3135,13 +3233,31 @@ export default function AdminPage() {
                   Comprobantes oficiales de venta de Gordo Ryders con número de guía, desglose de productos y soporte para impresión PDF.
                 </p>
               </div>
-              <button
-                onClick={() => setIsInvoiceModalOpen(true)}
-                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Generar Factura Oficial de Venta</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={exportInvoicesToExcelCSV}
+                  className="px-4 py-2.5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Exportar a Excel Contable</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(true)}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/20"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>⚡ Conectar Google Sheets</span>
+                </button>
+                <button
+                  onClick={() => setIsInvoiceModalOpen(true)}
+                  className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Generar Factura Oficial</span>
+                </button>
+              </div>
             </div>
 
             <div className="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
@@ -3248,6 +3364,22 @@ export default function AdminPage() {
 
                 {/* Acciones Rápidas de Venta y Portales */}
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={exportOrdersToExcelCSV}
+                    className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 font-black text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Exportar Pedidos a Excel</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsGoogleSheetsModalOpen(true)}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>⚡ Google Sheets</span>
+                  </button>
                   <button
                     onClick={() => setIsTakeOrderModalOpen(true)}
                     className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
@@ -3607,6 +3739,14 @@ export default function AdminPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>⚡ Sincronizar Clientes con Google Sheets</span>
+                </button>
                 <button
                   onClick={openNewUserModal}
                   className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-orange-500/20"
@@ -7600,7 +7740,18 @@ export default function AdminPage() {
                     onClick={() => {
                       const script = `function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = null;
+    try {
+      sheet = SpreadsheetApp.getActiveSpreadsheet();
+    } catch(err) {}
+    if (!sheet) {
+      var files = DriveApp.getFilesByName('Gordo Ryders - Contabilidad Oficial');
+      if (files.hasNext()) {
+        sheet = SpreadsheetApp.open(files.next());
+      } else {
+        sheet = SpreadsheetApp.create('Gordo Ryders - Contabilidad Oficial');
+      }
+    }
     var data = JSON.parse(e.postData.contents);
     if (data.invoices) {
       var invSheet = sheet.getSheetByName('Facturas') || sheet.insertSheet('Facturas');
