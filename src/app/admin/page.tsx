@@ -1150,6 +1150,48 @@ export default function AdminPage() {
     document.body.removeChild(link);
   };
 
+  const exportUsersToExcelCSV = () => {
+    const headers = [
+      "ID_Cliente",
+      "Nombre_Completo",
+      "Tipo_Cliente",
+      "Cedula_o_NIT",
+      "Telefono",
+      "Email",
+      "Ciudad",
+      "Direccion",
+      "Pedidos_Realizados",
+      "Total_Comprado_COP",
+      "Estado_Cuenta",
+      "Notas_Internas",
+    ];
+
+    const rows = users.map((u) => [
+      `"${u.id}"`,
+      `"${(u.name || "").replace(/"/g, '""')}"`,
+      `"${(u.type || "detal").toUpperCase()}"`,
+      `"${u.cedulaOrNit || ""}"`,
+      `"${u.phone || ""}"`,
+      `"${u.email || ""}"`,
+      `"${(u.city || "").replace(/"/g, '""')}"`,
+      `"${(u.address || "").replace(/"/g, '""')}"`,
+      u.ordersCount || 0,
+      u.totalSpent || 0,
+      `"${(u.status || "activo").toUpperCase()}"`,
+      `"${(u.notes || "").replace(/"/g, '""')}"`,
+    ].join(";"));
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `GordoRyders_Clientes_CRM_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleSyncToGoogleSheets = async () => {
     if (!googleSheetsUrl.trim()) {
       alert("Por favor ingresa primero la URL de tu Webhook de Google Apps Script.");
@@ -2031,6 +2073,14 @@ export default function AdminPage() {
                 >
                   <Download className="w-3.5 h-3.5 text-orange-400" />
                   <span>Pedidos .CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={exportUsersToExcelCSV}
+                  className="flex-1 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-teal-400" />
+                  <span>Clientes .CSV</span>
                 </button>
               </div>
             </div>
@@ -3741,11 +3791,19 @@ export default function AdminPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsGoogleSheetsModalOpen(true)}
+                  onClick={exportUsersToExcelCSV}
                   className="px-4 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>⚡ Sincronizar Clientes con Google Sheets</span>
+                  <span>Exportar Clientes a Excel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-600/20"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>⚡ Sincronizar con Google Sheets</span>
                 </button>
                 <button
                   onClick={openNewUserModal}

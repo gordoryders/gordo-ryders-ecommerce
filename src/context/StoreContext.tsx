@@ -215,36 +215,7 @@ const DEFAULT_INVOICES: Invoice[] = [
     paymentMethod: "Wompi (Bancolombia)",
     paymentStatus: "pagado",
   },
-  {
-    id: "inv-3",
-    invoiceNumber: "FACT-GR-2026-39810",
-    orderId: "ord-gr-1020",
-    date: "Ayer, 04:30 PM",
-    customerName: "Almacén Motos El Diamante (B2B)",
-    customerNitOrCedula: "900.849.201-4",
-    customerPhone: "3209876543",
-    customerEmail: "compras@motoseldiamante.com",
-    customerCity: "Bucaramanga, Santander",
-    customerAddress: "Carrera 27 # 45-12, Sotomayor",
-    carrier: "Envia",
-    guideNumber: "ENV-4592018",
-    items: [
-      {
-        productName: "Lote Mayorista 24x Cascos ICH 3110 + Guantes",
-        sku: "B2B-LOTE-24",
-        size: "Surtido",
-        quantity: 24,
-        unitPrice: 202083,
-        subtotal: 4850000,
-      },
-    ],
-    subtotal: 4850000,
-    shippingCost: 0,
-    tax: 0,
-    total: 4850000,
-    paymentMethod: "Transferencia Directa",
-    paymentStatus: "pagado",
-  },
+
 ];
 
 const DEFAULT_USERS: CustomerUser[] = [
@@ -269,75 +240,10 @@ const DEFAULT_USERS: CustomerUser[] = [
     notes: "Usuario oficial registrado. Comprador frecuente verificado.",
     recentOrders: ["ord-gr-1024", "ord-gr-1025"],
   },
-  {
-    id: "usr-diamante",
-    name: "Almacén Motos El Diamante (B2B)",
-    email: "compras@motoseldiamante.com",
-    phone: "3209876543",
-    city: "Bucaramanga",
-    department: "Santander",
-    documentType: "NIT",
-    cedulaOrNit: "900.849.201-4",
-    address: "Carrera 27 # 45-12",
-    neighborhood: "Sotomayor",
-    deliveryNotes: "Local comercial frente a estación de servicio.",
-    type: "mayorista",
-    authProvider: "Google Workspace",
-    ordersCount: 8,
-    totalSpent: 4850000,
-    registrationDate: "02 Sep 2026",
-    status: "verificado",
-    notes: "Distribuidor mayorista de Santander. Compra por docenas de impermeables y guantes.",
-    b2bStatus: "aprobado",
-    b2bCode: "GR-B2B-108",
-    businessName: "Almacén Motos El Diamante",
-    b2bNitOrRut: "900.849.201-4",
-    b2bAddressOrSocial: "Carrera 27 # 45-12, Bucaramanga",
-    b2bDiscountTier: 2,
-  },
+
 ];
 
-const DEFAULT_WHOLESALE_INQUIRIES: WholesaleInquiry[] = [
-  {
-    id: "wh-1",
-    businessName: "Motos & Accesorios del Valle",
-    contactName: "Julián Echeverry",
-    nitOrCedula: "900.849.201-4",
-    phone: "3127894561",
-    city: "Cali, Valle",
-    productsInterest: "Guantes Proviker Ref E44 (30 pares) + Impermeables Siliconados (20 unds)",
-    estimatedUnits: 50,
-    date: "Hoy, 09:15 AM",
-    status: "en_negociacion",
-    notes: "Interesado en surtido quincenal. Se envió catálogo y lista de precios B2B.",
-  },
-  {
-    id: "wh-2",
-    businessName: "Taller y Repuestos La 33",
-    contactName: "Rodrigo Montoya",
-    nitOrCedula: "71.382.901",
-    phone: "3186543210",
-    city: "Medellín, Antioquia",
-    productsInterest: "Lote Cascos Abatibles ICH 3110 Doble Visor (12 unds variadas)",
-    estimatedUnits: 12,
-    date: "Ayer, 04:30 PM",
-    status: "catalogo_enviado",
-    notes: "Solicitó fotos de los visores y colores disponibles.",
-  },
-  {
-    id: "wh-3",
-    businessName: "Mundo Motero Caribe",
-    contactName: "Edwin Bernal (Contacto Aliado)",
-    nitOrCedula: "901.442.891-1",
-    phone: "3001122334",
-    city: "Barranquilla, Atlántico",
-    productsInterest: "Protecciones de rodilla y kits impermeables (40 unds)",
-    estimatedUnits: 40,
-    date: "04 Nov 2026",
-    status: "cerrado",
-    notes: "Pedido despachado por Envia y pagado con transferencia Bancolombia.",
-  },
-];
+const DEFAULT_WHOLESALE_INQUIRIES: WholesaleInquiry[] = [];
 
 const DEFAULT_SETTINGS: StoreSettings = {
   whatsappSales: "+57 300 000 0000",
@@ -410,175 +316,10 @@ const DEFAULT_ORDERS: Order[] = [
     paymentStatus: "pagado",
     createdAtTimestamp: Date.now() - 1000 * 60 * 45,
   },
-  {
-    id: "ord-gr-1020",
-    invoiceNumber: "FACT-GR-2026-39810",
-    guideNumber: "ENV-4592018",
-    carrier: "Envia",
-    customerName: "Almacén Motos El Diamante (B2B)",
-    customerEmail: "compras@motoseldiamante.com",
-    customerPhone: "3209876543",
-    customerCedulaOrNit: "900.849.201-4",
-    customerAddress: "Carrera 27 # 45-12, Sotomayor",
-    city: "Bucaramanga, Santander",
-    total: 4850000,
-    itemsCount: 24,
-    status: "entregado",
-    date: "Ayer, 04:30 PM",
-    productsSummary: "Lote Mayorista 24x Cascos ICH 3110 + Guantes",
-    paymentMethod: "Transferencia Directa",
-    paymentStatus: "pagado",
-    createdAtTimestamp: Date.now() - 1000 * 60 * 60 * 55,
-  },
+
 ];
 
-const DEFAULT_SUPPORT_CHATS: SupportChatSession[] = [
-  {
-    id: "chat-carlos-1",
-    customerName: "Carlos Mario Restrepo",
-    customerEmail: "carlos.mario@gmail.com",
-    customerPhone: "3104567890",
-    customerCity: "Medellín, Antioquia",
-    customerType: "detal",
-    status: "needs_human",
-    unreadCountForAdmin: 1,
-    unreadCountForUser: 0,
-    lastMessageText: "Perfecto, pero necesito confirmar si me llega antes del viernes a Medellín. ¿Puedo hablar con alguien?",
-    lastMessageTime: "Hoy, 10:42 AM",
-    createdAt: "Hoy, 10:35 AM",
-    currentProductViewed: "Casco Abatible ICH 3110 Doble Visor Top Speed",
-    messages: [
-      {
-        id: "msg-1-1",
-        sender: "bot",
-        text: "¡Hola Carlos! 🏍️ Bienvenido a Gordo Ryders. ¿En qué te podemos asesorar hoy?",
-        timestamp: "10:35 AM",
-      },
-      {
-        id: "msg-1-2",
-        sender: "user",
-        senderName: "Carlos Mario Restrepo",
-        text: "Buenas tardes, quiero saber si el Casco ICH 3110 en talla L negro mate lo tienen disponible para despacho inmediato a Medellín.",
-        timestamp: "10:36 AM",
-      },
-      {
-        id: "msg-1-3",
-        sender: "bot",
-        text: "¡Sí tenemos disponibilidad! El Casco ICH 3110 cuenta con doble visor solar retráctil y certificación DOT. Tenemos 14 unidades en bodega.",
-        timestamp: "10:37 AM",
-        productCard: {
-          id: "prod-ich-3110",
-          name: "Casco Abatible ICH 3110 Doble Visor Top Speed",
-          price: 249900,
-          price_original: 289900,
-          image_url: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80",
-          slug: "casco-abatible-ich-3110-doble-visor-top-speed",
-          category: "Cascos",
-        },
-      },
-      {
-        id: "msg-1-4",
-        sender: "user",
-        senderName: "Carlos Mario Restrepo",
-        text: "Perfecto, pero necesito confirmar si me llega antes del viernes a Medellín. ¿Puedo hablar con alguien?",
-        timestamp: "10:42 AM",
-      },
-      {
-        id: "msg-1-5",
-        sender: "bot",
-        text: "Entendido Carlos. Estoy transfiriendo tu chat con Edwin de bodega para confirmar el tiempo exacto de entrega con Inter Rapidísimo 🟢 Un momento por favor.",
-        timestamp: "10:42 AM",
-      },
-    ],
-  },
-  {
-    id: "chat-diamante-2",
-    customerName: "Almacén Motos El Diamante (B2B)",
-    customerEmail: "compras@motoseldiamante.com",
-    customerPhone: "3209876543",
-    customerCity: "Bucaramanga, Santander",
-    customerType: "mayorista",
-    status: "agent_replying",
-    unreadCountForAdmin: 0,
-    unreadCountForUser: 0,
-    lastMessageText: "Excelente Edwin, ya te pasamos el comprobante de Bancolombia.",
-    lastMessageTime: "Ayer, 04:30 PM",
-    createdAt: "Ayer, 03:15 PM",
-    currentProductViewed: "Guantes Proviker Ref E44",
-    messages: [
-      {
-        id: "msg-2-1",
-        sender: "user",
-        senderName: "Almacén Motos El Diamante",
-        text: "Hola Edwin, requerimos cotización de 36 pares de Guantes Proviker Ref E44 surtidos M y L con el descuento del 35% de mayorista.",
-        timestamp: "03:15 PM",
-      },
-      {
-        id: "msg-2-2",
-        sender: "agent",
-        senderName: "Edwin Bernal (Gordo Ryders)",
-        text: "Buenas tardes amigos de El Diamante. Confirmado el inventario de las 36 unidades. Les dejo la guía lista para salir por Envía hoy.",
-        timestamp: "03:45 PM",
-      },
-      {
-        id: "msg-2-3",
-        sender: "user",
-        senderName: "Almacén Motos El Diamante",
-        text: "Excelente Edwin, ya te pasamos el comprobante de Bancolombia.",
-        timestamp: "04:30 PM",
-      },
-    ],
-  },
-  {
-    id: "chat-paola-3",
-    customerName: "Paola Andrea Parada",
-    customerEmail: "paola.parada@outlook.com",
-    customerPhone: "3145678901",
-    customerCity: "Bogotá D.C.",
-    customerType: "detal",
-    status: "resolved",
-    unreadCountForAdmin: 0,
-    unreadCountForUser: 0,
-    lastMessageText: "¡Muchas gracias! Ya hice la compra del casco modular.",
-    lastMessageTime: "12 Nov, 11:20 AM",
-    createdAt: "12 Nov, 11:05 AM",
-    messages: [
-      {
-        id: "msg-3-1",
-        sender: "user",
-        senderName: "Paola Andrea Parada",
-        text: "Hola, ¿cómo puedo saber mi talla exacta de casco?",
-        timestamp: "11:05 AM",
-      },
-      {
-        id: "msg-3-2",
-        sender: "bot",
-        text: "📌 Mide el contorno de tu cabeza con una cinta métrica 2 cm por encima de tus cejas:\n• S: 55-56 cm\n• M: 57-58 cm\n• L: 59-60 cm\n• XL: 61-62 cm",
-        timestamp: "11:06 AM",
-      },
-      {
-        id: "msg-3-3",
-        sender: "user",
-        senderName: "Paola Andrea Parada",
-        text: "Me dio 56 cm.",
-        timestamp: "11:10 AM",
-      },
-      {
-        id: "msg-3-4",
-        sender: "bot",
-        text: "Para 56 cm tu talla perfecta en ICH Helmets es S. Recuerda que los primeros 3 días debe sentirse bien ajustado mientras el tapizado cede un 10%.",
-        timestamp: "11:11 AM",
-      },
-      {
-        id: "msg-3-5",
-        sender: "user",
-        senderName: "Paola Andrea Parada",
-        text: "¡Muchas gracias! Ya hice la compra del casco modular.",
-        timestamp: "11:20 AM",
-      },
-    ],
-  },
-];
+const DEFAULT_SUPPORT_CHATS: SupportChatSession[] = [];
 
 interface StoreContextType {
   // Cart
@@ -806,14 +547,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (savedOrders) {
         try {
           const parsedOrders: Order[] = JSON.parse(savedOrders);
-          const hasMichaelOrder = parsedOrders.some((o) => o.customerName === "Michael Tovar" || o.customerEmail === "tobarmichael212@gmail.com");
-          if (!hasMichaelOrder) {
-            const merged = [...DEFAULT_ORDERS, ...parsedOrders.filter(o => o.customerName !== "Carlos Mendoza" && o.customerName !== "Alejandro Gómez")];
-            setOrders(merged);
-            localStorage.setItem("gr_admin_orders", JSON.stringify(merged));
-          } else {
-            setOrders(parsedOrders);
-          }
+          // Purge mock orders
+          const realOrders = parsedOrders.filter(o => 
+            !o.customerName?.includes("Diamante") &&
+            !o.customerEmail?.includes("motoseldiamante") &&
+            o.customerName !== "Carlos Mendoza" &&
+            o.customerName !== "Alejandro Gómez"
+          );
+          const finalOrders = realOrders.length > 0 ? realOrders : DEFAULT_ORDERS;
+          setOrders(finalOrders);
+          localStorage.setItem("gr_admin_orders", JSON.stringify(finalOrders));
         } catch {
           setOrders(DEFAULT_ORDERS);
         }
@@ -825,16 +568,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (savedUsers) {
         try {
           const parsedUsers: CustomerUser[] = JSON.parse(savedUsers);
-          const hasMichael = parsedUsers.some((u) => u.email?.toLowerCase() === "tobarmichael212@gmail.com");
-          if (!hasMichael) {
-            const merged = [DEFAULT_USERS[0], ...parsedUsers.filter(u => u.name !== "Carlos Mario Restrepo" && u.name !== "Paola Andrea Parada")];
-            setUsers(merged);
-            localStorage.setItem("gr_admin_users", JSON.stringify(merged));
-          } else {
-            const cleanUsers = parsedUsers.filter(u => u.name !== "Carlos Mario Restrepo" && u.name !== "Paola Andrea Parada");
-            setUsers(cleanUsers);
-            localStorage.setItem("gr_admin_users", JSON.stringify(cleanUsers));
-          }
+          // Purge any fake users
+          const cleanUsers = parsedUsers.filter(u => 
+            !u.name?.includes("Diamante") &&
+            !u.email?.includes("motoseldiamante") &&
+            u.name !== "Carlos Mario Restrepo" && 
+            u.name !== "Paola Andrea Parada" &&
+            u.name !== "Alejandro Gómez"
+          );
+          const hasMichael = cleanUsers.some((u) => u.email?.toLowerCase() === "tobarmichael212@gmail.com");
+          const finalUsers = hasMichael ? cleanUsers : [DEFAULT_USERS[0], ...cleanUsers];
+          setUsers(finalUsers);
+          localStorage.setItem("gr_admin_users", JSON.stringify(finalUsers));
         } catch {
           setUsers(DEFAULT_USERS);
         }
@@ -843,7 +588,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       const savedWholesale = localStorage.getItem("gr_admin_wholesale");
-      if (savedWholesale) setWholesaleInquiries(JSON.parse(savedWholesale));
+      if (savedWholesale) {
+        try {
+          const parsedW = JSON.parse(savedWholesale);
+          const cleanW = parsedW.filter((w: any) => 
+            !w.businessName?.includes("Valle") && 
+            !w.businessName?.includes("La 33") && 
+            !w.businessName?.includes("Mundo Motero")
+          );
+          setWholesaleInquiries(cleanW);
+          localStorage.setItem("gr_admin_wholesale", JSON.stringify(cleanW));
+        } catch {}
+      }
 
       const savedSettings = localStorage.getItem("gr_admin_settings");
       if (savedSettings) setSettings(JSON.parse(savedSettings));
@@ -852,14 +608,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (savedInvoices) {
         try {
           const parsedInvoices: Invoice[] = JSON.parse(savedInvoices);
-          const hasMichaelInvoice = parsedInvoices.some((inv) => inv.customerName === "Michael Tovar" || inv.customerEmail === "tobarmichael212@gmail.com");
-          if (!hasMichaelInvoice) {
-            const merged = [...DEFAULT_INVOICES, ...parsedInvoices.filter(inv => inv.customerName !== "Carlos Mario Restrepo" && inv.customerName !== "Alejandro Gómez")];
-            setInvoices(merged);
-            localStorage.setItem("gr_admin_invoices", JSON.stringify(merged));
-          } else {
-            setInvoices(parsedInvoices);
-          }
+          const cleanInvoices = parsedInvoices.filter(inv => 
+            !inv.customerName?.includes("Diamante") &&
+            !inv.customerEmail?.includes("motoseldiamante") &&
+            inv.customerName !== "Carlos Mario Restrepo" &&
+            inv.customerName !== "Alejandro Gómez"
+          );
+          const finalInvoices = cleanInvoices.length > 0 ? cleanInvoices : DEFAULT_INVOICES;
+          setInvoices(finalInvoices);
+          localStorage.setItem("gr_admin_invoices", JSON.stringify(finalInvoices));
         } catch {
           setInvoices(DEFAULT_INVOICES);
         }
