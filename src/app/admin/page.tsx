@@ -26,6 +26,8 @@ import {
   Building2,
   FileText,
   Printer,
+  Download,
+  FileSpreadsheet,
   TrendingUp,
   DollarSign,
   AlertTriangle,
@@ -1013,6 +1015,168 @@ export default function AdminPage() {
       ? Math.round(((prodForm.price_original - prodForm.price_retail) / prodForm.price_original) * 100)
       : null;
   const previewCuota = Math.round(prodForm.price_retail / 3);
+
+
+  // --- ACCOUNTING EXPORT TO EXCEL / CSV & GOOGLE SHEETS LIVE SYNC ---
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string>("");
+  const [isGoogleSheetsModalOpen, setIsGoogleSheetsModalOpen] = useState(false);
+  const [isSyncingSheets, setIsSyncingSheets] = useState(false);
+  const [sheetsSyncSuccess, setSheetsSyncSuccess] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedUrl = localStorage.getItem("gr_google_sheets_url");
+      if (savedUrl) setGoogleSheetsUrl(savedUrl);
+    } catch {}
+  }, []);
+
+  const handleSaveInvoicePDF = (inv: Invoice) => {
+    const originalTitle = document.title;
+    document.title = `Factura-Oficial-${inv.invoiceNumber}-${inv.customerName.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
+  const handleSaveComandaPDF = (ord: Order) => {
+    const originalTitle = document.title;
+    document.title = `Comanda-Bodega-${ord.id.toUpperCase()}-${ord.customerName.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
+  const exportInvoicesToExcelCSV = () => {
+    const headers = [
+      "Numero_Factura",
+      "Fecha",
+      "Tipo_Documento",
+      "Cedula_o_NIT",
+      "Nombre_Cliente_Razon_Social",
+      "Telefono",
+      "Email",
+      "Ciudad_Destino",
+      "Direccion",
+      "Concepto_Productos",
+      "Subtotal_COP",
+      "IVA_COP",
+      "Total_Factura_COP",
+      "Metodo_Pago",
+      "Estado_Pago",
+      "Transportadora",
+      "Guia_Nacional",
+    ];
+
+    const rows = invoices.map((inv) => {
+      const prods = (inv.items || []).map((i) => `${i.quantity}x ${i.productName} (${i.size || "U"})`).join(" + ");
+      return [
+        `"${inv.invoiceNumber}"`,
+        `"${inv.date}"`,
+        `"CC"`,
+        `"${inv.customerNitOrCedula?.replace(/\D/g, "") || "222222222222"}"`,
+        `"${(inv.customerName || "").replace(/"/g, '""')}"`,
+        `"${inv.customerPhone || ""}"`,
+        `"${inv.customerEmail || ""}"`,
+        `"${(inv.customerCity || "").replace(/"/g, '""')}"`,
+        `"${(inv.customerAddress || "").replace(/"/g, '""')}"`,
+        `"${(prods || "Productos Gordo Ryders").replace(/"/g, '""')}"`,
+        inv.subtotal || 0,
+        0,
+        inv.total || 0,
+        `"${inv.paymentMethod || "Wompi"}"`,
+        `"PAGADO"`,
+        `"${inv.carrier || "Inter Rapidísimo"}"`,
+        `"${inv.guideNumber || ""}"`,
+      ].join(";");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `GordoRyders_Facturacion_Contable_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportOrdersToExcelCSV = () => {
+    const headers = [
+      "ID_Pedido",
+      "Fecha",
+      "Cliente",
+      "Telefono",
+      "Email",
+      "Cedula_NIT",
+      "Ciudad",
+      "Direccion",
+      "Productos_Comanda",
+      "Total_COP",
+      "Metodo_Pago",
+      "Transportadora",
+      "Numero_Guia",
+      "Estado_Logistico",
+    ];
+
+    const rows = orders.map((ord) => [
+      `"${ord.id.toUpperCase()}"`,
+      `"${ord.date}"`,
+      `"${(ord.customerName || "").replace(/"/g, '""')}"`,
+      `"${ord.customerPhone || ""}"`,
+      `"${ord.customerEmail || ""}"`,
+      `"${ord.customerCedulaOrNit || ""}"`,
+      `"${(ord.city || "").replace(/"/g, '""')}"`,
+      `"${(ord.customerAddress || "").replace(/"/g, '""')}"`,
+      `"${(ord.productsSummary || "").replace(/"/g, '""')}"`,
+      ord.total || 0,
+      `"${ord.paymentMethod || "Wompi"}"`,
+      `"${ord.carrier || "Inter Rapidísimo"}"`,
+      `"${ord.guideNumber || ""}"`,
+      `"${getAutoOrderStatus(ord).toUpperCase()}"`,
+    ].join(";"));
+
+    const csvContent = "\uFEFF" + [headers.join(";"), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `GordoRyders_Control_Pedidos_Logistica_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleSyncToGoogleSheets = async () => {
+    if (!googleSheetsUrl.trim()) {
+      alert("Por favor ingresa primero la URL de tu Webhook de Google Apps Script.");
+      return;
+    }
+    setIsSyncingSheets(true);
+    try {
+      localStorage.setItem("gr_google_sheets_url", googleSheetsUrl.trim());
+      await fetch(googleSheetsUrl.trim(), {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "full_sync",
+          timestamp: new Date().toISOString(),
+          invoices: invoices,
+          orders: orders.map((o) => ({ ...o, status: getAutoOrderStatus(o) })),
+        }),
+      });
+      setIsSyncingSheets(false);
+      setSheetsSyncSuccess(true);
+      setTimeout(() => setSheetsSyncSuccess(false), 5000);
+    } catch (err) {
+      setIsSyncingSheets(false);
+      alert("Error enviando datos a Google Sheets. Revisa la URL del Webhook.");
+    }
+  };
 
   // Serious Functional Analytics Calculations (Memoized for High Performance)
   const totalInventoryValue = useMemo(() => products.reduce((acc, p) => acc + p.price_retail * (p.stock || 0), 0), [products]);
@@ -5499,11 +5663,11 @@ export default function AdminPage() {
                 Cerrar
               </button>
               <button
-                onClick={() => window.print()}
+                type="button" onClick={() => handleSaveInvoicePDF(selectedInvoiceForView)}
                 className="bg-neutral-900 hover:bg-neutral-800 text-white font-black text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow"
               >
-                <Printer className="w-4 h-4 text-orange-400" />
-                <span>Imprimir / Descargar Factura PDF</span>
+                <Download className="w-4 h-4 text-emerald-400" />
+                <span>Guardar Factura en PDF</span>
               </button>
             </div>
 
@@ -6203,11 +6367,12 @@ export default function AdminPage() {
                 Cerrar
               </button>
               <button
-                onClick={() => window.print()}
+                type="button"
+                onClick={() => handleSaveComandaPDF(selectedOrderForKitchenTicket)}
                 className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase flex items-center gap-1.5 shadow-lg shadow-orange-500/20 cursor-pointer"
               >
-                <Printer className="w-4 h-4" />
-                <span>Imprimir Comanda</span>
+                <Download className="w-4 h-4" />
+                <span>Guardar Comanda en PDF</span>
               </button>
             </div>
 
@@ -7353,6 +7518,136 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* =========================================================================
+          MODAL: CONEXIÓN & SINCRONIZACIÓN AUTOMÁTICA CON GOOGLE SHEETS
+          ========================================================================= */}
+      {isGoogleSheetsModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase flex items-center gap-2">
+                    <span>Sincronización en la Nube con Google Sheets</span>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                      AUTOMÁTICO
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">Conecta tu hoja contable de Google para registrar ventas y facturas en tiempo real.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsGoogleSheetsModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Webhook Configuration Box */}
+              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-3">
+                <span className="text-[10px] uppercase font-bold text-orange-400 block tracking-wider">
+                  1. URL del Webhook de tu Google Apps Script
+                </span>
+                <p className="text-neutral-400 leading-relaxed text-[11px]">
+                  Pega la URL de la aplicación web que te da Google Apps Script (terminada en <code className="text-emerald-400 font-mono">/exec</code>). Cada pedido y factura se enviará solo y creará su fila automáticamente.
+                </p>
+                <input
+                  type="url"
+                  value={googleSheetsUrl}
+                  onChange={(e) => setGoogleSheetsUrl(e.target.value)}
+                  placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
+                  className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-emerald-500"
+                />
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-neutral-500 font-mono">
+                    {googleSheetsUrl ? "🟢 URL vinculada y lista para sincronizar" : "⚪ Sin URL vinculada aún"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isSyncingSheets}
+                    onClick={handleSyncToGoogleSheets}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                  >
+                    <span>{isSyncingSheets ? "Enviando filas a Google Sheets..." : "⚡ Sincronizar Todo Ahora"}</span>
+                  </button>
+                </div>
+
+                {sheetsSyncSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold animate-in fade-in">
+                    ✓ ¡Sincronización exitosa! Las facturas y pedidos fueron inyectados en tu Google Sheets en vivo.
+                  </div>
+                )}
+              </div>
+
+              {/* Copy Script Instructions */}
+              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
+                    2. Script de Google Apps Script (Copiar y Pegar en Google Sheets)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const script = `function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+    if (data.invoices) {
+      var invSheet = sheet.getSheetByName('Facturas') || sheet.insertSheet('Facturas');
+      if (invSheet.getLastRow() === 0) {
+        invSheet.appendRow(['N° Factura', 'Fecha', 'Cliente', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'Subtotal', 'Total', 'Método Pago', 'Transportadora', 'Guía']);
+      }
+      data.invoices.forEach(function(inv) {
+        invSheet.appendRow([inv.invoiceNumber, inv.date, inv.customerName, inv.customerNitOrCedula, inv.customerPhone, inv.customerEmail, inv.customerCity, inv.customerAddress, inv.subtotal, inv.total, inv.paymentMethod, inv.carrier, inv.guideNumber]);
+      });
+    }
+    if (data.orders) {
+      var ordSheet = sheet.getSheetByName('Pedidos') || sheet.insertSheet('Pedidos');
+      if (ordSheet.getLastRow() === 0) {
+        ordSheet.appendRow(['ID Pedido', 'Fecha', 'Cliente', 'Teléfono', 'Ciudad', 'Dirección', 'Productos', 'Total', 'Estado', 'Transportadora', 'Guía']);
+      }
+      data.orders.forEach(function(ord) {
+        ordSheet.appendRow([ord.id, ord.date, ord.customerName, ord.customerPhone, ord.city, ord.customerAddress, ord.productsSummary, ord.total, ord.status, ord.carrier, ord.guideNumber]);
+      });
+    }
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+                      navigator.clipboard.writeText(script);
+                      setCopiedScript(true);
+                      setTimeout(() => setCopiedScript(false), 3000);
+                    }}
+                    className="px-3 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-[10px] flex items-center gap-1"
+                  >
+                    <span>{copiedScript ? "✓ ¡Copiado!" : "Copiar Código"}</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-neutral-400">
+                  En tu Google Sheets ve a <strong>Extensiones → Apps Script</strong>, pega el código, haz clic en <strong>Implementar → Nueva implementación → Aplicación Web (Acceso: Cualquier persona)</strong> y pega la URL arriba.
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex justify-end pt-2 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsGoogleSheetsModalOpen(false)}
+                  className="px-5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
