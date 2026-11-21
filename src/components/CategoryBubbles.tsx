@@ -23,7 +23,7 @@ export default function CategoryBubbles() {
     },
     {
       name: "Impermeables",
-      image: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=400&q=80",
+      image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=400&q=80",
       href: "/categoria/impermeables",
       subtitle: "Siliconados",
     },

@@ -615,7 +615,7 @@ export default function AdminPage() {
     buttonLink: "/categoria/impermeables",
     secondaryText: "Pedir por WhatsApp",
     secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
-    bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+    bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
     accentColor: "from-cyan-400 via-blue-500 to-teal-300",
     isActive: true,
   });
@@ -668,7 +668,7 @@ export default function AdminPage() {
       buttonLink: "/categoria/impermeables",
       secondaryText: "Pedir por WhatsApp",
       secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
-      bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+      bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
       accentColor: "from-cyan-400 via-blue-500 to-teal-300",
       isActive: true,
     });
@@ -5737,7 +5737,7 @@ export default function AdminPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80" })}
+                    onClick={() => setBannerForm({ ...bannerForm, bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80" })}
                     className="px-2 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-cyan-400 whitespace-nowrap cursor-pointer"
                   >
                     🌧️ Impermeable Lluvia

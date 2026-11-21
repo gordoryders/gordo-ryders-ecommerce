@@ -120,7 +120,7 @@ const DEFAULT_BANNERS: HeroBanner[] = [
     buttonLink: "/categoria/impermeables",
     secondaryText: "Pedir por WhatsApp",
     secondaryLink: "https://wa.me/573000000000?text=Hola,%20quiero%20pedir%20el%20traje%20impermeable%20siliconado",
-    bgImage: "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=1920&q=80",
+    bgImage: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1920&q=80",
     accentColor: "from-cyan-400 via-blue-500 to-teal-300",
     isActive: true,
   },
@@ -516,7 +516,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedCity = localStorage.getItem("gr_user_city");
       if (savedCity) setUserCity(savedCity);
 
-      const CATALOG_VERSION = "2026_real_ich_v5";
+      const CATALOG_VERSION = "2026_real_ich_v6";
       const savedVersion = localStorage.getItem("gr_catalog_version");
 
       if (savedVersion !== CATALOG_VERSION) {

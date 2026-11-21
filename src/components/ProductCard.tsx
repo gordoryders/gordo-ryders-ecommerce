@@ -37,7 +37,7 @@ export default function ProductCard({ product, onAddToCart, onViewDetail }: Prod
     : product.category_name?.toLowerCase().includes("guante")
     ? "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=600&q=80"
     : product.category_name?.toLowerCase().includes("impermeable")
-    ? "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=600&q=80"
+    ? "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80"
     : product.category_name?.toLowerCase().includes("chaqueta")
     ? "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80"
     : product.category_name?.toLowerCase().includes("protecci")

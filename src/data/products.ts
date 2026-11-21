@@ -617,7 +617,7 @@ export const PRODUCTS: Product[] = [
     reviews_count: 48,
     description: "Cero filtraciones en los peores aguaceros de carretera o ciudad. Confeccionado en tela náutica siliconada con termosellado electrónico en cada costura y entrepierna reforzada sin costura central para máxima durabilidad sobre el sillín de la moto. Bandas reflectivas 3M.",
     images: [
-      "https://images.unsplash.com/photo-1517846695664-44df0e167232?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80",
     ],
     specs: [
       { label: "Tipo de Prenda", value: "Enterizo 100% impermeable termosellado" },
