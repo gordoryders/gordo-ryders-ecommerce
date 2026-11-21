@@ -1032,7 +1032,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const getOrderByGuide = (guide: string): Order | undefined => {
     const clean = guide.trim().toUpperCase();
-    return orders.find((o) => o.guideNumber.toUpperCase() === clean);
+    return orders.find((o) => o.guideNumber.toUpperCase() === clean || o.id.toUpperCase() === clean);
   };
 
   // Users Operations
