@@ -7740,6 +7740,7 @@ export default function AdminPage() {
                     onClick={() => {
                       const script = `function doPost(e) {
   try {
+    var data = JSON.parse(e.postData.contents);
     var sheet = null;
     try {
       sheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -7752,28 +7753,67 @@ export default function AdminPage() {
         sheet = SpreadsheetApp.create('Gordo Ryders - Contabilidad Oficial');
       }
     }
-    var data = JSON.parse(e.postData.contents);
+
+    // Sincronización limpia: limpia datos viejos para reflejar ediciones y eliminaciones de inmediato
+    function syncTab(sheetName, headers, rows) {
+      var s = sheet.getSheetByName(sheetName) || sheet.insertSheet(sheetName);
+      if (s.getLastRow() === 0) {
+        s.appendRow(headers);
+        s.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#fed7aa');
+      } else if (s.getLastRow() > 1) {
+        s.getRange(2, 1, s.getLastRow() - 1, s.getLastColumn()).clearContent();
+      }
+      if (rows && rows.length > 0) {
+        s.getRange(2, 1, rows.length, headers.length).setValues(rows);
+      }
+    }
+
+    // 1. FACTURAS OFICIALES
     if (data.invoices) {
-      var invSheet = sheet.getSheetByName('Facturas') || sheet.insertSheet('Facturas');
-      if (invSheet.getLastRow() === 0) {
-        invSheet.appendRow(['N° Factura', 'Fecha', 'Cliente', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'Subtotal', 'Total', 'Método Pago', 'Transportadora', 'Guía']);
-      }
-      data.invoices.forEach(function(inv) {
-        invSheet.appendRow([inv.invoiceNumber, inv.date, inv.customerName, inv.customerNitOrCedula, inv.customerPhone, inv.customerEmail, inv.customerCity, inv.customerAddress, inv.subtotal, inv.total, inv.paymentMethod, inv.carrier, inv.guideNumber]);
+      var invHeaders = ['N° Factura', 'Fecha', 'Cliente', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'Subtotal', 'Total', 'Método Pago', 'Transportadora', 'Guía'];
+      var invRows = data.invoices.map(function(inv) {
+        return [inv.invoiceNumber || '', inv.date || '', inv.customerName || '', inv.customerNitOrCedula || '', inv.customerPhone || '', inv.customerEmail || '', inv.customerCity || '', inv.customerAddress || '', inv.subtotal || 0, inv.total || 0, inv.paymentMethod || '', inv.carrier || '', inv.guideNumber || ''];
       });
+      syncTab('Facturas Oficiales', invHeaders, invRows);
     }
+
+    // 2. PEDIDOS & LOGÍSTICA
     if (data.orders) {
-      var ordSheet = sheet.getSheetByName('Pedidos') || sheet.insertSheet('Pedidos');
-      if (ordSheet.getLastRow() === 0) {
-        ordSheet.appendRow(['ID Pedido', 'Fecha', 'Cliente', 'Teléfono', 'Ciudad', 'Dirección', 'Productos', 'Total', 'Estado', 'Transportadora', 'Guía']);
-      }
-      data.orders.forEach(function(ord) {
-        ordSheet.appendRow([ord.id, ord.date, ord.customerName, ord.customerPhone, ord.city, ord.customerAddress, ord.productsSummary, ord.total, ord.status, ord.carrier, ord.guideNumber]);
+      var ordHeaders = ['ID Pedido', 'Fecha', 'Cliente', 'Teléfono', 'Cédula/NIT', 'Ciudad', 'Dirección', 'Productos Solicitados', 'Total', 'Estado Logístico', 'Transportadora', 'Guía'];
+      var ordRows = data.orders.map(function(ord) {
+        return [ord.id || '', ord.date || '', ord.customerName || '', ord.customerPhone || '', ord.customerCedulaOrNit || '', ord.city || '', ord.customerAddress || '', ord.productsSummary || '', ord.total || 0, ord.status || '', ord.carrier || '', ord.guideNumber || ''];
       });
+      syncTab('Pedidos & Logística', ordHeaders, ordRows);
     }
-    return ContentService.createTextOutput(JSON.stringify({ status: 'ok' })).setMimeType(ContentService.MimeType.JSON);
+
+    // 3. CLIENTES CRM
+    if (data.users) {
+      var usrHeaders = ['ID Cliente', 'Nombre', 'Tipo', 'Cédula/NIT', 'Teléfono', 'Email', 'Ciudad', 'Dirección', 'N° Pedidos', 'Total Comprado ($COP)', 'Estado', 'Notas'];
+      var usrRows = data.users.map(function(u) {
+        return [u.id || '', u.name || '', u.type || 'detal', u.cedulaOrNit || '', u.phone || '', u.email || '', u.city || '', u.address || '', u.ordersCount || 0, u.totalSpent || 0, u.status || 'activo', u.notes || ''];
+      });
+      syncTab('Clientes CRM', usrHeaders, usrRows);
+    }
+
+    // 4. MAYORISTAS B2B
+    if (data.wholesale) {
+      var whoHeaders = ['Empresa / Almacén', 'Contacto', 'NIT / Cédula', 'Teléfono', 'Ciudad', 'Productos de Interés', 'Unidades Estimadas', 'Estado', 'Notas'];
+      var whoRows = data.wholesale.map(function(w) {
+        return [w.businessName || '', w.contactName || '', w.nitOrCedula || '', w.phone || '', w.city || '', w.productsInterest || '', w.estimatedUnits || 0, w.status || '', w.notes || ''];
+      });
+      syncTab('Mayoristas B2B', whoHeaders, whoRows);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'ok',
+      message: 'Sincronizado con éxito en Gordo Ryders',
+      fileUrl: sheet.getUrl()
+    })).setMimeType(ContentService.MimeType.JSON);
+
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({
+      error: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }`;
                       navigator.clipboard.writeText(script);
