@@ -63,7 +63,7 @@ export default function CheckoutModal({
   }, [currentUser]);
 
   // Payment Selection
-  const [paymentMethod, setPaymentMethod] = useState<"wompi" | "nequi" | "contraentrega">("wompi");
+  const [paymentMethod, setPaymentMethod] = useState<"wompi" | "pse" | "nequi">("wompi");
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [completedInvoice, setCompletedInvoice] = useState<Invoice | null>(null);
@@ -129,10 +129,10 @@ export default function CheckoutModal({
         paymentMethod:
           paymentMethod === "wompi"
             ? "Wompi (Bancolombia)"
-            : paymentMethod === "nequi"
-            ? "PSE / Nequi"
-            : "Contra Entrega Nacional",
-        paymentStatus: paymentMethod === "contraentrega" ? "pendiente" : "pagado",
+            : paymentMethod === "pse"
+            ? "PSE Débito Bancario"
+            : "PSE / Nequi",
+        paymentStatus: "pagado",
         createdAtTimestamp: Date.now(),
       };
 
@@ -165,10 +165,10 @@ export default function CheckoutModal({
         paymentMethod:
           paymentMethod === "wompi"
             ? "Wompi (Bancolombia)"
-            : paymentMethod === "nequi"
-            ? "PSE / Nequi"
-            : "Contra Entrega Nacional",
-        paymentStatus: paymentMethod === "contraentrega" ? "pendiente" : "pagado",
+            : paymentMethod === "pse"
+            ? "PSE Débito Bancario"
+            : "PSE / Nequi",
+        paymentStatus: "pagado",
       };
 
       addOrder(newOrder);
@@ -520,11 +520,11 @@ export default function CheckoutModal({
                     </div>
                   </label>
 
-                  {/* Contra Entrega */}
+                  {/* PSE Débito Bancario */}
                   <label
-                    onClick={() => setPaymentMethod("contraentrega")}
+                    onClick={() => setPaymentMethod("pse")}
                     className={`block p-4 rounded-2xl border cursor-pointer transition-all ${
-                      paymentMethod === "contraentrega"
+                      paymentMethod === "pse"
                         ? "bg-orange-500/10 border-orange-500 ring-2 ring-orange-500/20"
                         : "bg-neutral-950 border-neutral-800 hover:border-neutral-700"
                     }`}
@@ -532,20 +532,20 @@ export default function CheckoutModal({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black">
-                          <Truck className="w-5 h-5" />
+                          <Building2 className="w-5 h-5" />
                         </div>
                         <div>
-                          <span className="text-xs font-black uppercase text-white">Pago Contra Entrega</span>
+                          <span className="text-xs font-black uppercase text-white">PSE Débito Bancario</span>
                           <p className="text-[11px] text-neutral-400">
-                            Pagas en efectivo al mensajero de Inter Rapidísimo cuando llegue a tu casa.
+                            Paga desde Davivienda, Banco de Bogotá, BBVA, Colpatria, Scotiabank o cualquier banco.
                           </p>
                         </div>
                       </div>
                       <input
                         type="radio"
                         name="pay"
-                        checked={paymentMethod === "contraentrega"}
-                        onChange={() => setPaymentMethod("contraentrega")}
+                        checked={paymentMethod === "pse"}
+                        onChange={() => setPaymentMethod("pse")}
                         className="accent-orange-500 w-4 h-4"
                       />
                     </div>

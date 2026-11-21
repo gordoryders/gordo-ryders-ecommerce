@@ -182,8 +182,8 @@ const DEFAULT_INVOICES: Invoice[] = [
     shippingCost: 0,
     tax: 0,
     total: 249900,
-    paymentMethod: "Contra Entrega Nacional",
-    paymentStatus: "pendiente",
+    paymentMethod: "Wompi (Bancolombia)",
+    paymentStatus: "pagado",
   },
   {
     id: "inv-2",
@@ -386,8 +386,8 @@ const DEFAULT_ORDERS: Order[] = [
     status: "en_reparto",
     date: "Hoy, 08:30 AM",
     productsSummary: "1x Casco Abatible ICH 3110 Doble Visor Top Speed (Talla L)",
-    paymentMethod: "Contra Entrega Nacional",
-    paymentStatus: "pendiente",
+    paymentMethod: "Wompi (Bancolombia)",
+    paymentStatus: "pagado",
     createdAtTimestamp: Date.now() - 1000 * 60 * 60 * 28,
   },
   {
@@ -610,7 +610,9 @@ interface StoreContextType {
 
   // Albums (Lookbooks)
   albums: LookbookAlbum[];
+  addAlbum: (album: LookbookAlbum) => void;
   updateAlbum: (album: LookbookAlbum) => void;
+  deleteAlbum: (id: string) => void;
 
   // Orders & Tracking (Admin Synced)
   orders: Order[];
@@ -1065,9 +1067,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   // Albums Lookbook Operations
+  const addAlbum = (newAlbum: LookbookAlbum) => {
+    setAlbums((prev) => {
+      const updated = [newAlbum, ...prev];
+      try {
+        localStorage.setItem("gr_admin_albums", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const updateAlbum = (updatedAlbum: LookbookAlbum) => {
     setAlbums((prev) => {
       const updated = prev.map((a) => (a.id === updatedAlbum.id ? updatedAlbum : a));
+      try {
+        localStorage.setItem("gr_admin_albums", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const deleteAlbum = (id: string) => {
+    setAlbums((prev) => {
+      const updated = prev.filter((a) => a.id !== id);
       try {
         localStorage.setItem("gr_admin_albums", JSON.stringify(updated));
       } catch {}
@@ -1138,8 +1160,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       status: "empacado",
       date: dateStr,
       productsSummary: orderData.productsSummary || "Productos Venta Mostrador",
-      paymentMethod: orderData.paymentMethod || "Contra Entrega Nacional",
-      paymentStatus: orderData.paymentStatus || "pendiente",
+      paymentMethod: orderData.paymentMethod || "Wompi (Bancolombia)",
+      paymentStatus: orderData.paymentStatus || "pagado",
       createdAtTimestamp: Date.now(),
     };
 
@@ -1916,7 +1938,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updateProduct,
         deleteProduct,
         albums,
+        addAlbum,
         updateAlbum,
+        deleteAlbum,
         orders,
         addOrder,
         updateOrder,

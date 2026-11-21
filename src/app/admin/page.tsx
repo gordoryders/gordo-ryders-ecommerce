@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useStore, getAutoOrderStatus } from "@/context/StoreContext";
 import { Product, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
@@ -76,7 +76,9 @@ export default function AdminPage() {
     deleteOrder,
     createManualOrder,
     albums,
+    addAlbum,
     updateAlbum,
+    deleteAlbum,
     users,
     addUser,
     updateUser,
@@ -901,7 +903,7 @@ export default function AdminPage() {
     selectedProductId: string;
     size: string;
     quantity: number;
-    paymentMethod: "Contra Entrega Nacional" | "Wompi (Bancolombia)" | "PSE / Nequi";
+    paymentMethod: "Wompi (Bancolombia)" | "PSE / Nequi" | "Transferencia Directa" | "Efectivo Mostrador";
     carrier: "Inter Rapidísimo" | "Servientrega" | "Envia";
   }>({
     customerName: "Michael Tovar",
@@ -913,7 +915,7 @@ export default function AdminPage() {
     selectedProductId: products[0]?.id || "",
     size: "L",
     quantity: 1,
-    paymentMethod: "Contra Entrega Nacional",
+    paymentMethod: "Wompi (Bancolombia)",
     carrier: "Inter Rapidísimo",
   });
 
@@ -934,7 +936,7 @@ export default function AdminPage() {
       productsSummary: `${manualOrderForm.quantity}x ${prod.name} (Talla ${manualOrderForm.size})`,
       paymentMethod: manualOrderForm.paymentMethod,
       carrier: manualOrderForm.carrier,
-      paymentStatus: manualOrderForm.paymentMethod === "Contra Entrega Nacional" ? "pendiente" : "pagado",
+      paymentStatus: "pagado",
     });
 
     setIsTakeOrderModalOpen(false);
@@ -992,16 +994,18 @@ export default function AdminPage() {
     }).format(amount);
   };
 
-  // Filtered Products
-  const filteredProducts = products.filter((p) => {
-    const matchCat =
-      selectedCategoryFilter === "all" ||
-      p.category_name?.toLowerCase().includes(selectedCategoryFilter.toLowerCase());
-    const matchSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  // Filtered Products (Memoized for High Performance)
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchCat =
+        selectedCategoryFilter === "all" ||
+        p.category_name?.toLowerCase().includes(selectedCategoryFilter.toLowerCase());
+      const matchSearch =
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [products, selectedCategoryFilter, searchQuery]);
 
   // Calculate live preview discount
   const previewDiscount =
@@ -1010,13 +1014,368 @@ export default function AdminPage() {
       : null;
   const previewCuota = Math.round(prodForm.price_retail / 3);
 
-  // Serious Functional Analytics Calculations
-  const totalInventoryValue = products.reduce((acc, p) => acc + p.price_retail * (p.stock || 0), 0);
-  const totalStockUnits = products.reduce((acc, p) => acc + (p.stock || 0), 0);
-  const totalInvoicedSales = invoices.reduce((acc, inv) => acc + inv.total, 0);
-  const averageTicket = invoices.length > 0 ? Math.round(totalInvoicedSales / invoices.length) : 0;
+  // Serious Functional Analytics Calculations (Memoized for High Performance)
+  const totalInventoryValue = useMemo(() => products.reduce((acc, p) => acc + p.price_retail * (p.stock || 0), 0), [products]);
+  const totalStockUnits = useMemo(() => products.reduce((acc, p) => acc + (p.stock || 0), 0), [products]);
+  const totalInvoicedSales = useMemo(() => invoices.reduce((acc, inv) => acc + inv.total, 0), [invoices]);
+  const averageTicket = useMemo(() => invoices.length > 0 ? Math.round(totalInvoicedSales / invoices.length) : 0, [invoices, totalInvoicedSales]);
   const conversionRate = productViews > 0 ? ((whatsappClicks / productViews) * 100).toFixed(1) : "0.0";
-  const lowStockProducts = products.filter((p) => (p.stock || 0) <= 5);
+  const lowStockProducts = useMemo(() => products.filter((p) => (p.stock || 0) <= 5), [products]);
+
+  // --- ORDERS CRUD: EDIT STATE & HANDLERS ---
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [isEditOrderModalOpen, setIsEditOrderModalOpen] = useState(false);
+  const [editOrderForm, setEditOrderForm] = useState<{
+    customerName: string;
+    customerPhone: string;
+    customerEmail: string;
+    customerCedula: string;
+    customerCity: string;
+    customerAddress: string;
+    carrier: "Inter Rapidísimo" | "Servientrega" | "Envia" | "Coordinadora";
+    guideNumber: string;
+    productsSummary: string;
+    total: number;
+    status: "empacado" | "recolectado" | "en_transito" | "en_reparto" | "entregado" | "cancelado";
+  }>({
+    customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    customerCedula: "",
+    customerCity: "",
+    customerAddress: "",
+    carrier: "Inter Rapidísimo",
+    guideNumber: "",
+    productsSummary: "",
+    total: 0,
+    status: "empacado",
+  });
+
+  const openEditOrderModal = (ord: Order) => {
+    setEditingOrder(ord);
+    setEditOrderForm({
+      customerName: ord.customerName,
+      customerPhone: ord.customerPhone,
+      customerEmail: ord.customerEmail || "",
+      customerCedula: ord.customerCedulaOrNit || "",
+      customerCity: ord.city,
+      customerAddress: ord.customerAddress || "",
+      carrier: ord.carrier,
+      guideNumber: ord.guideNumber,
+      productsSummary: ord.productsSummary,
+      total: ord.total,
+      status: ord.status,
+    });
+    setIsEditOrderModalOpen(true);
+  };
+
+  const handleSaveEditOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    const updated: Order = {
+      ...editingOrder,
+      customerName: editOrderForm.customerName.trim(),
+      customerPhone: editOrderForm.customerPhone.trim(),
+      customerEmail: editOrderForm.customerEmail.trim(),
+      customerCedulaOrNit: editOrderForm.customerCedula.trim(),
+      city: editOrderForm.customerCity.trim(),
+      customerAddress: editOrderForm.customerAddress.trim(),
+      carrier: editOrderForm.carrier,
+      guideNumber: editOrderForm.guideNumber.trim().toUpperCase(),
+      productsSummary: editOrderForm.productsSummary.trim(),
+      total: Number(editOrderForm.total),
+      status: editOrderForm.status,
+      isManualStatus: true,
+    };
+    updateOrder(updated);
+    setIsEditOrderModalOpen(false);
+    setEditingOrder(null);
+  };
+
+  // --- INVOICES CRUD: EDIT STATE & HANDLERS ---
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [isEditInvoiceModalOpen, setIsEditInvoiceModalOpen] = useState(false);
+  const [editInvoiceForm, setEditInvoiceForm] = useState<{
+    customerName: string;
+    customerNitOrCedula: string;
+    customerPhone: string;
+    customerEmail: string;
+    customerCity: string;
+    customerAddress: string;
+    carrier: string;
+    guideNumber: string;
+    total: number;
+    paymentMethod: "Wompi (Bancolombia)" | "Mercado Pago" | "PSE / Nequi" | "PSE Débito Bancario" | "Transferencia Directa";
+  }>({
+    customerName: "",
+    customerNitOrCedula: "",
+    customerPhone: "",
+    customerEmail: "",
+    customerCity: "",
+    customerAddress: "",
+    carrier: "Inter Rapidísimo",
+    guideNumber: "",
+    total: 0,
+    paymentMethod: "Wompi (Bancolombia)",
+  });
+
+  const openEditInvoiceModal = (inv: Invoice) => {
+    setEditingInvoice(inv);
+    setEditInvoiceForm({
+      customerName: inv.customerName,
+      customerNitOrCedula: inv.customerNitOrCedula,
+      customerPhone: inv.customerPhone,
+      customerEmail: inv.customerEmail || "",
+      customerCity: inv.customerCity,
+      customerAddress: inv.customerAddress || "",
+      carrier: inv.carrier,
+      guideNumber: inv.guideNumber,
+      total: inv.total,
+      paymentMethod: (inv.paymentMethod as any) || "Wompi (Bancolombia)",
+    });
+    setIsEditInvoiceModalOpen(true);
+  };
+
+  const handleSaveEditInvoice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInvoice) return;
+    const updated: Invoice = {
+      ...editingInvoice,
+      customerName: editInvoiceForm.customerName.trim(),
+      customerNitOrCedula: editInvoiceForm.customerNitOrCedula.trim(),
+      customerPhone: editInvoiceForm.customerPhone.trim(),
+      customerEmail: editInvoiceForm.customerEmail.trim(),
+      customerCity: editInvoiceForm.customerCity.trim(),
+      customerAddress: editInvoiceForm.customerAddress.trim(),
+      carrier: editInvoiceForm.carrier.trim(),
+      guideNumber: editInvoiceForm.guideNumber.trim().toUpperCase(),
+      total: Number(editInvoiceForm.total),
+      subtotal: Number(editInvoiceForm.total),
+      paymentMethod: editInvoiceForm.paymentMethod,
+    };
+    updateInvoice(updated);
+    setIsEditInvoiceModalOpen(false);
+    setEditingInvoice(null);
+  };
+
+  // --- USERS CRUD: ADD & EDIT STATE & HANDLERS ---
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<CustomerUser | null>(null);
+  const [userForm, setUserForm] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    city: string;
+    address: string;
+    cedulaOrNit: string;
+    documentType: "CC" | "CE" | "NIT" | "Pasaporte";
+    type: "detal" | "mayorista";
+    notes: string;
+  }>({
+    name: "",
+    email: "",
+    phone: "",
+    city: "Bogotá D.C., Cundinamarca",
+    address: "",
+    cedulaOrNit: "",
+    documentType: "CC",
+    type: "detal",
+    notes: "",
+  });
+
+  const openNewUserModal = () => {
+    setEditingUser(null);
+    setUserForm({
+      name: "",
+      email: "",
+      phone: "300",
+      city: "Bogotá D.C., Cundinamarca",
+      address: "",
+      cedulaOrNit: "",
+      documentType: "CC",
+      type: "detal",
+      notes: "",
+    });
+    setIsUserModalOpen(true);
+  };
+
+  const openEditUserModal = (usr: CustomerUser) => {
+    setEditingUser(usr);
+    setUserForm({
+      name: usr.name,
+      email: usr.email,
+      phone: usr.phone,
+      city: usr.city,
+      address: usr.address || "",
+      cedulaOrNit: usr.cedulaOrNit || "",
+      documentType: usr.documentType || "CC",
+      type: usr.type,
+      notes: usr.notes || "",
+    });
+    setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingUser) {
+      const updated: CustomerUser = {
+        ...editingUser,
+        name: userForm.name.trim(),
+        email: userForm.email.trim(),
+        phone: userForm.phone.trim(),
+        city: userForm.city.trim(),
+        address: userForm.address.trim(),
+        cedulaOrNit: userForm.cedulaOrNit.trim(),
+        documentType: userForm.documentType,
+        type: userForm.type,
+        notes: userForm.notes.trim(),
+      };
+      updateUser(updated);
+    } else {
+      const newUser: CustomerUser = {
+        id: `usr-${Date.now()}`,
+        name: userForm.name.trim(),
+        email: userForm.email.trim(),
+        phone: userForm.phone.trim(),
+        city: userForm.city.trim(),
+        address: userForm.address.trim(),
+        cedulaOrNit: userForm.cedulaOrNit.trim(),
+        documentType: userForm.documentType,
+        type: userForm.type,
+        ordersCount: 0,
+        totalSpent: 0,
+        registrationDate: "Hoy",
+        status: "activo",
+        notes: userForm.notes.trim(),
+        b2bStatus: userForm.type === "mayorista" ? "aprobado" : "ninguno",
+        b2bCode: userForm.type === "mayorista" ? `GR-B2B-${Math.floor(100 + Math.random() * 900)}` : undefined,
+      };
+      addUser(newUser);
+    }
+    setIsUserModalOpen(false);
+  };
+
+  // --- WHOLESALE CRUD: ADD & EDIT STATE & HANDLERS ---
+  const [isWholesaleModalOpen, setIsWholesaleModalOpen] = useState(false);
+  const [editingWholesale, setEditingWholesale] = useState<WholesaleInquiry | null>(null);
+  const [wholesaleForm, setWholesaleForm] = useState<{
+    businessName: string;
+    contactName: string;
+    nitOrCedula: string;
+    phone: string;
+    city: string;
+    productsInterest: string;
+    estimatedUnits: number;
+    status: "nuevo" | "catalogo_enviado" | "en_negociacion" | "cerrado" | "descartado";
+    notes: string;
+  }>({
+    businessName: "",
+    contactName: "",
+    nitOrCedula: "",
+    phone: "300",
+    city: "Bogotá D.C.",
+    productsInterest: "Lote Cascos ICH 3110 + Guantes Proviker",
+    estimatedUnits: 12,
+    status: "nuevo",
+    notes: "",
+  });
+
+  const openNewWholesaleModal = () => {
+    setEditingWholesale(null);
+    setWholesaleForm({
+      businessName: "",
+      contactName: "",
+      nitOrCedula: "",
+      phone: "300",
+      city: "Bogotá D.C.",
+      productsInterest: "Lote Cascos ICH 3110 + Guantes Proviker",
+      estimatedUnits: 12,
+      status: "nuevo",
+      notes: "",
+    });
+    setIsWholesaleModalOpen(true);
+  };
+
+  const handleSaveWholesale = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingWholesale) {
+      updateWholesaleInquiry({
+        ...editingWholesale,
+        businessName: wholesaleForm.businessName.trim(),
+        contactName: wholesaleForm.contactName.trim(),
+        nitOrCedula: wholesaleForm.nitOrCedula.trim(),
+        phone: wholesaleForm.phone.trim(),
+        city: wholesaleForm.city.trim(),
+        productsInterest: wholesaleForm.productsInterest.trim(),
+        estimatedUnits: Number(wholesaleForm.estimatedUnits),
+        status: wholesaleForm.status,
+        notes: wholesaleForm.notes.trim(),
+      });
+    } else {
+      const newInq: WholesaleInquiry = {
+        id: `wh-${Date.now()}`,
+        businessName: wholesaleForm.businessName.trim(),
+        contactName: wholesaleForm.contactName.trim(),
+        nitOrCedula: wholesaleForm.nitOrCedula.trim(),
+        phone: wholesaleForm.phone.trim(),
+        city: wholesaleForm.city.trim(),
+        productsInterest: wholesaleForm.productsInterest.trim(),
+        estimatedUnits: Number(wholesaleForm.estimatedUnits),
+        date: "Hoy",
+        status: wholesaleForm.status,
+        notes: wholesaleForm.notes.trim(),
+      };
+      addWholesaleInquiry(newInq);
+    }
+    setIsWholesaleModalOpen(false);
+  };
+
+  // --- LOOKBOOKS CRUD: ADD LOOKBOOK STATE & HANDLERS ---
+  const [isNewAlbumModalOpen, setIsNewAlbumModalOpen] = useState(false);
+  const [newAlbumForm, setNewAlbumForm] = useState<{
+    title: string;
+    subtitle: string;
+    tag: string;
+    description: string;
+    coverImage: string;
+    productSlugs: string[];
+  }>({
+    title: "",
+    subtitle: "Equipamiento recomendado",
+    tag: "KIT ESPECIAL",
+    description: "Colección curada de accesorios para moteros.",
+    coverImage: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
+    productSlugs: [],
+  });
+
+  const openNewAlbumModal = () => {
+    setNewAlbumForm({
+      title: "",
+      subtitle: "Equipamiento recomendado",
+      tag: "KIT ESPECIAL",
+      description: "Colección curada de accesorios para moteros.",
+      coverImage: products[0]?.images?.[0] || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80",
+      productSlugs: products.slice(0, 4).map((p) => p.slug),
+    });
+    setIsNewAlbumModalOpen(true);
+  };
+
+  const handleSaveNewAlbum = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newAlb: LookbookAlbum = {
+      id: `alb-${Date.now()}`,
+      title: newAlbumForm.title.trim(),
+      subtitle: newAlbumForm.subtitle.trim(),
+      tag: newAlbumForm.tag.trim(),
+      description: newAlbumForm.description.trim(),
+      coverImage: newAlbumForm.coverImage,
+      category: "Equipamiento",
+      images: [newAlbumForm.coverImage],
+      productSlugs: newAlbumForm.productSlugs,
+    };
+    addAlbum(newAlb);
+    setIsNewAlbumModalOpen(false);
+  };
 
   // Quick Restock handler
   const handleQuickRestock = (productId: string, addQty: number) => {
@@ -2508,11 +2867,20 @@ export default function AdminPage() {
             ========================================================================= */}
         {activeTab === "lookbooks" && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-black uppercase text-white">Lookbooks & Cajas de Equipamiento</h3>
-              <p className="text-xs text-neutral-400">
-                Selecciona productos del stock general para armar cada collage. Cualquier cambio en precio o stock se sincroniza de inmediato.
-              </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">Lookbooks & Cajas de Equipamiento</h3>
+                <p className="text-xs text-neutral-400">
+                  Selecciona productos del stock general para armar cada collage. Cualquier cambio en precio o stock se sincroniza de inmediato.
+                </p>
+              </div>
+              <button
+                onClick={openNewAlbumModal}
+                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Crear Nuevo Lookbook</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2562,13 +2930,24 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="p-4 pt-0">
+                    <div className="p-4 pt-0 flex items-center gap-2">
                       <button
                         onClick={() => openAlbumModal(album)}
-                        className="w-full bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 border border-neutral-700 cursor-pointer"
+                        className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 border border-neutral-700 cursor-pointer"
                       >
                         <Edit3 className="w-3.5 h-3.5 text-orange-400" />
-                        <span>Configurar Productos de este Collage</span>
+                        <span>Configurar</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`¿Eliminar lookbook "${album.title}"?`)) {
+                            deleteAlbum(album.id);
+                          }
+                        }}
+                        className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer"
+                        title="Eliminar Lookbook"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -2648,10 +3027,18 @@ export default function AdminPage() {
                               <span>Ver Factura</span>
                             </button>
                             <button
+                              onClick={() => openEditInvoiceModal(inv)}
+                              className="p-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 transition-colors cursor-pointer"
+                              title="Editar Factura"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                            </button>
+                            <button
                               onClick={() => {
                                 if (confirm(`¿Eliminar factura ${inv.invoiceNumber}?`)) deleteInvoice(inv.id);
                               }}
                               className="p-1.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                              title="Eliminar Factura"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -2925,10 +3312,10 @@ export default function AdminPage() {
                             <p className="text-neutral-200 font-medium">📦 {ord.productsSummary}</p>
                             <div className="flex items-center justify-between pt-1 border-t border-neutral-800/80 text-[11px]">
                               <span className="text-neutral-400">
-                                Pago: <strong>{ord.paymentMethod || "Contra Entrega"}</strong>
+                                Pago: <strong>{ord.paymentMethod || "Wompi / PSE"}</strong>
                               </span>
-                              <span className={ord.paymentStatus === "pagado" ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
-                                {ord.paymentStatus === "pagado" ? "🟢 Pagado" : "🟡 Cobro en puerta"}
+                              <span className="text-emerald-400 font-bold">
+                                🟢 100% Pagado & Verificado
                               </span>
                             </div>
                           </div>
@@ -3003,6 +3390,30 @@ export default function AdminPage() {
                             <span>WhatsApp</span>
                           </a>
                         </div>
+
+                        {/* Admin Action: Edit & Delete */}
+                        <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => openEditOrderModal(ord)}
+                            className="flex-1 py-1.5 px-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 flex items-center justify-center gap-1.5 font-bold transition-all cursor-pointer mr-2"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                            <span>Editar Pedido</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`¿Eliminar definitivamente el pedido ${ord.id.toUpperCase()} de ${ord.customerName}?`)) {
+                                deleteOrder(ord.id);
+                              }
+                            }}
+                            className="p-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer"
+                            title="Eliminar Pedido"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -3029,17 +3440,25 @@ export default function AdminPage() {
                 </p>
               </div>
 
-              {/* Botón rápido a Mayoristas */}
-              <button
-                onClick={() => {
-                  setAdminModule("operations");
-                  setActiveTab("wholesale");
-                }}
-                className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>👑 Ir a Pipeline Mayoristas B2B</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={openNewUserModal}
+                  className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-orange-500/20"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Registrar Nuevo Cliente</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setAdminModule("operations");
+                    setActiveTab("wholesale");
+                  }}
+                  className="px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>👑 Ir a Pipeline Mayoristas B2B</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* Filter Tabs for Customer Types */}
@@ -3171,12 +3590,30 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-neutral-800 flex items-center gap-2">
+                      <div className="pt-3 border-t border-neutral-800 flex items-center gap-1.5">
                         <button
                           onClick={() => setSelectedUserForDetail(usr)}
                           className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs py-2 rounded-xl text-center border border-neutral-700 transition-all cursor-pointer"
                         >
-                          Ver Expediente Completo
+                          Expediente 360°
+                        </button>
+                        <button
+                          onClick={() => openEditUserModal(usr)}
+                          className="p-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 transition-all cursor-pointer"
+                          title="Editar Datos del Cliente"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-orange-400" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`¿Eliminar la cuenta del cliente ${usr.name}?`)) {
+                              deleteUser(usr.id);
+                            }
+                          }}
+                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer"
+                          title="Eliminar Cliente"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                         {isWholesale && (
                           <button
@@ -3212,11 +3649,20 @@ export default function AdminPage() {
             ========================================================================= */}
         {activeTab === "wholesale" && (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-black uppercase text-white">Solicitudes de Mayoristas & Talleres B2B</h3>
-              <p className="text-xs text-neutral-400">
-                Almacenes interesados en comprar por mayor docenas de cascos, impermeables o guantes.
-              </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">Solicitudes de Mayoristas & Talleres B2B</h3>
+                <p className="text-xs text-neutral-400">
+                  Almacenes interesados en comprar por mayor docenas de cascos, impermeables o guantes.
+                </p>
+              </div>
+              <button
+                onClick={openNewWholesaleModal}
+                className="px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-orange-500/20"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Registrar Solicitud Mayorista</span>
+              </button>
             </div>
 
             {/* Registered B2B Distributor Accounts */}
@@ -3336,15 +3782,29 @@ export default function AdminPage() {
                       </select>
                     </div>
 
-                    <a
-                      href={`https://wa.me/57${wh.phone.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all shadow"
-                    >
-                      <MessageSquareText className="w-3.5 h-3.5" />
-                      <span>Atender por WhatsApp</span>
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`https://wa.me/57${wh.phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs py-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all shadow"
+                      >
+                        <MessageSquareText className="w-3.5 h-3.5" />
+                        <span>Atender WhatsApp</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`¿Eliminar la solicitud mayorista de ${wh.businessName}?`)) {
+                            deleteWholesaleInquiry(wh.id);
+                          }
+                        }}
+                        className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-all cursor-pointer"
+                        title="Eliminar Solicitud"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -3787,6 +4247,20 @@ export default function AdminPage() {
                                   🧑‍💼 Edwin
                                 </span>
                               )}
+                              {/* Quick Delete Chat Thread */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`¿Eliminar la conversación con ${chat.customerName}?`)) {
+                                    deleteChatSession(chat.id);
+                                  }
+                                }}
+                                className="p-1 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-red-500/15 transition opacity-80 group-hover:opacity-100"
+                                title="Eliminar conversación"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
                             </div>
                           </div>
                         );
@@ -5243,7 +5717,7 @@ export default function AdminPage() {
                   ) : (
                     <button
                       onClick={() => {
-                        if (confirm(`¿Bloquear / Banear la cuenta de ${selectedUserForDetail.name}? No podrá realizar compras ni pedidos contra entrega.`)) {
+                        if (confirm(`¿Bloquear / Banear la cuenta de ${selectedUserForDetail.name}? No podrá iniciar sesión ni realizar compras en la tienda.`)) {
                           banUser(selectedUserForDetail.id, "Baneado por administración");
                           setSelectedUserForDetail({ ...selectedUserForDetail, status: "bloqueado" });
                         }
@@ -5603,9 +6077,10 @@ export default function AdminPage() {
                       onChange={(e) => setManualOrderForm({ ...manualOrderForm, paymentMethod: e.target.value as any })}
                       className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
                     >
-                      <option value="Contra Entrega Nacional">Contra Entrega (Cobro en puerta)</option>
-                      <option value="Wompi (Bancolombia)">Wompi / Tarjeta / PSE</option>
-                      <option value="PSE / Nequi">Nequi / Bancolombia QR</option>
+                      <option value="Wompi (Bancolombia)">Wompi (Bancolombia / Tarjeta Crédito & Débito)</option>
+                      <option value="PSE / Nequi">PSE Débito Bancario / Nequi</option>
+                      <option value="Transferencia Directa">Transferencia Directa Bancolombia / Daviplata</option>
+                      <option value="Efectivo Mostrador">Efectivo Mostrador (Caja Física)</option>
                     </select>
                   </div>
                   <div>
@@ -5713,8 +6188,8 @@ export default function AdminPage() {
                 <p className="text-base font-black text-emerald-400 font-mono">
                   {formatCOP(selectedOrderForKitchenTicket.total)}
                 </p>
-                <span className="text-xs font-bold text-amber-300 block">
-                  {selectedOrderForKitchenTicket.paymentMethod || "Contra Entrega Nacional"}
+                <span className="text-xs font-bold text-emerald-300 block">
+                  🟢 100% Pagado ({selectedOrderForKitchenTicket.paymentMethod || "Wompi / PSE"})
                 </span>
               </div>
             </div>
@@ -6128,6 +6603,753 @@ export default function AdminPage() {
                   className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase"
                 >
                   {editingCombo ? "Actualizar Combo" : "Guardar Combo"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* =========================================================================
+          MODAL: EDITAR PEDIDO & DESPACHO
+          ========================================================================= */}
+      {isEditOrderModalOpen && editingOrder && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">Editar Pedido {editingOrder.id.toUpperCase()}</h3>
+                  <p className="text-[11px] text-neutral-400">Modifica datos de entrega, transportadora o estado del pedido.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsEditOrderModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditOrder} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Nombre Cliente</label>
+                  <input
+                    type="text"
+                    required
+                    value={editOrderForm.customerName}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerName: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Teléfono / WhatsApp</label>
+                  <input
+                    type="text"
+                    required
+                    value={editOrderForm.customerPhone}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerPhone: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editOrderForm.customerEmail}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerEmail: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Cédula o NIT</label>
+                  <input
+                    type="text"
+                    value={editOrderForm.customerCedula}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerCedula: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Ciudad Destino</label>
+                  <input
+                    type="text"
+                    required
+                    value={editOrderForm.customerCity}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerCity: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Dirección Completa</label>
+                  <input
+                    type="text"
+                    value={editOrderForm.customerAddress}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, customerAddress: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Transportadora</label>
+                  <select
+                    value={editOrderForm.carrier}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, carrier: e.target.value as any })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    <option value="Inter Rapidísimo">Inter Rapidísimo</option>
+                    <option value="Servientrega">Servientrega</option>
+                    <option value="Envia">Envía</option>
+                    <option value="Coordinadora">Coordinadora</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Número de Guía</label>
+                  <input
+                    type="text"
+                    required
+                    value={editOrderForm.guideNumber}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, guideNumber: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold uppercase"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Total del Pedido (COP)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editOrderForm.total}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, total: Number(e.target.value) })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Estado de la Entrega</label>
+                  <select
+                    value={editOrderForm.status}
+                    onChange={(e) => setEditOrderForm({ ...editOrderForm, status: e.target.value as any })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    <option value="empacado">1. Comanda en Bodega (Alistamiento)</option>
+                    <option value="recolectado">2. Recolectado por transportadora</option>
+                    <option value="en_transito">3. En tránsito intermunicipal</option>
+                    <option value="en_reparto">4. En reparto local (Móvil)</option>
+                    <option value="entregado">5. ¡Entregado a satisfacción!</option>
+                    <option value="cancelado">Cancelado / Anulado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Resumen de Productos (Comanda)</label>
+                <input
+                  type="text"
+                  required
+                  value={editOrderForm.productsSummary}
+                  onChange={(e) => setEditOrderForm({ ...editOrderForm, productsSummary: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOrderModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black uppercase shadow-lg shadow-orange-500/20"
+                >
+                  Guardar Cambios del Pedido
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: EDITAR FACTURA OFICIAL
+          ========================================================================= */}
+      {isEditInvoiceModalOpen && editingInvoice && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">Editar Factura {editingInvoice.invoiceNumber}</h3>
+                  <p className="text-[11px] text-neutral-400">Actualiza los datos tributarios y de despacho de este comprobante.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsEditInvoiceModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditInvoice} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Nombre o Razón Social</label>
+                  <input
+                    type="text"
+                    required
+                    value={editInvoiceForm.customerName}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerName: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Cédula o NIT</label>
+                  <input
+                    type="text"
+                    required
+                    value={editInvoiceForm.customerNitOrCedula}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerNitOrCedula: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.customerPhone}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerPhone: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editInvoiceForm.customerEmail}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerEmail: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Ciudad</label>
+                  <input
+                    type="text"
+                    required
+                    value={editInvoiceForm.customerCity}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerCity: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.customerAddress}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, customerAddress: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Transportadora</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.carrier}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, carrier: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Guía</label>
+                  <input
+                    type="text"
+                    value={editInvoiceForm.guideNumber}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, guideNumber: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold uppercase"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Total Factura (COP)</label>
+                  <input
+                    type="number"
+                    required
+                    value={editInvoiceForm.total}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, total: Number(e.target.value) })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Método de Pago</label>
+                  <select
+                    value={editInvoiceForm.paymentMethod}
+                    onChange={(e) => setEditInvoiceForm({ ...editInvoiceForm, paymentMethod: e.target.value as any })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    <option value="Wompi (Bancolombia)">Wompi (Bancolombia)</option>
+                    <option value="PSE / Nequi">PSE / Nequi</option>
+                    <option value="PSE Débito Bancario">PSE Débito Bancario</option>
+                    <option value="Transferencia Directa">Transferencia Directa</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsEditInvoiceModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-black uppercase shadow-lg shadow-emerald-500/20"
+                >
+                  Actualizar Factura
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: REGISTRAR / EDITAR CLIENTE (CRM 360°)
+          ========================================================================= */}
+      {isUserModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">
+                    {editingUser ? `Editar Cliente: ${editingUser.name}` : "Registrar Nuevo Cliente"}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">Expediente de cliente para facturación, despachos y compras.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsUserModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUser} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Nombre Completo</label>
+                  <input
+                    type="text"
+                    required
+                    value={userForm.name}
+                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">WhatsApp / Teléfono</label>
+                  <input
+                    type="text"
+                    required
+                    value={userForm.phone}
+                    onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Correo Electrónico</label>
+                <input
+                  type="email"
+                  required
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Tipo de Documento</label>
+                  <select
+                    value={userForm.documentType}
+                    onChange={(e) => setUserForm({ ...userForm, documentType: e.target.value as any })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    <option value="CC">Cédula de Ciudadanía (CC)</option>
+                    <option value="NIT">NIT Persona Jurídica</option>
+                    <option value="CE">Cédula de Extranjería (CE)</option>
+                    <option value="Pasaporte">Pasaporte</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Número de Documento</label>
+                  <input
+                    type="text"
+                    value={userForm.cedulaOrNit}
+                    onChange={(e) => setUserForm({ ...userForm, cedulaOrNit: e.target.value })}
+                    placeholder="Ej: 1.020.849.201"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Ciudad y Departamento</label>
+                  <input
+                    type="text"
+                    required
+                    value={userForm.city}
+                    onChange={(e) => setUserForm({ ...userForm, city: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Tipo de Cliente</label>
+                  <select
+                    value={userForm.type}
+                    onChange={(e) => setUserForm({ ...userForm, type: e.target.value as any })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    <option value="detal">Cliente al Detal</option>
+                    <option value="mayorista">👑 Distribuidor Mayorista B2B</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Dirección de Entrega</label>
+                <input
+                  type="text"
+                  value={userForm.address}
+                  onChange={(e) => setUserForm({ ...userForm, address: e.target.value })}
+                  placeholder="Calle / Carrera / Barrio"
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Notas Internas de Administración</label>
+                <textarea
+                  rows={2}
+                  value={userForm.notes}
+                  onChange={(e) => setUserForm({ ...userForm, notes: e.target.value })}
+                  placeholder="Observaciones sobre compras, preferencias o acuerdos comerciales..."
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl p-3 text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsUserModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black uppercase shadow-lg shadow-orange-500/20"
+                >
+                  {editingUser ? "Guardar Cambios" : "Crear Cliente"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: REGISTRAR / EDITAR SOLICITUD MAYORISTA B2B
+          ========================================================================= */}
+      {isWholesaleModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">
+                    {editingWholesale ? `Editar Cotización: ${editingWholesale.businessName}` : "Registrar Solicitud Mayorista B2B"}
+                  </h3>
+                  <p className="text-[11px] text-neutral-400">Ingresa cotizaciones de almacenes y talleres moteros de Colombia.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsWholesaleModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveWholesale} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Razón Social / Almacén</label>
+                  <input
+                    type="text"
+                    required
+                    value={wholesaleForm.businessName}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, businessName: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Contacto Comercial</label>
+                  <input
+                    type="text"
+                    required
+                    value={wholesaleForm.contactName}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, contactName: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">NIT / Cédula</label>
+                  <input
+                    type="text"
+                    required
+                    value={wholesaleForm.nitOrCedula}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, nitOrCedula: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">WhatsApp / Teléfono</label>
+                  <input
+                    type="text"
+                    required
+                    value={wholesaleForm.phone}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, phone: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Ciudad Destino</label>
+                  <input
+                    type="text"
+                    required
+                    value={wholesaleForm.city}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, city: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Unidades Estimadas</label>
+                  <input
+                    type="number"
+                    min={6}
+                    required
+                    value={wholesaleForm.estimatedUnits}
+                    onChange={(e) => setWholesaleForm({ ...wholesaleForm, estimatedUnits: Number(e.target.value) })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Productos de Interés</label>
+                <input
+                  type="text"
+                  required
+                  value={wholesaleForm.productsInterest}
+                  onChange={(e) => setWholesaleForm({ ...wholesaleForm, productsInterest: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Estado de la Cotización</label>
+                <select
+                  value={wholesaleForm.status}
+                  onChange={(e) => setWholesaleForm({ ...wholesaleForm, status: e.target.value as any })}
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                >
+                  <option value="nuevo">1. Nueva Solicitud</option>
+                  <option value="catalogo_enviado">2. Catálogo PDF Enviado</option>
+                  <option value="en_negociacion">3. En Negociación</option>
+                  <option value="cerrado">4. Pago Confirmado / Cerrado</option>
+                  <option value="descartado">5. Descartado</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsWholesaleModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black uppercase shadow-lg shadow-amber-500/20"
+                >
+                  {editingWholesale ? "Guardar Cambios" : "Registrar Cotización"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CREAR NUEVO LOOKBOOK
+          ========================================================================= */}
+      {isNewAlbumModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-xs">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-black">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">Crear Nuevo Lookbook / Caja</h3>
+                  <p className="text-[11px] text-neutral-400">Colección de productos recomendados para la vitrina principal.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsNewAlbumModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewAlbum} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Título del Lookbook</label>
+                  <input
+                    type="text"
+                    required
+                    value={newAlbumForm.title}
+                    onChange={(e) => setNewAlbumForm({ ...newAlbumForm, title: e.target.value })}
+                    placeholder="Ej: KIT RUTERO TOURING"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Subtítulo</label>
+                  <input
+                    type="text"
+                    value={newAlbumForm.subtitle}
+                    onChange={(e) => setNewAlbumForm({ ...newAlbumForm, subtitle: e.target.value })}
+                    placeholder="Ej: Para viajes largos"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Etiqueta</label>
+                  <input
+                    type="text"
+                    value={newAlbumForm.tag}
+                    onChange={(e) => setNewAlbumForm({ ...newAlbumForm, tag: e.target.value })}
+                    placeholder="Ej: NOVEDAD 2026"
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white uppercase font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-neutral-400 font-bold mb-1">Imagen de Portada (URL)</label>
+                  <input
+                    type="text"
+                    required
+                    value={newAlbumForm.coverImage}
+                    onChange={(e) => setNewAlbumForm({ ...newAlbumForm, coverImage: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Descripción</label>
+                <textarea
+                  rows={2}
+                  value={newAlbumForm.description}
+                  onChange={(e) => setNewAlbumForm({ ...newAlbumForm, description: e.target.value })}
+                  placeholder="Descripción de este kit o colección..."
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl p-3 text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-neutral-400 font-bold mb-1">Productos del Catálogo para este Lookbook</label>
+                <div className="max-h-40 overflow-y-auto space-y-1.5 p-3 rounded-xl bg-neutral-950 border border-neutral-800">
+                  {products.map((p) => {
+                    const isChecked = newAlbumForm.productSlugs.includes(p.slug);
+                    return (
+                      <label key={p.id} className="flex items-center gap-2 cursor-pointer hover:bg-neutral-900 p-1.5 rounded-lg">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            setNewAlbumForm((prev) => ({
+                              ...prev,
+                              productSlugs: isChecked
+                                ? prev.productSlugs.filter((s) => s !== p.slug)
+                                : [...prev.productSlugs, p.slug],
+                            }));
+                          }}
+                          className="w-4 h-4 accent-orange-500 rounded"
+                        />
+                        <span className="text-white font-medium">{p.name}</span>
+                        <span className="text-neutral-500 text-[10px] ml-auto font-mono">{formatCOP(p.price_retail)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsNewAlbumModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black uppercase shadow-lg shadow-orange-500/20"
+                >
+                  Crear Lookbook
                 </button>
               </div>
             </form>

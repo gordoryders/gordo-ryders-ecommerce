@@ -151,7 +151,7 @@ export interface Invoice {
   shippingCost: number;
   tax: number;
   total: number;
-  paymentMethod: "Wompi (Bancolombia)" | "Mercado Pago" | "PSE / Nequi" | "Transferencia Directa" | "Contra Entrega Nacional";
+  paymentMethod: "Wompi (Bancolombia)" | "Mercado Pago" | "PSE / Nequi" | "PSE Débito Bancario" | "Transferencia Directa";
   paymentStatus: "pagado" | "pendiente" | "anulado";
 }
 
