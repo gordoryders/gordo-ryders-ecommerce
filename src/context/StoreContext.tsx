@@ -157,47 +157,17 @@ const DEFAULT_BANNERS: HeroBanner[] = [
 const DEFAULT_INVOICES: Invoice[] = [
   {
     id: "inv-1",
-    invoiceNumber: "FACT-GR-2026-00124",
-    orderId: "ord-1",
-    date: "08 Nov 2026, 09:30 AM",
-    customerName: "Carlos Mario Restrepo",
-    customerNitOrCedula: "1.037.492.180",
-    customerPhone: "3104567890",
-    customerEmail: "carlos.mario@gmail.com",
-    customerCity: "Medellín, Antioquia",
-    customerAddress: "Calle 10 # 43E-20, El Poblado",
+    invoiceNumber: "FACT-GR-2026-40291",
+    orderId: "ord-gr-1024",
+    date: "Hoy, 08:30 AM",
+    customerName: "Michael Tovar",
+    customerNitOrCedula: "1.020.849.201",
+    customerPhone: "3161492880",
+    customerEmail: "tobarmichael212@gmail.com",
+    customerCity: "Bogotá D.C., Cundinamarca",
+    customerAddress: "Carrera 7 # 72-41, Chapinero",
     carrier: "Inter Rapidísimo",
-    guideNumber: "INT-7009482",
-    items: [
-      {
-        productName: "Guantes Urbanos Proviker Ref E44",
-        sku: "G-PROV-E44",
-        size: "L",
-        quantity: 2,
-        unitPrice: 85000,
-        subtotal: 170000,
-      },
-    ],
-    subtotal: 170000,
-    shippingCost: 0,
-    tax: 0,
-    total: 170000,
-    paymentMethod: "Wompi (Bancolombia)",
-    paymentStatus: "pagado",
-  },
-  {
-    id: "inv-2",
-    invoiceNumber: "FACT-GR-2026-00125",
-    orderId: "ord-2",
-    date: "07 Nov 2026, 03:15 PM",
-    customerName: "Alejandro Gómez",
-    customerNitOrCedula: "14.892.301",
-    customerPhone: "3158901234",
-    customerEmail: "alejandro.gomez@gmail.com",
-    customerCity: "Cali, Valle",
-    customerAddress: "Avenida 6N # 24-18, Granada",
-    carrier: "Servientrega",
-    guideNumber: "SER-8849201",
+    guideNumber: "INT-7029410",
     items: [
       {
         productName: "Casco Abatible ICH 3110 Doble Visor Top Speed DOT",
@@ -212,36 +182,66 @@ const DEFAULT_INVOICES: Invoice[] = [
     shippingCost: 0,
     tax: 0,
     total: 249900,
-    paymentMethod: "PSE / Nequi",
+    paymentMethod: "Contra Entrega Nacional",
+    paymentStatus: "pendiente",
+  },
+  {
+    id: "inv-2",
+    invoiceNumber: "FACT-GR-2026-40292",
+    orderId: "ord-gr-1025",
+    date: "Hoy, 10:45 AM",
+    customerName: "Michael Tovar",
+    customerNitOrCedula: "1.020.849.201",
+    customerPhone: "3161492880",
+    customerEmail: "tobarmichael212@gmail.com",
+    customerCity: "Bogotá D.C., Cundinamarca",
+    customerAddress: "Carrera 7 # 72-41, Chapinero",
+    carrier: "Inter Rapidísimo",
+    guideNumber: "INT-7491028",
+    items: [
+      {
+        productName: "Guantes Urbanos Proviker Ref E44",
+        sku: "G-PROV-E44",
+        size: "M",
+        quantity: 2,
+        unitPrice: 85000,
+        subtotal: 170000,
+      },
+    ],
+    subtotal: 170000,
+    shippingCost: 0,
+    tax: 0,
+    total: 170000,
+    paymentMethod: "Wompi (Bancolombia)",
     paymentStatus: "pagado",
   },
   {
     id: "inv-3",
-    invoiceNumber: "FACT-GR-2026-00126",
-    orderId: "ord-3",
-    date: "08 Nov 2026, 10:45 AM",
+    invoiceNumber: "FACT-GR-2026-39810",
+    orderId: "ord-gr-1020",
+    date: "Ayer, 04:30 PM",
     customerName: "Almacén Motos El Diamante (B2B)",
     customerNitOrCedula: "900.849.201-4",
     customerPhone: "3209876543",
     customerEmail: "compras@motoseldiamante.com",
-    customerCity: "Barranquilla, Atlántico",
-    customerAddress: "Calle 30 # 41-15, Centro",
+    customerCity: "Bucaramanga, Santander",
+    customerAddress: "Carrera 27 # 45-12, Sotomayor",
     carrier: "Envia",
     guideNumber: "ENV-4592018",
     items: [
       {
-        productName: "Lote Mayorista 12x Guantes Proviker Ref E44",
-        sku: "G-PROV-E44-B2B",
+        productName: "Lote Mayorista 24x Cascos ICH 3110 + Guantes",
+        sku: "B2B-LOTE-24",
         size: "Surtido",
-        quantity: 12,
-        unitPrice: 55000,
-        subtotal: 660000,
+        quantity: 24,
+        unitPrice: 202083,
+        subtotal: 4850000,
       },
     ],
-    subtotal: 660000,
+    subtotal: 4850000,
     shippingCost: 0,
     tax: 0,
-    total: 660000,
+    total: 4850000,
     paymentMethod: "Transferencia Directa",
     paymentStatus: "pagado",
   },
@@ -249,27 +249,28 @@ const DEFAULT_INVOICES: Invoice[] = [
 
 const DEFAULT_USERS: CustomerUser[] = [
   {
-    id: "usr-1",
-    name: "Carlos Mario Restrepo",
-    email: "carlos.mario@gmail.com",
-    phone: "3104567890",
-    city: "Medellín",
-    department: "Antioquia",
+    id: "usr-michael",
+    name: "Michael Tovar",
+    email: "tobarmichael212@gmail.com",
+    phone: "3161492880",
+    city: "Bogotá D.C.",
+    department: "Cundinamarca",
     documentType: "CC",
-    cedulaOrNit: "1.037.492.180",
-    address: "Calle 10 # 43E-20",
-    neighborhood: "El Poblado",
-    deliveryNotes: "Edificio Castropol, Apto 402. Dejar en portería.",
+    cedulaOrNit: "1.020.849.201",
+    address: "Carrera 7 # 72-41",
+    neighborhood: "Chapinero",
+    deliveryNotes: "Edificio Torre Central, Apto 502 (Dejar en portería)",
     type: "detal",
     authProvider: "Google Workspace",
-    ordersCount: 3,
-    totalSpent: 649700,
-    registrationDate: "15 Oct 2026",
-    status: "verificado",
-    notes: "Cliente recurrente de cascos Shaft y guantes Proviker.",
+    ordersCount: 2,
+    totalSpent: 419900,
+    registrationDate: "Hoy",
+    status: "activo",
+    notes: "Usuario oficial registrado. Comprador frecuente verificado.",
+    recentOrders: ["ord-gr-1024", "ord-gr-1025"],
   },
   {
-    id: "usr-2",
+    id: "usr-diamante",
     name: "Almacén Motos El Diamante (B2B)",
     email: "compras@motoseldiamante.com",
     phone: "3209876543",
@@ -293,26 +294,6 @@ const DEFAULT_USERS: CustomerUser[] = [
     b2bNitOrRut: "900.849.201-4",
     b2bAddressOrSocial: "Carrera 27 # 45-12, Bucaramanga",
     b2bDiscountTier: 2,
-  },
-  {
-    id: "usr-3",
-    name: "Paola Andrea Parada",
-    email: "paola.parada@outlook.com",
-    phone: "3145678901",
-    city: "Bogotá D.C.",
-    department: "Cundinamarca",
-    documentType: "CC",
-    cedulaOrNit: "52.849.201",
-    address: "Carrera 15 # 118-45",
-    neighborhood: "Unicentro",
-    deliveryNotes: "Casa de dos pisos reja blanca.",
-    type: "detal",
-    authProvider: "Google Workspace",
-    ordersCount: 1,
-    totalSpent: 249900,
-    registrationDate: "Ayer",
-    status: "activo",
-    notes: "Compró Casco Abatible ICH 3110 Doble Visor Top Speed para despacho en Bogotá.",
   },
 ];
 
@@ -373,45 +354,81 @@ const DEFAULT_SETTINGS: StoreSettings = {
   mapsUrl: "https://maps.google.com/?q=Bogota+Gordo+Ryders",
 };
 
+export function getAutoOrderStatus(order: Order): "empacado" | "recolectado" | "en_transito" | "en_reparto" | "entregado" | "cancelado" {
+  if (order.status === "cancelado") return "cancelado";
+  if (order.isManualStatus) return order.status;
+
+  const now = Date.now();
+  const created = order.createdAtTimestamp || (now - 1000 * 60 * 60 * 6);
+  const elapsedHours = (now - created) / (1000 * 60 * 60);
+
+  if (elapsedHours < 2) return "empacado";
+  if (elapsedHours < 8) return "recolectado";
+  if (elapsedHours < 24) return "en_transito";
+  if (elapsedHours < 48) return "en_reparto";
+  return "entregado";
+}
+
 const DEFAULT_ORDERS: Order[] = [
   {
-    id: "ord-1",
-    guideNumber: "INT-7009482",
+    id: "ord-gr-1024",
+    invoiceNumber: "FACT-GR-2026-40291",
+    guideNumber: "INT-7029410",
     carrier: "Inter Rapidísimo",
-    customerName: "Carlos Mendoza",
-    customerPhone: "3104567890",
-    city: "Medellín, Antioquia",
-    total: 170000,
-    itemsCount: 2,
+    customerName: "Michael Tovar",
+    customerEmail: "tobarmichael212@gmail.com",
+    customerPhone: "3161492880",
+    customerCedulaOrNit: "1.020.849.201",
+    customerAddress: "Carrera 7 # 72-41 - Chapinero",
+    city: "Bogotá D.C., Cundinamarca",
+    total: 249900,
+    itemsCount: 1,
     status: "en_reparto",
     date: "Hoy, 08:30 AM",
-    productsSummary: "2x Guantes Proviker Ref E44 (Talla L)",
+    productsSummary: "1x Casco Abatible ICH 3110 Doble Visor Top Speed (Talla L)",
+    paymentMethod: "Contra Entrega Nacional",
+    paymentStatus: "pendiente",
+    createdAtTimestamp: Date.now() - 1000 * 60 * 60 * 28,
   },
   {
-    id: "ord-2",
-    guideNumber: "SER-8849201",
-    carrier: "Servientrega",
-    customerName: "Alejandro Gómez",
-    customerPhone: "3158901234",
-    city: "Cali, Valle",
-    total: 289900,
-    itemsCount: 1,
-    status: "en_transito",
-    date: "Ayer, 03:15 PM",
-    productsSummary: "1x Casco Shaft Pro 582 ECE 22.06 (Talla M)",
-  },
-  {
-    id: "ord-3",
-    guideNumber: "ENV-4592018",
-    carrier: "Envia",
-    customerName: "Taller Motos El Poblado (B2B)",
-    customerPhone: "3209876543",
-    city: "Barranquilla, Atlántico",
-    total: 660000,
-    itemsCount: 12,
+    id: "ord-gr-1025",
+    invoiceNumber: "FACT-GR-2026-40292",
+    guideNumber: "INT-7491028",
+    carrier: "Inter Rapidísimo",
+    customerName: "Michael Tovar",
+    customerEmail: "tobarmichael212@gmail.com",
+    customerPhone: "3161492880",
+    customerCedulaOrNit: "1.020.849.201",
+    customerAddress: "Carrera 7 # 72-41 - Chapinero",
+    city: "Bogotá D.C., Cundinamarca",
+    total: 170000,
+    itemsCount: 2,
     status: "empacado",
     date: "Hoy, 10:45 AM",
-    productsSummary: "Lote Mayorista 12x Guantes Proviker Ref E44",
+    productsSummary: "2x Guantes Urbanos Proviker Ref E44 (Talla M)",
+    paymentMethod: "Wompi (Bancolombia)",
+    paymentStatus: "pagado",
+    createdAtTimestamp: Date.now() - 1000 * 60 * 45,
+  },
+  {
+    id: "ord-gr-1020",
+    invoiceNumber: "FACT-GR-2026-39810",
+    guideNumber: "ENV-4592018",
+    carrier: "Envia",
+    customerName: "Almacén Motos El Diamante (B2B)",
+    customerEmail: "compras@motoseldiamante.com",
+    customerPhone: "3209876543",
+    customerCedulaOrNit: "900.849.201-4",
+    customerAddress: "Carrera 27 # 45-12, Sotomayor",
+    city: "Bucaramanga, Santander",
+    total: 4850000,
+    itemsCount: 24,
+    status: "entregado",
+    date: "Ayer, 04:30 PM",
+    productsSummary: "Lote Mayorista 24x Cascos ICH 3110 + Guantes",
+    paymentMethod: "Transferencia Directa",
+    paymentStatus: "pagado",
+    createdAtTimestamp: Date.now() - 1000 * 60 * 60 * 55,
   },
 ];
 
@@ -601,12 +618,15 @@ interface StoreContextType {
   updateOrder: (order: Order) => void;
   deleteOrder: (id: string) => void;
   getOrderByGuide: (guide: string) => Order | undefined;
+  createManualOrder: (orderData: Partial<Order>) => Order;
 
   // Users & Customers (Admin Synced)
   users: CustomerUser[];
   addUser: (user: CustomerUser) => void;
   updateUser: (user: CustomerUser) => void;
   deleteUser: (id: string) => void;
+  banUser: (userId: string, reason?: string) => void;
+  unbanUser: (userId: string) => void;
 
   // Wholesale B2B Inquiries (Admin Synced)
   wholesaleInquiries: WholesaleInquiry[];
@@ -781,10 +801,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       const savedOrders = localStorage.getItem("gr_admin_orders");
-      if (savedOrders) setOrders(JSON.parse(savedOrders));
+      if (savedOrders) {
+        try {
+          const parsedOrders: Order[] = JSON.parse(savedOrders);
+          const hasMichaelOrder = parsedOrders.some((o) => o.customerName === "Michael Tovar" || o.customerEmail === "tobarmichael212@gmail.com");
+          if (!hasMichaelOrder) {
+            const merged = [...DEFAULT_ORDERS, ...parsedOrders.filter(o => o.customerName !== "Carlos Mendoza" && o.customerName !== "Alejandro Gómez")];
+            setOrders(merged);
+            localStorage.setItem("gr_admin_orders", JSON.stringify(merged));
+          } else {
+            setOrders(parsedOrders);
+          }
+        } catch {
+          setOrders(DEFAULT_ORDERS);
+        }
+      } else {
+        setOrders(DEFAULT_ORDERS);
+      }
 
       const savedUsers = localStorage.getItem("gr_admin_users");
-      if (savedUsers) setUsers(JSON.parse(savedUsers));
+      if (savedUsers) {
+        try {
+          const parsedUsers: CustomerUser[] = JSON.parse(savedUsers);
+          const hasMichael = parsedUsers.some((u) => u.email?.toLowerCase() === "tobarmichael212@gmail.com");
+          if (!hasMichael) {
+            const merged = [DEFAULT_USERS[0], ...parsedUsers.filter(u => u.name !== "Carlos Mario Restrepo" && u.name !== "Paola Andrea Parada")];
+            setUsers(merged);
+            localStorage.setItem("gr_admin_users", JSON.stringify(merged));
+          } else {
+            const cleanUsers = parsedUsers.filter(u => u.name !== "Carlos Mario Restrepo" && u.name !== "Paola Andrea Parada");
+            setUsers(cleanUsers);
+            localStorage.setItem("gr_admin_users", JSON.stringify(cleanUsers));
+          }
+        } catch {
+          setUsers(DEFAULT_USERS);
+        }
+      } else {
+        setUsers(DEFAULT_USERS);
+      }
 
       const savedWholesale = localStorage.getItem("gr_admin_wholesale");
       if (savedWholesale) setWholesaleInquiries(JSON.parse(savedWholesale));
@@ -792,11 +846,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedSettings = localStorage.getItem("gr_admin_settings");
       if (savedSettings) setSettings(JSON.parse(savedSettings));
 
-      const savedBanners = localStorage.getItem("gr_admin_banners");
-      if (savedBanners) setBanners(JSON.parse(savedBanners));
-
       const savedInvoices = localStorage.getItem("gr_admin_invoices");
-      if (savedInvoices) setInvoices(JSON.parse(savedInvoices));
+      if (savedInvoices) {
+        try {
+          const parsedInvoices: Invoice[] = JSON.parse(savedInvoices);
+          const hasMichaelInvoice = parsedInvoices.some((inv) => inv.customerName === "Michael Tovar" || inv.customerEmail === "tobarmichael212@gmail.com");
+          if (!hasMichaelInvoice) {
+            const merged = [...DEFAULT_INVOICES, ...parsedInvoices.filter(inv => inv.customerName !== "Carlos Mario Restrepo" && inv.customerName !== "Alejandro Gómez")];
+            setInvoices(merged);
+            localStorage.setItem("gr_admin_invoices", JSON.stringify(merged));
+          } else {
+            setInvoices(parsedInvoices);
+          }
+        } catch {
+          setInvoices(DEFAULT_INVOICES);
+        }
+      } else {
+        setInvoices(DEFAULT_INVOICES);
+      }
 
       const savedCategories = localStorage.getItem("gr_admin_categories");
       if (savedCategories) setCategories(JSON.parse(savedCategories));
@@ -1041,7 +1108,76 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const getOrderByGuide = (guide: string): Order | undefined => {
     const clean = guide.trim().toUpperCase();
-    return orders.find((o) => o.guideNumber.toUpperCase() === clean || o.id.toUpperCase() === clean);
+    const found = orders.find((o) => o.guideNumber.toUpperCase() === clean || o.id.toUpperCase() === clean);
+    if (!found) return undefined;
+    return {
+      ...found,
+      status: getAutoOrderStatus(found),
+    };
+  };
+
+  const createManualOrder = (orderData: Partial<Order>): Order => {
+    const orderNumber = `ORD-GR-${Math.floor(1000 + Math.random() * 9000)}`;
+    const invoiceNumber = `FACT-GR-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const autoGuide = `INT-${Math.floor(7000000 + Math.random() * 2000000)}`;
+    const dateStr = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
+
+    const newOrder: Order = {
+      id: orderNumber.toLowerCase(),
+      invoiceNumber: invoiceNumber,
+      guideNumber: orderData.guideNumber || autoGuide,
+      carrier: orderData.carrier || "Inter Rapidísimo",
+      customerName: orderData.customerName || "Cliente Mostrador",
+      customerEmail: orderData.customerEmail || "cliente@gordoryders.com",
+      customerPhone: orderData.customerPhone || "3000000000",
+      customerCedulaOrNit: orderData.customerCedulaOrNit || "1.000.000.000",
+      customerAddress: orderData.customerAddress || "Entrega en Local / Mostrador",
+      city: orderData.city || "Bogotá D.C., Cundinamarca",
+      total: orderData.total || 0,
+      itemsCount: orderData.itemsCount || 1,
+      status: "empacado",
+      date: dateStr,
+      productsSummary: orderData.productsSummary || "Productos Venta Mostrador",
+      paymentMethod: orderData.paymentMethod || "Contra Entrega Nacional",
+      paymentStatus: orderData.paymentStatus || "pendiente",
+      createdAtTimestamp: Date.now(),
+    };
+
+    addOrder(newOrder);
+
+    // Also generate linked invoice
+    const newInvoice: Invoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: invoiceNumber,
+      orderId: orderNumber,
+      date: dateStr,
+      customerName: newOrder.customerName,
+      customerNitOrCedula: newOrder.customerCedulaOrNit || "Consumidor Final",
+      customerPhone: newOrder.customerPhone,
+      customerEmail: newOrder.customerEmail || "cliente@gordoryders.com",
+      customerCity: newOrder.city,
+      customerAddress: newOrder.customerAddress,
+      carrier: newOrder.carrier,
+      guideNumber: newOrder.guideNumber,
+      items: [
+        {
+          productName: newOrder.productsSummary,
+          sku: "VENTA-MANUAL",
+          quantity: newOrder.itemsCount,
+          unitPrice: newOrder.total,
+          subtotal: newOrder.total,
+        },
+      ],
+      subtotal: newOrder.total,
+      shippingCost: 0,
+      tax: 0,
+      total: newOrder.total,
+      paymentMethod: newOrder.paymentMethod as any,
+      paymentStatus: newOrder.paymentStatus === "pagado" ? "pagado" : "pendiente",
+    };
+    addInvoice(newInvoice);
+
+    return newOrder;
   };
 
   // Users Operations
@@ -1068,6 +1204,43 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deleteUser = (id: string) => {
     setUsers((prev) => {
       const updated = prev.filter((u) => u.id !== id);
+      try {
+        localStorage.setItem("gr_admin_users", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const banUser = (userId: string, reason: string = "Bloqueado por administración") => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            status: "bloqueado" as const,
+            notes: u.notes ? `${u.notes} | 🚫 BLOQUEADO: ${reason}` : `🚫 BLOQUEADO: ${reason}`,
+          };
+        }
+        return u;
+      });
+      try {
+        localStorage.setItem("gr_admin_users", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const unbanUser = (userId: string) => {
+    setUsers((prev) => {
+      const updated = prev.map((u) => {
+        if (u.id === userId) {
+          return {
+            ...u,
+            status: "activo" as const,
+          };
+        }
+        return u;
+      });
       try {
         localStorage.setItem("gr_admin_users", JSON.stringify(updated));
       } catch {}
@@ -1749,10 +1922,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updateOrder,
         deleteOrder,
         getOrderByGuide,
+        createManualOrder,
         users,
         addUser,
         updateUser,
         deleteUser,
+        banUser,
+        unbanUser,
         currentUser,
         setCurrentUser,
         isAuthModalOpen,

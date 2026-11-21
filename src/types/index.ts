@@ -76,16 +76,24 @@ export interface LookbookAlbum {
 
 export interface Order {
   id: string;
+  invoiceNumber?: string;
   guideNumber: string;
   carrier: "Inter Rapidísimo" | "Servientrega" | "Envia" | "Coordinadora";
   customerName: string;
+  customerEmail?: string;
   customerPhone: string;
+  customerCedulaOrNit?: string;
+  customerAddress?: string;
   city: string;
   total: number;
   itemsCount: number;
-  status: "empacado" | "recolectado" | "en_transito" | "en_reparto" | "entregado";
+  status: "empacado" | "recolectado" | "en_transito" | "en_reparto" | "entregado" | "cancelado";
   date: string;
   productsSummary: string;
+  paymentMethod?: string;
+  paymentStatus?: "pagado" | "pendiente";
+  createdAtTimestamp?: number;
+  isManualStatus?: boolean;
 }
 
 export interface HeroBanner {

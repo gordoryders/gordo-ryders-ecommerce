@@ -107,19 +107,33 @@ export default function CheckoutModal({
         .map((i) => `${i.quantity}x ${i.product.name} (${i.selectedSize})`)
         .join(", ");
 
-      // 1. Create Official Order (Nivel 1 para despacho en bodega)
+      const autoGuide = `INT-${Math.floor(7000000 + Math.random() * 2000000)}`;
+
+      // 1. Create Official Order (Comanda de Despacho Automática)
       const newOrder: Order = {
         id: orderNumber.toLowerCase(),
-        guideNumber: "POR ASIGNAR",
+        invoiceNumber: invoiceNumber,
+        guideNumber: autoGuide,
         carrier: "Inter Rapidísimo",
         customerName: fullName,
+        customerEmail: email || "cliente@gordoryders.com",
         customerPhone: phone,
+        customerCedulaOrNit: cedulaOrNit,
+        customerAddress: `${address} ${neighborhood ? `- ${neighborhood}` : ""}`,
         city: `${city}, ${department}`,
         total: total,
         itemsCount: items.reduce((acc, i) => acc + i.quantity, 0),
         status: "empacado",
         date: dateStr,
         productsSummary: productsSummary,
+        paymentMethod:
+          paymentMethod === "wompi"
+            ? "Wompi (Bancolombia)"
+            : paymentMethod === "nequi"
+            ? "PSE / Nequi"
+            : "Contra Entrega Nacional",
+        paymentStatus: paymentMethod === "contraentrega" ? "pendiente" : "pagado",
+        createdAtTimestamp: Date.now(),
       };
 
       // 2. Create Official Digital Invoice
@@ -135,7 +149,7 @@ export default function CheckoutModal({
         customerCity: `${city}, ${department}`,
         customerAddress: `${address} ${neighborhood ? `- ${neighborhood}` : ""}`,
         carrier: "Inter Rapidísimo",
-        guideNumber: "Pendiente asignación por bodega",
+        guideNumber: autoGuide,
         items: items.map((i) => ({
           productName: i.product.name,
           sku: i.product.sku,

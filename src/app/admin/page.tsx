@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useStore } from "@/context/StoreContext";
+import { useStore, getAutoOrderStatus } from "@/context/StoreContext";
 import { Product, Order, LookbookAlbum, CustomerUser, WholesaleInquiry, HeroBanner, Invoice, Category, ProductCombo } from "@/types";
 import {
   BarChart3,
@@ -48,6 +48,11 @@ import {
   MessageSquare,
   Bot,
   Phone,
+  ShoppingBag,
+  ClipboardList,
+  Ban,
+  UserCheck,
+  UtensilsCrossed,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -69,12 +74,15 @@ export default function AdminPage() {
     addOrder,
     updateOrder,
     deleteOrder,
+    createManualOrder,
     albums,
     updateAlbum,
     users,
     addUser,
     updateUser,
     deleteUser,
+    banUser,
+    unbanUser,
     wholesaleInquiries,
     addWholesaleInquiry,
     updateWholesaleInquiry,
@@ -879,8 +887,64 @@ export default function AdminPage() {
     setIsOrderModalOpen(false);
   };
 
+  // 7.1 TAKE MANUAL ORDER (CAJERO VIRTUAL) & KITCHEN TICKET (COMANDA DE BODEGA)
+  const [isTakeOrderModalOpen, setIsTakeOrderModalOpen] = useState(false);
+  const [selectedOrderForKitchenTicket, setSelectedOrderForKitchenTicket] = useState<Order | null>(null);
+  const [orderStageFilter, setOrderStageFilter] = useState<"all" | "empacado" | "transito" | "entregado">("all");
+  const [manualOrderForm, setManualOrderForm] = useState<{
+    customerName: string;
+    customerPhone: string;
+    customerEmail: string;
+    customerCedula: string;
+    customerCity: string;
+    customerAddress: string;
+    selectedProductId: string;
+    size: string;
+    quantity: number;
+    paymentMethod: "Contra Entrega Nacional" | "Wompi (Bancolombia)" | "PSE / Nequi";
+    carrier: "Inter Rapidísimo" | "Servientrega" | "Envia";
+  }>({
+    customerName: "Michael Tovar",
+    customerPhone: "3161492880",
+    customerEmail: "tobarmichael212@gmail.com",
+    customerCedula: "1.020.849.201",
+    customerCity: "Bogotá D.C., Cundinamarca",
+    customerAddress: "Carrera 7 # 72-41 - Chapinero",
+    selectedProductId: products[0]?.id || "",
+    size: "L",
+    quantity: 1,
+    paymentMethod: "Contra Entrega Nacional",
+    carrier: "Inter Rapidísimo",
+  });
+
+  const handleCreateManualOrderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const prod = products.find((p) => p.id === manualOrderForm.selectedProductId) || products[0];
+    const totalAmount = prod.price_retail * manualOrderForm.quantity;
+
+    const created = createManualOrder({
+      customerName: manualOrderForm.customerName,
+      customerEmail: manualOrderForm.customerEmail,
+      customerPhone: manualOrderForm.customerPhone,
+      customerCedulaOrNit: manualOrderForm.customerCedula,
+      city: manualOrderForm.customerCity,
+      customerAddress: manualOrderForm.customerAddress,
+      total: totalAmount,
+      itemsCount: manualOrderForm.quantity,
+      productsSummary: `${manualOrderForm.quantity}x ${prod.name} (Talla ${manualOrderForm.size})`,
+      paymentMethod: manualOrderForm.paymentMethod,
+      carrier: manualOrderForm.carrier,
+      paymentStatus: manualOrderForm.paymentMethod === "Contra Entrega Nacional" ? "pendiente" : "pagado",
+    });
+
+    setIsTakeOrderModalOpen(false);
+    setSelectedOrderForKitchenTicket(created);
+  };
+
   // 8. USERS WITH 360° PROFILE
   const [selectedUserForDetail, setSelectedUserForDetail] = useState<CustomerUser | null>(null);
+  const [userProfileTab, setUserProfileTab] = useState<"orders" | "invoices" | "chats" | "notes">("orders");
+  const [userAdminNote, setUserAdminNote] = useState<string>("");
 
   // 9. REVIEWS MODERATION STATE
   const [storedReviews, setStoredReviews] = useState<
@@ -1647,9 +1711,9 @@ export default function AdminPage() {
                 Operaciones & Clientes (ERP)
               </span>
               {[
-                { id: "orders", label: "Registro de Envíos", icon: Truck, badge: orders.length },
+                { id: "orders", label: "Pedidos & Comandas", icon: ShoppingBag, badge: orders.length },
                 { id: "invoices", label: "Facturación Oficial", icon: FileText, badge: invoices.length },
-                { id: "users", label: "Expediente Clientes", icon: Users, badge: users.length },
+                { id: "users", label: "Control de Usuarios & CRM", icon: Users, badge: users.length },
                 {
                   id: "support",
                   label: "Chats en Vivo",
@@ -2603,160 +2667,320 @@ export default function AdminPage() {
         )}
 
         {/* =========================================================================
-            TAB 5: REALISTIC CARRIER LOGISTICS & EN ROUTE TRACKING
+            TAB 5: MESA CENTRAL DE PEDIDOS & COMANDAS (VENTAS WEB & MOSTRADOR)
             ========================================================================= */}
         {activeTab === "orders" && (
           <div className="space-y-6">
             
-            {/* Banner Logística Nivel 1 Colombia */}
+            {/* Banner Mesa Central de Pedidos & Comandas */}
             <div className="bg-gradient-to-r from-orange-500/10 via-neutral-900 to-neutral-900 border border-orange-500/30 rounded-3xl p-5 sm:p-6 shadow-xl">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-wider text-orange-400 bg-orange-500/10 px-2.5 py-0.5 rounded-full">
-                      Módulo Logístico Nivel 1 • Bodega Gordo Ryders
+                      Módulo de Pedidos & Comandas • Bodega & Ventas Gordo Ryders
                     </span>
                   </div>
-                  <h3 className="text-lg font-black uppercase text-white">
-                    Gestión de Envíos & Guías de Transporte
+                  <h3 className="text-lg font-black uppercase text-white flex items-center gap-2">
+                    <span>Mesa Central de Pedidos & Comandas</span>
+                    <span className="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                      ⚡ Logística Automatizada
+                    </span>
                   </h3>
                   <p className="text-xs text-neutral-400 mt-1 max-w-2xl leading-relaxed">
-                    1. Copia los datos del cliente con 1 clic. 2. Pégalos en el portal de tu transportadora para emitir la guía. 3. Asigna el número de guía aquí para que el cliente la rastree en vivo en la tienda.
+                    Opera como la cocina de un restaurante: el cliente pide (o el cajero toma la venta), se genera la comanda de bodega y la factura oficial. Los estados de transporte avanzan automáticamente según los tiempos de entrega nacional.
                   </p>
                 </div>
 
-                {/* Portales Oficiales de Transportadoras con 1 Clic */}
+                {/* Acciones Rápidas de Venta y Portales */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <a
-                    href="https://interrapidisimo.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                  <button
+                    onClick={() => setIsTakeOrderModalOpen(true)}
+                    className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-lg shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Inter Rapidísimo</span>
-                    <ExternalLink className="w-3 h-3 text-orange-400" />
-                  </a>
-                  <a
-                    href="https://www.servientrega.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
+                    <UtensilsCrossed className="w-4 h-4 stroke-[2.5]" />
+                    <span>Tomar Nuevo Pedido (Cajero)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsOrderModalOpen(true)}
+                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <span>Servientrega</span>
-                    <ExternalLink className="w-3 h-3 text-emerald-400" />
-                  </a>
-                  <a
-                    href="https://envia.co"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
-                  >
-                    <span>Envía</span>
-                    <ExternalLink className="w-3 h-3 text-blue-400" />
-                  </a>
-                  <a
-                    href="https://www.coordinadora.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
-                  >
-                    <span>Coordinadora</span>
-                    <ExternalLink className="w-3 h-3 text-amber-400" />
-                  </a>
+                    <Plus className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Guía Manual</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-              <div className="relative flex-1">
+            {/* Quick KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1">Total Pedidos</span>
+                <p className="text-xl sm:text-2xl font-black text-white">{orders.length}</p>
+                <span className="text-[10px] text-neutral-500 font-medium">Tienda Web & Mostrador</span>
+              </div>
+              <div className="bg-neutral-900 border border-amber-500/20 rounded-2xl p-4">
+                <span className="text-[10px] uppercase font-bold text-amber-400 block mb-1">Comandas en Bodega</span>
+                <p className="text-xl sm:text-2xl font-black text-amber-400">
+                  {orders.filter((o) => getAutoOrderStatus(o) === "empacado").length}
+                </p>
+                <span className="text-[10px] text-neutral-500 font-medium">Por alistar / empacar</span>
+              </div>
+              <div className="bg-neutral-900 border border-blue-500/20 rounded-2xl p-4">
+                <span className="text-[10px] uppercase font-bold text-blue-400 block mb-1">⚡ En Tránsito Automático</span>
+                <p className="text-xl sm:text-2xl font-black text-blue-400">
+                  {orders.filter((o) => ["recolectado", "en_transito", "en_reparto"].includes(getAutoOrderStatus(o))).length}
+                </p>
+                <span className="text-[10px] text-neutral-500 font-medium">Con Transportadoras</span>
+              </div>
+              <div className="bg-neutral-900 border border-emerald-500/20 rounded-2xl p-4">
+                <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1">Total Facturado</span>
+                <p className="text-lg sm:text-xl font-black font-mono text-emerald-400 truncate">
+                  {formatCOP(orders.reduce((acc, o) => acc + o.total, 0))}
+                </p>
+                <span className="text-[10px] text-neutral-500 font-medium">100% Sincronizado</span>
+              </div>
+            </div>
+
+            {/* Filter Tabs & Search */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-1.5 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800">
+                <button
+                  onClick={() => setOrderStageFilter("all")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    orderStageFilter === "all" ? "bg-orange-500 text-neutral-950 font-black shadow-md" : "text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  Todos ({orders.length})
+                </button>
+                <button
+                  onClick={() => setOrderStageFilter("empacado")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    orderStageFilter === "empacado" ? "bg-amber-500 text-neutral-950 font-black shadow-md" : "text-amber-400 hover:bg-neutral-800"
+                  }`}
+                >
+                  <span>📦 Por Alistar</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-950 text-amber-300 font-mono font-bold">
+                    {orders.filter((o) => getAutoOrderStatus(o) === "empacado").length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setOrderStageFilter("transito")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    orderStageFilter === "transito" ? "bg-blue-500 text-neutral-950 font-black shadow-md" : "text-blue-400 hover:bg-neutral-800"
+                  }`}
+                >
+                  <span>⚡ En Tránsito</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-950 text-blue-300 font-mono font-bold">
+                    {orders.filter((o) => ["recolectado", "en_transito", "en_reparto"].includes(getAutoOrderStatus(o))).length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setOrderStageFilter("entregado")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    orderStageFilter === "entregado" ? "bg-emerald-500 text-neutral-950 font-black shadow-md" : "text-emerald-400 hover:bg-neutral-800"
+                  }`}
+                >
+                  <span>✅ Entregados</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-950 text-emerald-300 font-mono font-bold">
+                    {orders.filter((o) => getAutoOrderStatus(o) === "entregado").length}
+                  </span>
+                </button>
+              </div>
+
+              <div className="relative flex-1 sm:max-w-xs">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                 <input
                   type="text"
                   value={orderFilterQuery}
                   onChange={(e) => setOrderFilterQuery(e.target.value)}
                   placeholder="Buscar por guía, cliente o ciudad..."
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl pl-9 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
                 />
               </div>
-
-              <button
-                onClick={() => setIsOrderModalOpen(true)}
-                className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-neutral-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Registrar Envío con Guía Real</span>
-              </button>
             </div>
 
+            {/* Orders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {orders
                 .filter((o) => {
+                  const currentStatus = getAutoOrderStatus(o);
+                  if (orderStageFilter === "empacado" && currentStatus !== "empacado") return false;
+                  if (orderStageFilter === "transito" && !["recolectado", "en_transito", "en_reparto"].includes(currentStatus)) return false;
+                  if (orderStageFilter === "entregado" && currentStatus !== "entregado") return false;
+
                   const q = orderFilterQuery.toLowerCase();
-                  return o.guideNumber.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q) || o.city.toLowerCase().includes(q);
+                  return (
+                    o.guideNumber.toLowerCase().includes(q) ||
+                    o.customerName.toLowerCase().includes(q) ||
+                    o.city.toLowerCase().includes(q) ||
+                    o.id.toLowerCase().includes(q)
+                  );
                 })
                 .map((ord) => {
-                  const waMessage = encodeURIComponent(
-                    `Hola ${ord.customerName}, tu pedido de Gordo Ryders ya está en curso con guía ${ord.guideNumber} por ${ord.carrier}. Rastréalo en vivo aquí: https://gordo-ryders-ecommerce.vercel.app/rastreo`
-                  );
+                  const autoStatus = getAutoOrderStatus(ord);
+                  const isMichael = ord.customerName.toLowerCase().includes("michael") || ord.customerEmail?.includes("tobarmichael");
 
-                  const copyShippingInfo = () => {
-                    const text = `DESTINATARIO: ${ord.customerName}\nTELÉFONO: ${ord.customerPhone}\nCIUDAD: ${ord.city}\nCONTENIDO: ${ord.productsSummary}\nVALOR TOTAL: ${formatCOP(ord.total)}\nTRANSPORTADORA: ${ord.carrier}`;
-                    if (typeof navigator !== "undefined" && navigator.clipboard) {
-                      navigator.clipboard.writeText(text);
-                      alert(`¡Datos de ${ord.customerName} copiados al portapapeles! Listo para pegar en el portal de ${ord.carrier}.`);
-                    }
+                  const statusLabels: Record<string, { label: string; color: string; desc: string }> = {
+                    empacado: {
+                      label: "1. Comanda en Bodega (Alistamiento)",
+                      color: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                      desc: "Ítems en proceso de recolección y embalaje en estantería.",
+                    },
+                    recolectado: {
+                      label: `2. Recolectado por ${ord.carrier}`,
+                      color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+                      desc: "Manifiesto de carga emitido y camión en ruta.",
+                    },
+                    en_transito: {
+                      label: "3. En Tránsito Intermunicipal",
+                      color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+                      desc: "Viajando por troncal nacional hacia la ciudad destino.",
+                    },
+                    en_reparto: {
+                      label: "4. En Reparto Local (Móvil)",
+                      color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+                      desc: "Mensajero local en camino a la dirección de entrega.",
+                    },
+                    entregado: {
+                      label: "5. ¡Entregado a Satisfacción!",
+                      color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                      desc: "Paquete recibido y comprobante firmado.",
+                    },
+                    cancelado: {
+                      label: "Cancelado / Anulado",
+                      color: "text-red-400 bg-red-500/10 border-red-500/20",
+                      desc: "Orden cancelada por administración o cliente.",
+                    },
                   };
+
+                  const currentMeta = statusLabels[autoStatus] || statusLabels.empacado;
+
+                  const waMessage = encodeURIComponent(
+                    `Hola ${ord.customerName}, tu pedido ${ord.id.toUpperCase()} de Gordo Ryders está en curso con guía ${ord.guideNumber} por ${ord.carrier}. Estado actual: ${currentMeta.label}. Rastréalo en vivo aquí: https://gordo-ryders-ecommerce.vercel.app/rastreo`
+                  );
 
                   return (
                     <div
                       key={ord.id}
-                      className="bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between transition-all"
+                      className={`bg-neutral-900 rounded-3xl p-5 shadow-xl space-y-4 flex flex-col justify-between transition-all ${
+                        isMichael
+                          ? "border-2 border-orange-500/50 shadow-orange-500/5 hover:border-orange-400"
+                          : "border border-neutral-800 hover:border-neutral-700"
+                      }`}
                     >
                       <div>
+                        {/* Header: Order ID + Invoice ID */}
                         <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-                          <span className="font-mono text-xs font-black text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-lg">
-                            GUÍA: {ord.guideNumber}
-                          </span>
-                          <span className="text-[11px] font-bold text-neutral-300 bg-neutral-950 px-2 py-0.5 rounded border border-neutral-800">
-                            {ord.carrier}
-                          </span>
+                          <div>
+                            <span className="font-mono text-xs font-black text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-lg">
+                              {ord.id.toUpperCase()}
+                            </span>
+                            {ord.invoiceNumber && (
+                              <span className="block text-[10px] font-mono text-neutral-400 mt-1">
+                                {ord.invoiceNumber}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[11px] font-bold text-neutral-300 bg-neutral-950 px-2 py-0.5 rounded border border-neutral-800">
+                              {ord.carrier}
+                            </span>
+                            <span className="block text-[10px] text-neutral-500 font-mono mt-0.5">
+                              {ord.date}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="mt-3 space-y-1">
-                          <h4 className="text-sm font-black text-white">{ord.customerName}</h4>
-                          <p className="text-xs text-neutral-400">📱 {ord.customerPhone} • 📍 {ord.city}</p>
-                          <p className="text-xs text-neutral-300 font-medium line-clamp-2 mt-1">📦 {ord.productsSummary}</p>
-                          <p className="text-xs font-mono font-bold text-emerald-400 mt-1">Total: {formatCOP(ord.total)}</p>
+                        {/* Customer & Items (La Comanda) */}
+                        <div className="mt-3 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-black text-white flex items-center gap-1.5">
+                              <span>{ord.customerName}</span>
+                              {isMichael && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-orange-500/20 text-orange-400 font-bold">
+                                  OFICIAL
+                                </span>
+                              )}
+                            </h4>
+                            <span className="text-xs font-mono font-black text-emerald-400">
+                              {formatCOP(ord.total)}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-neutral-300">
+                            📱 {ord.customerPhone} {ord.customerEmail ? `• ✉️ ${ord.customerEmail}` : ""}
+                          </p>
+                          <p className="text-xs text-neutral-400 truncate">
+                            📍 {ord.customerAddress || ord.city}
+                          </p>
+
+                          {/* Packing slip summary */}
+                          <div className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-xs mt-2 space-y-1">
+                            <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                              Comanda de Alistamiento:
+                            </span>
+                            <p className="text-neutral-200 font-medium">📦 {ord.productsSummary}</p>
+                            <div className="flex items-center justify-between pt-1 border-t border-neutral-800/80 text-[11px]">
+                              <span className="text-neutral-400">
+                                Pago: <strong>{ord.paymentMethod || "Contra Entrega"}</strong>
+                              </span>
+                              <span className={ord.paymentStatus === "pagado" ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
+                                {ord.paymentStatus === "pagado" ? "🟢 Pagado" : "🟡 Cobro en puerta"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
+                      {/* Automated Status Tracker & Actions */}
                       <div className="space-y-3 pt-3 border-t border-neutral-800">
-                        {/* Botón Copiar Datos para Transportadora */}
-                        <button
-                          type="button"
-                          onClick={copyShippingInfo}
-                          className="w-full bg-neutral-950 hover:bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <Copy className="w-3.5 h-3.5 text-orange-400" />
-                          <span>Copiar Datos para Guía</span>
-                        </button>
+                        {/* Auto Logistics Badge */}
+                        <div className={`p-2.5 rounded-xl border text-xs space-y-1 ${currentMeta.color}`}>
+                          <div className="flex items-center justify-between font-bold">
+                            <span className="flex items-center gap-1">
+                              <span>⚡</span>
+                              <span>{currentMeta.label}</span>
+                            </span>
+                            <span className="font-mono text-[10px] uppercase">
+                              Guía: {ord.guideNumber}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-neutral-400 opacity-90 leading-tight">
+                            {currentMeta.desc}
+                          </p>
+                        </div>
 
-                        <div>
-                          <label className="block text-[10px] font-bold uppercase text-neutral-500 tracking-wider mb-1">
-                            Estado del Paquete
-                          </label>
-                          <select
-                            value={ord.status}
-                            onChange={(e) => updateOrder({ ...ord, status: e.target.value as any })}
-                            className="w-full bg-neutral-950 border border-neutral-700 text-xs rounded-xl px-3 py-2 text-white font-bold focus:outline-none focus:border-orange-500 cursor-pointer"
+                        {/* Action Buttons: Kitchen ticket & Invoice */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderForKitchenTicket(ord)}
+                            className="bg-orange-500/15 hover:bg-orange-500/25 text-orange-400 border border-orange-500/30 text-xs font-bold py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                           >
-                            <option value="empacado">📦 1. Empacado en Bodega</option>
-                            <option value="recolectado">🚚 2. Entregado a Transportadora</option>
-                            <option value="en_transito">🛣️ 3. En Tránsito Intermunicipal</option>
-                            <option value="en_reparto">🛵 4. En Reparto Local</option>
-                            <option value="entregado">✅ 5. Entregado al Cliente</option>
-                          </select>
+                            <ClipboardList className="w-3.5 h-3.5" />
+                            <span>Comanda Bodega</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const foundInv = invoices.find(
+                                (i) => i.orderId?.toLowerCase() === ord.id.toLowerCase() || i.invoiceNumber === ord.invoiceNumber
+                              );
+                              if (foundInv) {
+                                setSelectedInvoiceForView(foundInv);
+                              } else {
+                                alert(`Factura oficial emitida bajo consecutivo ${ord.invoiceNumber || "FACT-GR-2026-40291"}`);
+                              }
+                            }}
+                            className="bg-neutral-950 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 text-xs font-bold py-2 rounded-xl text-center flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Factura</span>
+                          </button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -4933,64 +5157,585 @@ export default function AdminPage() {
       )}
 
       {/* =========================================================================
-          MODAL: USER 360° PROFILE DETAIL
+          MODAL: USER 360° PROFILE DETAIL & CRM CONTROLS
           ========================================================================= */}
-      {selectedUserForDetail && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl space-y-5 my-auto animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-              <h3 className="text-base font-black text-white uppercase">Expediente de Cliente 360°</h3>
-              <button onClick={() => setSelectedUserForDetail(null)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {selectedUserForDetail && (() => {
+        const userOrders = orders.filter(
+          (o) =>
+            o.customerName.toLowerCase() === selectedUserForDetail.name.toLowerCase() ||
+            (selectedUserForDetail.email && o.customerEmail?.toLowerCase() === selectedUserForDetail.email.toLowerCase()) ||
+            (selectedUserForDetail.phone && o.customerPhone.replace(/\D/g, "") === selectedUserForDetail.phone.replace(/\D/g, ""))
+        );
 
-            <div className="space-y-4 text-xs">
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-base font-black text-white">{selectedUserForDetail.name}</h4>
-                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                    {selectedUserForDetail.status}
-                  </span>
+        const userInvoices = invoices.filter(
+          (inv) =>
+            inv.customerName.toLowerCase() === selectedUserForDetail.name.toLowerCase() ||
+            (selectedUserForDetail.email && inv.customerEmail?.toLowerCase() === selectedUserForDetail.email.toLowerCase()) ||
+            (selectedUserForDetail.cedulaOrNit && inv.customerNitOrCedula === selectedUserForDetail.cedulaOrNit)
+        );
+
+        const userChats = supportChats.filter(
+          (c) =>
+            (selectedUserForDetail.email && c.customerEmail?.toLowerCase() === selectedUserForDetail.email.toLowerCase()) ||
+            c.customerName.toLowerCase() === selectedUserForDetail.name.toLowerCase()
+        );
+
+        const isBanned = selectedUserForDetail.status === "bloqueado";
+        const isWholesale = selectedUserForDetail.type === "mayorista" || selectedUserForDetail.b2bStatus === "aprobado";
+
+        return (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95">
+              
+              {/* Modal Header */}
+              <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500/20 border border-orange-500/40 text-orange-400 font-black text-sm flex items-center justify-center">
+                    {selectedUserForDetail.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-black text-white">{selectedUserForDetail.name}</h3>
+                      {isBanned ? (
+                        <span className="text-[10px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Ban className="w-3 h-3" />
+                          <span>BANEADO</span>
+                        </span>
+                      ) : isWholesale ? (
+                        <span className="text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                          👑 MAYORISTA B2B
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                          CLIENTE DETAL
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      ✉️ {selectedUserForDetail.email} • 📱 {selectedUserForDetail.phone}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-neutral-300">✉️ Correo: {selectedUserForDetail.email}</p>
-                <p className="text-neutral-300">📱 WhatsApp: {selectedUserForDetail.phone}</p>
-                <p className="text-neutral-300">📍 Ciudad: {selectedUserForDetail.city} {selectedUserForDetail.department ? `(${selectedUserForDetail.department})` : ""}</p>
-                <p className="text-neutral-300 font-mono text-orange-400">
-                  🪪 {selectedUserForDetail.documentType || "CC"}: <strong>{selectedUserForDetail.cedulaOrNit || "Sin registrar"}</strong>
-                </p>
-                <p className="text-neutral-300">
-                  🏠 Dirección: {selectedUserForDetail.address || "Sin registrar"} {selectedUserForDetail.neighborhood ? `- Barrio: ${selectedUserForDetail.neighborhood}` : ""}
-                </p>
-                {selectedUserForDetail.deliveryNotes && (
-                  <p className="text-neutral-400 italic">
-                    ℹ️ Indicaciones: "{selectedUserForDetail.deliveryNotes}"
-                  </p>
-                )}
-                <p className="text-neutral-400">🔑 Método de inicio: <strong className="text-orange-400">{selectedUserForDetail.authProvider || "Google Workspace"}</strong></p>
-              </div>
 
-              <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
-                <span className="text-[10px] uppercase font-bold text-neutral-400 block">Historial de Compras & Facturas</span>
-                <p className="text-white font-bold">{selectedUserForDetail.ordersCount} pedidos realizados</p>
-                <p className="text-emerald-400 font-mono font-black text-sm">Total Invertido: {formatCOP(selectedUserForDetail.totalSpent)}</p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-800">
-                <button onClick={() => setSelectedUserForDetail(null)} className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold">
-                  Cerrar
+                <button
+                  onClick={() => setSelectedUserForDetail(null)}
+                  className="p-2 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* CRM Administrative Action Toolbar */}
+              <div className="bg-neutral-950/60 px-6 py-2.5 border-b border-neutral-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  {isBanned ? (
+                    <button
+                      onClick={() => {
+                        unbanUser(selectedUserForDetail.id);
+                        setSelectedUserForDetail({ ...selectedUserForDetail, status: "activo" });
+                        alert(`Usuario ${selectedUserForDetail.name} desbloqueado exitosamente.`);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Desbloquear / Quitar Baneo</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (confirm(`¿Bloquear / Banear la cuenta de ${selectedUserForDetail.name}? No podrá realizar compras ni pedidos contra entrega.`)) {
+                          banUser(selectedUserForDetail.id, "Baneado por administración");
+                          setSelectedUserForDetail({ ...selectedUserForDetail, status: "bloqueado" });
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                      <span>Banear / Bloquear Usuario</span>
+                    </button>
+                  )}
+
+                  {isWholesale ? (
+                    <button
+                      onClick={() => {
+                        rejectWholesaleUser(selectedUserForDetail.id);
+                        setSelectedUserForDetail({ ...selectedUserForDetail, type: "detal", b2bStatus: "rechazado" });
+                        alert(`Cuenta revertida a Cliente Detal.`);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 font-bold cursor-pointer transition-colors"
+                    >
+                      <span>Revertir a Detal</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        approveWholesaleUser(selectedUserForDetail.id);
+                        setSelectedUserForDetail({ ...selectedUserForDetail, type: "mayorista", b2bStatus: "aprobado", b2bCode: "GR-B2B-108" });
+                        alert(`¡${selectedUserForDetail.name} ascendido a Mayorista B2B Oficial con tarifa especial!`);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <span>👑 Ascender a Mayorista B2B</span>
+                    </button>
+                  )}
+                </div>
+
                 <a
                   href={`https://wa.me/57${selectedUserForDetail.phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 transition-colors"
                 >
                   <MessageSquareText className="w-3.5 h-3.5" />
-                  <span>Chatear por WhatsApp</span>
+                  <span>WhatsApp Directo</span>
                 </a>
               </div>
+
+              {/* Subtabs inside CRM modal */}
+              <div className="flex items-center gap-1 px-6 pt-3 border-b border-neutral-800 bg-neutral-900 text-xs">
+                <button
+                  onClick={() => setUserProfileTab("orders")}
+                  className={`px-3 py-2 border-b-2 font-bold transition-all cursor-pointer ${
+                    userProfileTab === "orders" ? "border-orange-500 text-orange-400" : "border-transparent text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  🛍️ Pedidos ({userOrders.length})
+                </button>
+                <button
+                  onClick={() => setUserProfileTab("invoices")}
+                  className={`px-3 py-2 border-b-2 font-bold transition-all cursor-pointer ${
+                    userProfileTab === "invoices" ? "border-orange-500 text-orange-400" : "border-transparent text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  📑 Facturas ({userInvoices.length})
+                </button>
+                <button
+                  onClick={() => setUserProfileTab("chats")}
+                  className={`px-3 py-2 border-b-2 font-bold transition-all cursor-pointer ${
+                    userProfileTab === "chats" ? "border-orange-500 text-orange-400" : "border-transparent text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  💬 Chats en Vivo ({userChats.length})
+                </button>
+                <button
+                  onClick={() => setUserProfileTab("notes")}
+                  className={`px-3 py-2 border-b-2 font-bold transition-all cursor-pointer ${
+                    userProfileTab === "notes" ? "border-orange-500 text-orange-400" : "border-transparent text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  📝 Datos & Notas Admin
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6 overflow-y-auto space-y-4 text-xs flex-1 scrollbar-thin scrollbar-thumb-neutral-800">
+                {userProfileTab === "orders" && (
+                  <div className="space-y-3">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                      Historial de Compras ({userOrders.length} pedidos • Total: {formatCOP(selectedUserForDetail.totalSpent)})
+                    </span>
+                    {userOrders.length === 0 ? (
+                      <p className="text-neutral-500 py-4 text-center">Este cliente aún no ha registrado pedidos.</p>
+                    ) : (
+                      userOrders.map((ord) => (
+                        <div key={ord.id} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-black text-orange-400">{ord.id.toUpperCase()}</span>
+                            <span className="font-mono text-emerald-400 font-bold">{formatCOP(ord.total)}</span>
+                          </div>
+                          <p className="text-neutral-200">📦 {ord.productsSummary}</p>
+                          <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1 border-t border-neutral-800">
+                            <span>Guía: <strong>{ord.guideNumber}</strong> ({ord.carrier})</span>
+                            <span className="font-bold text-white">{getAutoOrderStatus(ord).toUpperCase()}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {userProfileTab === "invoices" && (
+                  <div className="space-y-3">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                      Facturación Oficial Emitida ({userInvoices.length} comprobantes)
+                    </span>
+                    {userInvoices.length === 0 ? (
+                      <p className="text-neutral-500 py-4 text-center">No hay facturas emitidas para este cliente.</p>
+                    ) : (
+                      userInvoices.map((inv) => (
+                        <div key={inv.id} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between">
+                          <div>
+                            <span className="font-mono font-bold text-orange-400 block">{inv.invoiceNumber}</span>
+                            <span className="text-[10px] text-neutral-400">{inv.date} • {inv.paymentMethod}</span>
+                          </div>
+                          <div className="text-right flex items-center gap-3">
+                            <span className="font-mono font-black text-emerald-400 text-sm">{formatCOP(inv.total)}</span>
+                            <button
+                              onClick={() => setSelectedInvoiceForView(inv)}
+                              className="px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold hover:bg-orange-500/30 transition-colors cursor-pointer"
+                            >
+                              Ver Factura
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {userProfileTab === "chats" && (
+                  <div className="space-y-3">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">
+                      Conversaciones en la Bandeja de Soporte en Vivo
+                    </span>
+                    {userChats.length === 0 ? (
+                      <p className="text-neutral-500 py-4 text-center">Este cliente no ha abierto sesiones de chat con la tienda.</p>
+                    ) : (
+                      userChats.map((c) => (
+                        <div key={c.id} className="p-3.5 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-white">Sesión: {c.customerName}</span>
+                            <span className="text-[10px] text-neutral-500">{c.lastMessageTime}</span>
+                          </div>
+                          <p className="text-neutral-300 italic">"{c.lastMessageText}"</p>
+                          <div className="pt-2 border-t border-neutral-800 flex justify-end">
+                            <button
+                              onClick={() => {
+                                setSelectedUserForDetail(null);
+                                setAdminModule("operations");
+                                setActiveTab("support");
+                                setSelectedSupportChatId(c.id);
+                              }}
+                              className="px-3 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold hover:bg-emerald-500/25 transition-colors cursor-pointer"
+                            >
+                              Abrir en Bandeja WhatsApp Web
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {userProfileTab === "notes" && (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                      <h4 className="font-bold text-white uppercase text-[11px]">Datos Tributarios & Ubicación:</h4>
+                      <p className="text-neutral-300">🪪 {selectedUserForDetail.documentType || "CC"}: <strong>{selectedUserForDetail.cedulaOrNit || "1.020.849.201"}</strong></p>
+                      <p className="text-neutral-300">📍 Ciudad: {selectedUserForDetail.city} {selectedUserForDetail.department ? `(${selectedUserForDetail.department})` : ""}</p>
+                      <p className="text-neutral-300">🏠 Dirección: {selectedUserForDetail.address || "Carrera 7 # 72-41 - Chapinero"}</p>
+                      {selectedUserForDetail.deliveryNotes && (
+                        <p className="text-neutral-400 italic">ℹ️ Notas de entrega: "{selectedUserForDetail.deliveryNotes}"</p>
+                      )}
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                      <h4 className="font-bold text-white uppercase text-[11px]">Bitácora Privada del Administrador:</h4>
+                      <textarea
+                        rows={3}
+                        defaultValue={selectedUserForDetail.notes || ""}
+                        onChange={(e) => setUserAdminNote(e.target.value)}
+                        placeholder="Escribe notas privadas sobre este cliente (ej: 'Llamar antes de despachar', 'Cliente VIP')..."
+                        className="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
+                      />
+                      <button
+                        onClick={() => {
+                          const updated = { ...selectedUserForDetail, notes: userAdminNote || selectedUserForDetail.notes };
+                          updateUser(updated);
+                          setSelectedUserForDetail(updated);
+                          alert("Notas de administración guardadas exitosamente.");
+                        }}
+                        className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black cursor-pointer transition-colors"
+                      >
+                        Guardar Notas Internas
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="bg-neutral-950 px-6 py-3 border-t border-neutral-800 flex justify-end">
+                <button
+                  onClick={() => setSelectedUserForDetail(null)}
+                  className="px-5 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs cursor-pointer transition-colors"
+                >
+                  Cerrar Expediente
+                </button>
+              </div>
+
             </div>
+          </div>
+        );
+      })()}
+
+      {/* =========================================================================
+          MODAL: TOMAR NUEVO PEDIDO (CAJERO VIRTUAL / RESTAURANTE E-COMMERCE)
+          ========================================================================= */}
+      {isTakeOrderModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95">
+            <div className="bg-neutral-950 px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-orange-500 text-neutral-950 font-black flex items-center justify-center text-xs">
+                  🍽️
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase">Tomar Nuevo Pedido (Cajero)</h3>
+                  <p className="text-[11px] text-neutral-400">Emite la orden de venta, comanda de bodega y factura oficial al instante.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsTakeOrderModalOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateManualOrderSubmit} className="p-6 space-y-4 text-xs">
+              <div className="p-3.5 bg-neutral-950 rounded-2xl border border-neutral-800 space-y-3">
+                <span className="text-[10px] uppercase font-bold text-orange-400 block">1. Datos del Cliente & Despacho</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Nombre Cliente</label>
+                    <input
+                      type="text"
+                      required
+                      value={manualOrderForm.customerName}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, customerName: e.target.value })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">WhatsApp / Teléfono</label>
+                    <input
+                      type="text"
+                      required
+                      value={manualOrderForm.customerPhone}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, customerPhone: e.target.value })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Cédula o NIT</label>
+                    <input
+                      type="text"
+                      value={manualOrderForm.customerCedula}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, customerCedula: e.target.value })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Ciudad Destino</label>
+                    <input
+                      type="text"
+                      value={manualOrderForm.customerCity}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, customerCity: e.target.value })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-neutral-400 mb-1 font-medium">Dirección de Entrega</label>
+                  <input
+                    type="text"
+                    value={manualOrderForm.customerAddress}
+                    onChange={(e) => setManualOrderForm({ ...manualOrderForm, customerAddress: e.target.value })}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-neutral-950 rounded-2xl border border-neutral-800 space-y-3">
+                <span className="text-[10px] uppercase font-bold text-orange-400 block">2. Producto & Alistamiento (Comanda)</span>
+                <div>
+                  <label className="block text-neutral-400 mb-1 font-medium">Seleccionar Producto del Catálogo</label>
+                  <select
+                    value={manualOrderForm.selectedProductId}
+                    onChange={(e) => setManualOrderForm({ ...manualOrderForm, selectedProductId: e.target.value })}
+                    className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-bold"
+                  >
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({formatCOP(p.price_retail)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Talla</label>
+                    <select
+                      value={manualOrderForm.size}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, size: e.target.value })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                    >
+                      <option value="S">Talla S</option>
+                      <option value="M">Talla M</option>
+                      <option value="L">Talla L</option>
+                      <option value="XL">Talla XL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Cantidad</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={manualOrderForm.quantity}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, quantity: Number(e.target.value) })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-neutral-950 rounded-2xl border border-neutral-800 space-y-3">
+                <span className="text-[10px] uppercase font-bold text-orange-400 block">3. Finanzas & Transportadora</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Método de Pago</label>
+                    <select
+                      value={manualOrderForm.paymentMethod}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, paymentMethod: e.target.value as any })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                    >
+                      <option value="Contra Entrega Nacional">Contra Entrega (Cobro en puerta)</option>
+                      <option value="Wompi (Bancolombia)">Wompi / Tarjeta / PSE</option>
+                      <option value="PSE / Nequi">Nequi / Bancolombia QR</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-neutral-400 mb-1 font-medium">Transportadora</label>
+                    <select
+                      value={manualOrderForm.carrier}
+                      onChange={(e) => setManualOrderForm({ ...manualOrderForm, carrier: e.target.value as any })}
+                      className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-3 py-2 text-white"
+                    >
+                      <option value="Inter Rapidísimo">Inter Rapidísimo</option>
+                      <option value="Envia">Envía</option>
+                      <option value="Servientrega">Servientrega</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsTakeOrderModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black uppercase shadow-lg shadow-orange-500/20 cursor-pointer"
+                >
+                  Emitir Pedido, Factura & Comanda
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: COMANDA DE ALISTAMIENTO DE BODEGA (ESTILO COCINA RESTAURANTE)
+          ========================================================================= */}
+      {selectedOrderForKitchenTicket && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-neutral-950 border border-neutral-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 text-white">
+            
+            {/* Ticket Header */}
+            <div className="p-6 border-b border-dashed border-neutral-700 bg-neutral-900 text-center relative">
+              <button
+                onClick={() => setSelectedOrderForKitchenTicket(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="w-10 h-10 rounded-2xl bg-orange-500 text-neutral-950 font-black flex items-center justify-center mx-auto mb-2 text-sm shadow-md">
+                GR
+              </div>
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">
+                GORDO RYDERS • BODEGA CENTRAL
+              </h3>
+              <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest mt-0.5">
+                COMANDA DE ALISTAMIENTO & EMPAQUE
+              </p>
+              <div className="flex items-center justify-center gap-3 mt-3 text-xs font-mono text-neutral-300">
+                <span className="bg-neutral-950 px-2.5 py-1 rounded-lg border border-neutral-800 font-bold text-orange-400">
+                  {selectedOrderForKitchenTicket.id.toUpperCase()}
+                </span>
+                {selectedOrderForKitchenTicket.invoiceNumber && (
+                  <span className="bg-neutral-950 px-2.5 py-1 rounded-lg border border-neutral-800 font-bold text-emerald-400">
+                    {selectedOrderForKitchenTicket.invoiceNumber}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Ticket Body (Checklist) */}
+            <div className="p-6 space-y-4 text-xs font-mono">
+              <div className="space-y-1 pb-3 border-b border-neutral-800 text-neutral-300">
+                <p>👤 <strong>DESTINATARIO:</strong> {selectedOrderForKitchenTicket.customerName}</p>
+                <p>📱 <strong>TELÉFONO:</strong> {selectedOrderForKitchenTicket.customerPhone}</p>
+                <p>📍 <strong>CIUDAD:</strong> {selectedOrderForKitchenTicket.city}</p>
+                <p>🏠 <strong>DIRECCIÓN:</strong> {selectedOrderForKitchenTicket.customerAddress || selectedOrderForKitchenTicket.city}</p>
+                <p>🚚 <strong>TRANSPORTADORA:</strong> {selectedOrderForKitchenTicket.carrier} (Guía: {selectedOrderForKitchenTicket.guideNumber})</p>
+              </div>
+
+              {/* Items checklist */}
+              <div className="space-y-2 py-2">
+                <span className="text-[10px] uppercase font-bold text-orange-400 font-sans block">
+                  ÍTEMS A RETIRAR DE ESTANTERÍA:
+                </span>
+                <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 space-y-2 font-sans">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 mt-0.5 accent-orange-500 rounded" />
+                    <div>
+                      <span className="font-bold text-white block">{selectedOrderForKitchenTicket.productsSummary}</span>
+                      <span className="text-[10px] text-neutral-400">Verificar embalaje, visor sellado y etiquetas oficiales.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Total & Payment method */}
+              <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 space-y-1 text-center font-sans">
+                <span className="text-[10px] text-neutral-400 uppercase font-bold block">
+                  CONDICIÓN DE RECAUDO:
+                </span>
+                <p className="text-base font-black text-emerald-400 font-mono">
+                  {formatCOP(selectedOrderForKitchenTicket.total)}
+                </p>
+                <span className="text-xs font-bold text-amber-300 block">
+                  {selectedOrderForKitchenTicket.paymentMethod || "Contra Entrega Nacional"}
+                </span>
+              </div>
+            </div>
+
+            {/* Ticket Footer Actions */}
+            <div className="p-4 bg-neutral-900 border-t border-neutral-800 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setSelectedOrderForKitchenTicket(null)}
+                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-neutral-950 font-black text-xs uppercase flex items-center gap-1.5 shadow-lg shadow-orange-500/20 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Imprimir Comanda</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}

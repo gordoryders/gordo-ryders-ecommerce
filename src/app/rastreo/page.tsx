@@ -40,7 +40,7 @@ export default function RastreoPage() {
     const matched = getOrderByGuide(guideInput);
 
     if (matched) {
-      const statusMap = {
+      const statusMap: Record<string, { label: string; estimate: string; stepIndex: number }> = {
         empacado: {
           label: "Empacado en Bodega Central (Bogotá)",
           estimate: "En preparación para entrega a transportadora",
@@ -65,6 +65,11 @@ export default function RastreoPage() {
           label: "¡Entregado a satisfacción!",
           estimate: "Paquete entregado al cliente",
           stepIndex: 4,
+        },
+        cancelado: {
+          label: "Orden Cancelada",
+          estimate: "Cancelada por administración o solicitud del cliente",
+          stepIndex: -1,
         },
       };
 
